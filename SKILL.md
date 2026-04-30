@@ -1,0 +1,331 @@
+---
+name: krairport-python-builder
+description: Use this skill when building, extending, debugging, or documenting a Python client for Korean airport public APIs that combine 한국공항공사(KAC) and 인천국제공항공사(IIAC). Trigger on pykrairport, 한국공항공사, 인천국제공항공사, ICN/GMP/CJU airport API integration, flight status, aircraft registration, parking fee, parking status, arrival congestion, passenger forecast, KAC XML parsing, IIAC JSON/XML parsing, provider routing, or files like krairport-api.md and pykrairport/client.py.
+---
+
+# Krairport Python Library Builder
+
+You are helping build and maintain `pykrairport`, a Python client that unifies Korean airport public APIs across **KAC** and **IIAC**. Read `README.md` and `krairport-api.md` before changing public behavior.
+
+## Project invariants
+
+1. **Provider split is real**:
+   - `ICN` belongs to IIAC.
+   - KAC covers nationwide airports except Incheon.
+2. **One public surface, two provider adapters**:
+   - keep `KrairportClient` as the user-facing entrypoint
+   - implement KAC/IIAC-specific HTTP and parsing separately
+3. **KAC is still XML-heavy**:
+   - do not assume JSON availability across all KAC endpoints
+4. **IIAC usually supports `type=json`**:
+   - prefer JSON where documented, but keep XML fallback if needed
+5. **Service keys are separate**:
+- `KAC_SERVICE_KEY`
+- `IIAC_SERVICE_KEY`
+6. **All schedule timestamps are KST**:
+   - naive times are interpreted as `Asia/Seoul`
+   - keep `tzdata` in Windows dependencies and preserve the UTC+9 fallback in `_time.py`
+7. **No silent provider mismatch**:
+   - requests for `ICN` on KAC endpoints must raise `UnsupportedAirportError`
+8. **Default tests are offline**:
+   - fixture/mock based, no live traffic during ordinary test runs
+
+## Initial supported endpoints
+
+Start with these.
+
+| Public method | Provider | Endpoint |
+|---|---|---|
+| `KrairportClient.departures()` | KAC | `getDepFlightStatusList` |
+| `KrairportClient.arrivals()` | KAC | `getArrFlightStatusList` |
+| `KrairportClient.departures()` | IIAC | `getPassengerDeparturesDeOdp` or `getPassengerDeparturesOdp` |
+| `KrairportClient.arrivals()` | IIAC | `getPassengerArrivalsDeOdp` or `getPassengerArrivalsOdp` |
+| `KrairportClient.aircraft_assignments()` | KAC | `getFlightStatusAPLList` |
+| `KrairportClient.parking_fees()` | KAC | `parkingfee` |
+| `KrairportClient.parking_status()` | IIAC | `getTrackingParking` |
+| `KrairportClient.arrival_congestion()` | IIAC | `getArrivalsCongestion` |
+| `KrairportClient.passenger_forecast()` | IIAC | `getfPassengerNoticeIKR` |
+
+Do not widen scope until the routing, parsing, and model layer are stable.
+
+## Required deliverables when implementing from scratch
+
+```text
+pykrairport/
+├── __init__.py
+├── client.py              # KrairportClient
+├── providers/
+│   ├── __init__.py
+│   ├── kac.py             # KacClient or adapter
+│   └── iiac.py            # IiacClient or adapter
+├── models.py
+├── enums.py
+├── exceptions.py
+├── _http.py
+├── _xml.py
+├── _time.py
+├── _routing.py
+└── cli.py
+tests/
+├── fixtures/
+├── test_client.py
+├── test_kac.py
+├── test_iiac.py
+├── test_parsing.py
+└── test_routing.py
+README.md
+krairport-api.md
+SKILL.md
+docs/testing.md
+docs/repeated-mistakes.md
+docs/troubleshooting.md
+```
+
+## Public API rules
+
+### `KrairportClient`
+
+```python
+KrairportClient(
+    kac_service_key=None,
+    iiac_service_key=None,
+    *,
+    timeout=10.0,
+    retries=3,
+    session=None,
+)
+
+KrairportClient.from_env(
+    kac_name="KAC_SERVICE_KEY",
+    iiac_name="IIAC_SERVICE_KEY",
+)
+```
+
+Every public search method must accept an explicit `airport_code` unless it is an IIAC-only congestion API.
+
+### Routing
+
+- `ICN` -> IIAC
+- anything else supported by KAC -> KAC
+- IIAC-only methods ignore/validate `airport_code`
+- unsupported combinations raise `UnsupportedAirportError`
+
+### Flights
+
+Support these fields across providers:
+
+- `provider`
+- `airport_code`
+- `flight_id`
+- `flight_unique_id`
+- `direction`
+- `airline_name`
+- `airline_code`
+- `departure_airport_code`
+- `arrival_airport_code`
+- `scheduled_at`
+- `estimated_at`
+- `status_korean`
+- `status_english`
+- `terminal`
+- `gate`
+- `codeshare`
+- `raw`
+
+KAC and IIAC use different field names. Normalize them at the model boundary.
+
+## Type conversion policy
+
+### Keep as `str`
+
+- airport codes: `ICN`, `GMP`, `CJU`
+- flight numbers: `KE123`, `7C1101`
+- flight unique ids: `f_id`, `schFID`
+- `searchday`, `from_time`, `to_time`
+- `T1`, `T2`, gate letters
+
+### Convert to `datetime`
+
+- scheduled / estimated / changed timestamps
+- interpret as KST
+- support:
+  - `YYYYMMDDHHMM`
+  - `YYYYMMDDHHMMSS`
+  - scientific-looking numeric strings from IIAC examples such as `2.02112E+11`
+
+### Convert to `int`
+
+- parking counts
+- passenger counts
+- parking fees
+- total counts
+
+### Convert to `bool`
+
+- codeshare flags like `Y` / `N`
+
+### Normalize empties
+
+- blank strings
+- single spaces
+- `-`
+
+to `None`.
+
+## Provider-specific request rules
+
+### KAC `StatusOfFlights`
+
+Arrival request params can include:
+
+- `searchday`
+- `from_time`
+- `to_time`
+- `airport_code`
+- `f_id`
+- `flight_id`
+- `line`
+- `airport`
+- `dep_airport_code`
+- `dep_airport`
+- `fgenTime`
+- `serviceKey`
+- `pageNo`
+- `numOfRows`
+
+Departure request params can include:
+
+- `searchday`
+- `from_time`
+- `to_time`
+- `airport_code`
+- `f_id`
+- `flight_id`
+- `line`
+- `airport`
+- `arr_airport_code`
+- `arr_airport`
+- `fgenTime`
+- `serviceKey`
+- `pageNo`
+- `numOfRows`
+
+### KAC `FlightStatusAPLList`
+
+- `schStTime`
+- `schEdTime`
+- `schAirCode`
+- `schFID`
+- `schFln`
+- `Line`
+- `schAPLno`
+- `schAPM`
+- `serviceKey`
+- `pageNo`
+- `numOfRows`
+
+### IIAC detailed passenger flight
+
+- `serviceKey`
+- `pageNo`
+- `numOfRows`
+- `type`
+- `searchday`
+- `from_time`
+- `to_time`
+- `airport_code`
+- `f_id`
+- `flight_id`
+- `lang`
+- `inqtimechcd`
+
+### IIAC arrival congestion
+
+- `serviceKey`
+- `numOfRows`
+- `pageNo`
+- `terno`
+- `airport`
+- `type`
+
+### IIAC passenger forecast
+
+- `selectdate`
+- `type`
+- `serviceKey`
+- `numOfRows`
+- `pageNo`
+
+## HTTP and parsing rules
+
+1. Keep session/retry setup in one place.
+2. Do not log service keys.
+3. Retry only transient errors such as `429`, `500`, `502`, `503`, `504`.
+4. KAC XML parsing belongs in one parser layer, not scattered through client methods.
+5. Normalize `items.item` whether it arrives as one dict or a list.
+6. Preserve `raw` payloads only after normalization, not as the public surface.
+
+## Exception hierarchy
+
+```text
+KrairportError
+├── KrairportAuthError
+├── KrairportRequestError
+├── KrairportRateLimitError
+├── KrairportNetworkError
+├── KrairportServerError
+├── KrairportParseError
+└── UnsupportedAirportError
+```
+
+Map provider-specific weirdness into these common exceptions.
+
+## Testing rules
+
+Required offline tests:
+
+- provider routing for `ICN` vs non-`ICN`
+- rejection of `ICN` on KAC-only methods
+- rejection of non-`ICN` on IIAC-only methods
+- KAC XML single-item and multi-item normalization
+- IIAC JSON single-item and multi-item normalization
+- timestamp parsing, including scientific notation examples
+- Windows timezone fallback when `ZoneInfo("Asia/Seoul")` is unavailable
+- type assertions for every public model
+- flight code-share boolean mapping
+- parking fee integer conversion
+- passenger forecast integer conversion
+- result-code / HTTP error mapping
+- CLI JSON serialization
+- coverage gate: `pytest --cov=pykrairport --cov-fail-under=85`
+
+Optional live tests:
+
+- mark with `live_kac` or `live_iiac`
+- require matching env vars
+- assert response shape/types only
+- do not assert volatile traffic or flight counts
+
+## Common pitfalls
+
+1. Treating `ICN` as just another KAC airport.
+2. Assuming every endpoint supports JSON.
+3. Mixing up `airport_code`, `airport`, and `schAirCode`.
+4. Confusing `flight_id` with `f_id`.
+5. Parsing `2400` as a normal wall-clock time without day-boundary logic.
+6. Treating passenger forecast as real-time congestion.
+7. Treating parking fee and parking status as the same schema.
+8. Trusting one provider's field names to exist on the other provider.
+9. Returning provider-native names like `terno` or `schAPLno` to users.
+10. Assuming Windows always has IANA timezone data installed.
+11. Raising test count without covering parser and error branches.
+
+When one of these is fixed, update `docs/repeated-mistakes.md`.
+
+## Documentation update rules
+
+- Update `README.md` for user-facing API changes.
+- Update `krairport-api.md` for endpoint scope, parameter differences, and model rules.
+- Update `docs/testing.md` when fixture policy or live markers change.
+- Update `docs/troubleshooting.md` when a user-visible failure gains a known fix.
+- Update `CHANGELOG.md` for release-facing changes.

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>NORMAL SERVICE</resultMsg>
+  </header>
+  <body>
+    <items>
+      <item>
+        <airline>아시아나항공</airline>
+        <arrAirport>김포</arrAirport>
+        <arrAirportCode>GMP</arrAirportCode>
+        <depAirport>부산</depAirport>
+        <depAirportCode>PUS</depAirportCode>
+        <codeshare>N</codeshare>
+        <flightId>OZ8801</flightId>
+        <scheduleDateTime>202604300800</scheduleDateTime>
+        <estimatedDateTime>202604300755</estimatedDateTime>
+        <rmkKor>도착</rmkKor>
+        <rmkEng>Arrived</rmkEng>
+        <gate>3</gate>
+      </item>
+    </items>
+  </body>
+</response>

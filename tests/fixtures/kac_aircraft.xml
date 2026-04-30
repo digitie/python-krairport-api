@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>NORMAL SERVICE</resultMsg>
+  </header>
+  <body>
+    <items>
+      <item>
+        <airport>CJU</airport>
+        <airFln>KE1201</airFln>
+        <airlineKorean>대한항공</airlineKorean>
+        <aplRegNo>HL8000</aplRegNo>
+        <aircraftType>B738</aircraftType>
+        <scheduleDateTime>202604300600</scheduleDateTime>
+        <estimatedDateTime>202604300610</estimatedDateTime>
+        <boardingKor>12</boardingKor>
+      </item>
+    </items>
+  </body>
+</response>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>NORMAL SERVICE</resultMsg>
+  </header>
+  <body>
+    <items>
+      <item>
+        <airportCode>GMP</airportCode>
+        <parkingName>국내선 제1주차장</parkingName>
+        <parkingBasicM>30</parkingBasicM>
+        <parkingBasicAccount>1000</parkingBasicAccount>
+        <parkingBasicMd>30</parkingBasicMd>
+        <parkingBasicAccountd>1200</parkingBasicAccountd>
+        <parkingDayMaxAccount>20000</parkingDayMaxAccount>
+        <parkingDayMaxAccountd>40000</parkingDayMaxAccountd>
+      </item>
+    </items>
+  </body>
+</response>

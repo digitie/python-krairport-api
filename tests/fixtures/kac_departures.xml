@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>NORMAL SERVICE</resultMsg>
+  </header>
+  <body>
+    <items>
+      <item>
+        <airline>대한항공</airline>
+        <arrAirport>제주</arrAirport>
+        <arrAirportCode>CJU</arrAirportCode>
+        <depAirport>김포</depAirport>
+        <depAirportCode>GMP</depAirportCode>
+        <codeshare>N</codeshare>
+        <flightId>KE1201</flightId>
+        <scheduleDateTime>202604300600</scheduleDateTime>
+        <estimatedDateTime>202604300610</estimatedDateTime>
+        <rmkKor>출발</rmkKor>
+        <rmkEng>Departed</rmkEng>
+        <gate>12</gate>
+      </item>
+      <item>
+        <airline>제주항공</airline>
+        <arrAirport>제주</arrAirport>
+        <arrAirportCode>CJU</arrAirportCode>
+        <depAirport>김포</depAirport>
+        <depAirportCode>GMP</depAirportCode>
+        <codeshare>Y</codeshare>
+        <flightId>7C1101</flightId>
+        <scheduleDateTime>202604300630</scheduleDateTime>
+        <estimatedDateTime>202604300640</estimatedDateTime>
+        <rmkKor>탑승중</rmkKor>
+        <rmkEng>Boarding</rmkEng>
+        <gate>14</gate>
+      </item>
+    </items>
+    <pageNo>1</pageNo>
+    <numOfRows>10</numOfRows>
+    <totalCount>2</totalCount>
+  </body>
+</response>

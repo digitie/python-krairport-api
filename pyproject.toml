@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pykrairport"
+version = "0.1.0"
+description = "Python client design scaffold for Korean airport APIs across KAC and IIAC."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  {name = "digitie"}
+]
+keywords = ["airport", "korea", "kac", "iiac", "incheon", "flight", "parking"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+dependencies = [
+  "requests>=2.31",
+  "tzdata>=2024.1; platform_system == 'Windows'",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=6",
+  "responses>=0.25",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "types-requests>=2.31",
+]
+
+[project.scripts]
+pykrairport = "pykrairport.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pykrairport*"]
+
+[tool.setuptools.package-data]
+pykrairport = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "live_kac: tests that call the real KAC APIs and require KAC_SERVICE_KEY",
+  "live_iiac: tests that call the real IIAC APIs and require IIAC_SERVICE_KEY",
+]
