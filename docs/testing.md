@@ -8,7 +8,7 @@
 - 모든 provider 테스트는 고정 fixture 또는 mock response를 사용합니다.
 - live 테스트는 별도 marker로만 실행합니다.
 - 타입 assertion을 반드시 포함합니다.
-- 현재 기준선은 `53 passed`, coverage `91%+`, fail-under `85`입니다.
+- 현재 기준선은 `61 passed`, coverage `90%+`, fail-under `85`입니다.
 
 ## 필수 오프라인 테스트
 

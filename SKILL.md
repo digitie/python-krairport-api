@@ -45,8 +45,19 @@ Start with these.
 | `KrairportClient.parking_status()` | IIAC | `getTrackingParking` |
 | `KrairportClient.arrival_congestion()` | IIAC | `getArrivalsCongestion` |
 | `KrairportClient.passenger_forecast()` | IIAC | `getfPassengerNoticeIKR` |
+| `KrairportClient.airport_codes()` | KAC | `getAirportCodeList` |
+| `KrairportClient.flight_schedules()` | KAC/IIAC | KAC `FlightScheduleList`, IIAC `PaxFltSched` |
+| `KrairportClient.airport_facilities()` | KAC/IIAC | KAC `AirportFacilities`, IIAC `StatusOfFacility` |
+| `KrairportClient.bus_routes()` | KAC/IIAC | KAC `AirportBusInfo`, IIAC `BusInformation` |
+| `KrairportClient.taxi_status()` | KAC/IIAC | KAC `taxiWaitInfo`, IIAC `StatusOfTaxi` |
+| `KrairportClient.world_weather()` | IIAC | `StatusOfPassengerWorldWeatherInfo` |
+| `KrairportClient.service_destinations()` | IIAC | `StatusOfSrvDestinations` |
+| `KrairportClient.kac_raw_items()` | KAC | unmodeled KAC REST operations |
+| `KrairportClient.iiac_raw_items()` | IIAC | unmodeled B551177 REST operations |
 
 Do not widen scope until the routing, parsing, and model layer are stable.
+
+For coverage decisions, read `docs/api-coverage.md`. Prefer typed models for high-use APIs and `raw_items` for broad official API access until a fixture-backed parser exists.
 
 ## Required deliverables when implementing from scratch
 
@@ -297,6 +308,7 @@ Required offline tests:
 - passenger forecast integer conversion
 - result-code / HTTP error mapping
 - CLI JSON serialization
+- raw endpoint path validation
 - coverage gate: `pytest --cov=pykrairport --cov-fail-under=85`
 
 Optional live tests:
@@ -319,6 +331,9 @@ Optional live tests:
 9. Returning provider-native names like `terno` or `schAPLno` to users.
 10. Assuming Windows always has IANA timezone data installed.
 11. Raising test count without covering parser and error branches.
+12. Claiming API coverage without updating `docs/api-coverage.md`.
+13. Allowing arbitrary raw endpoint path strings.
+14. Ignoring data.go.kr change notices before adding or documenting IIAC endpoints.
 
 When one of these is fixed, update `docs/repeated-mistakes.md`.
 

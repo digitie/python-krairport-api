@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from datetime import date
 from typing import Any
 
@@ -10,11 +11,18 @@ from pykrairport._http import SessionLike
 from pykrairport._routing import provider_for_airport
 from pykrairport.models import (
     AircraftAssignment,
+    AirportCode,
+    AirportFacility,
     ArrivalCongestion,
+    BusRoute,
     Flight,
+    FlightSchedule,
     ParkingAreaStatus,
     ParkingFee,
     PassengerForecast,
+    ServiceDestination,
+    TaxiStatus,
+    WorldWeather,
 )
 from pykrairport.providers import IiacClient, KacClient
 
@@ -199,9 +207,18 @@ class KrairportClient:
         page_no: int = 1,
         num_of_rows: int = 100,
     ) -> list[ParkingAreaStatus]:
-        """IIAC 인천공항 주차현황을 조회합니다."""
+        """공항별 주차현황을 조회합니다.
 
-        return self.iiac.parking_status(
+        `ICN`은 IIAC, 그 외 KAC 공항은 KAC 주차 혼잡도 API로 조회합니다.
+        """
+
+        if provider_for_airport(airport_code) == "iiac":
+            return self.iiac.parking_status(
+                airport_code=airport_code,
+                page_no=page_no,
+                num_of_rows=num_of_rows,
+            )
+        return self.kac.parking_status(
             airport_code=airport_code,
             page_no=page_no,
             num_of_rows=num_of_rows,
@@ -242,6 +259,200 @@ class KrairportClient:
             page_no=page_no,
             num_of_rows=num_of_rows,
         )
+
+    def airport_codes(
+        self,
+        *,
+        code: str | None = None,
+        korean_name: str | None = None,
+        english_name: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[AirportCode]:
+        """KAC 공항코드 목록을 조회합니다."""
+
+        return self.kac.airport_codes(
+            code=code,
+            korean_name=korean_name,
+            english_name=english_name,
+            page_no=page_no,
+            num_of_rows=num_of_rows,
+        )
+
+    def flight_schedules(
+        self,
+        *,
+        airport_code: str,
+        direction: str,
+        counterpart_airport_code: str | None = None,
+        sch_date: str | None = None,
+        airline_code: str | None = None,
+        flight_id: str | None = None,
+        international: bool = False,
+        lang: str = "K",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[FlightSchedule]:
+        """정기 운항편 스케줄을 조회합니다."""
+
+        if provider_for_airport(airport_code) == "iiac":
+            return self.iiac.flight_schedules(
+                direction=direction,
+                airport_code=airport_code,
+                counterpart_airport_code=counterpart_airport_code,
+                airline_code=airline_code,
+                flight_id=flight_id,
+                lang=lang,
+                page_no=page_no,
+                num_of_rows=num_of_rows,
+            )
+        return self.kac.flight_schedules(
+            direction=direction,
+            airport_code=airport_code,
+            counterpart_airport_code=counterpart_airport_code,
+            sch_date=sch_date,
+            airline_code=airline_code,
+            flight_id=flight_id,
+            international=international,
+            page_no=page_no,
+            num_of_rows=num_of_rows,
+        )
+
+    def airport_facilities(
+        self,
+        *,
+        airport_code: str,
+        facility_name: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[AirportFacility]:
+        """공항 시설/상업시설 정보를 조회합니다."""
+
+        if provider_for_airport(airport_code) == "iiac":
+            return self.iiac.facilities(
+                airport_code=airport_code,
+                facility_name=facility_name,
+                page_no=page_no,
+                num_of_rows=num_of_rows,
+            )
+        return self.kac.airport_facilities(
+            airport_code=airport_code,
+            page_no=page_no,
+            num_of_rows=num_of_rows,
+        )
+
+    def bus_routes(
+        self,
+        *,
+        airport_code: str,
+        area: str = "1",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[BusRoute]:
+        """공항 버스 정보를 조회합니다."""
+
+        if provider_for_airport(airport_code) == "iiac":
+            return self.iiac.bus_routes(
+                airport_code=airport_code,
+                area=area,
+                page_no=page_no,
+                num_of_rows=num_of_rows,
+            )
+        return self.kac.airport_buses(
+            airport_code=airport_code,
+            page_no=page_no,
+            num_of_rows=num_of_rows,
+        )
+
+    def taxi_status(
+        self,
+        *,
+        airport_code: str = "ICN",
+        terminal: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[TaxiStatus]:
+        """택시 대기/출차 정보를 조회합니다.
+
+        `ICN`은 IIAC 택시출차, `CJU`는 KAC 제주 택시대기 정보를 사용합니다.
+        """
+
+        if provider_for_airport(airport_code) == "iiac":
+            return self.iiac.taxi_status(
+                airport_code=airport_code,
+                terminal=terminal,
+                page_no=page_no,
+                num_of_rows=num_of_rows,
+            )
+        if airport_code.upper() == "CJU":
+            return self.kac.jeju_taxi_wait(page_no=page_no, num_of_rows=num_of_rows)
+        return []
+
+    def world_weather(
+        self,
+        *,
+        direction: str,
+        airport_code: str = "ICN",
+        from_time: str | None = None,
+        to_time: str | None = None,
+        airport: str | None = None,
+        flight_id: str | None = None,
+        airline_code: str | None = None,
+        lang: str = "K",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[WorldWeather]:
+        """IIAC 여객편 상대 공항 기상정보를 조회합니다."""
+
+        return self.iiac.world_weather(
+            direction=direction,
+            airport_code=airport_code,
+            from_time=from_time,
+            to_time=to_time,
+            airport=airport,
+            flight_id=flight_id,
+            airline_code=airline_code,
+            lang=lang,
+            page_no=page_no,
+            num_of_rows=num_of_rows,
+        )
+
+    def service_destinations(
+        self,
+        *,
+        airport_code: str | None = None,
+        lang: str = "K",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[ServiceDestination]:
+        """IIAC 취항도시 현황을 조회합니다."""
+
+        return self.iiac.service_destinations(
+            airport_code=airport_code,
+            lang=lang,
+            page_no=page_no,
+            num_of_rows=num_of_rows,
+        )
+
+    def kac_raw_items(
+        self,
+        service: str,
+        operation: str,
+        params: Mapping[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """KAC 공식 REST 엔드포인트의 raw item 목록을 반환합니다."""
+
+        return self.kac.raw_items(service, operation, params)
+
+    def iiac_raw_items(
+        self,
+        service: str,
+        operation: str,
+        params: Mapping[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """IIAC B551177 공식 REST 엔드포인트의 raw item 목록을 반환합니다."""
+
+        return self.iiac.raw_items(service, operation, params)
 
 
 def _date_to_yyyymmdd(value: str | date | None) -> str | None:

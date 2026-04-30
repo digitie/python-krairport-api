@@ -48,7 +48,7 @@ def test_cli_arrivals(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-d
 def test_cli_parking_status(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr("pykrairport.cli.KrairportClient", FakeClient)
 
-    assert main(["parking-status"]) == 0
+    assert main(["parking-status", "--airport-code", "ICN"]) == 0
 
     assert '"occupied": 1' in capsys.readouterr().out
 

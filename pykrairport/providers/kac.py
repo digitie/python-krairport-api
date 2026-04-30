@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from typing import Any
 
@@ -11,11 +12,31 @@ from pykrairport._routing import ensure_kac_airport
 from pykrairport._time import parse_kst_datetime
 from pykrairport._xml import extract_items
 from pykrairport.exceptions import KrairportParseError
-from pykrairport.models import AircraftAssignment, Flight, ParkingFee
+from pykrairport.models import (
+    AircraftAssignment,
+    AirportCode,
+    AirportFacility,
+    BusRoute,
+    Flight,
+    FlightSchedule,
+    ParkingAreaStatus,
+    ParkingFee,
+    TaxiStatus,
+)
 
 STATUS_BASE = "https://openapi.airport.co.kr/service/rest/StatusOfFlights"
 AIRCRAFT_BASE = "https://openapi.airport.co.kr/service/rest/FlightStatusAPLList"
 PARKING_FEE_BASE = "https://openapi.airport.co.kr/service/rest/AirportParkingFee"
+AIRPORT_CODE_BASE = "https://openapi.airport.co.kr/service/rest/AirportCodeList"
+FLIGHT_SCHEDULE_BASE = "https://openapi.airport.co.kr/service/rest/FlightScheduleList"
+PARKING_CONGESTION_BASE = (
+    "https://openapi.airport.co.kr/service/rest/AirportParkingCongestion"
+)
+AIRPORT_PARKING_BASE = "https://openapi.airport.co.kr/service/rest/AirportParking"
+AIRPORT_FACILITIES_BASE = "https://openapi.airport.co.kr/service/rest/AirportFacilities"
+AIRPORT_BUS_BASE = "https://openapi.airport.co.kr/service/rest/AirportBusInfo"
+JEJU_TAXI_WAIT_BASE = "https://openapi.airport.co.kr/service/rest/taxiWaitInfo"
+_SAFE_PATH_PART = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 class KacClient:
@@ -141,6 +162,144 @@ class KacClient:
         data = self._http.get_xml(f"{PARKING_FEE_BASE}/parkingfee", params)
         return [_build_parking_fee(row, requested_airport_code=code) for row in extract_items(data)]
 
+    def airport_codes(
+        self,
+        *,
+        code: str | None = None,
+        korean_name: str | None = None,
+        english_name: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[AirportCode]:
+        params = {
+            "cityCode": code,
+            "cityKor": korean_name,
+            "cityEng": english_name,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = self._http.get_xml(f"{AIRPORT_CODE_BASE}/getAirportCodeList", params)
+        return [_build_airport_code(row) for row in extract_items(data)]
+
+    def flight_schedules(
+        self,
+        *,
+        direction: str,
+        airport_code: str | None = None,
+        counterpart_airport_code: str | None = None,
+        sch_date: str | None = None,
+        airline_code: str | None = None,
+        flight_id: str | None = None,
+        international: bool = False,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[FlightSchedule]:
+        code = ensure_kac_airport(airport_code) if airport_code else None
+        operation = "getIflightScheduleList" if international else "getDflightScheduleList"
+        if direction == "departure":
+            dept_code = code
+            arrv_code = counterpart_airport_code
+        elif direction == "arrival":
+            dept_code = counterpart_airport_code
+            arrv_code = code
+        else:
+            raise ValueError("direction must be 'arrival' or 'departure'")
+        params = {
+            "schDate": sch_date,
+            "schDeptCityCode": dept_code,
+            "schArrvCityCode": arrv_code,
+            "schAirLine": airline_code,
+            "schFlightNum": flight_id,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = self._http.get_xml(f"{FLIGHT_SCHEDULE_BASE}/{operation}", params)
+        return [
+            _build_flight_schedule(row, direction=direction, international=international)
+            for row in extract_items(data)
+        ]
+
+    def parking_status(
+        self,
+        *,
+        airport_code: str,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+        realtime: bool = False,
+    ) -> list[ParkingAreaStatus]:
+        code = ensure_kac_airport(airport_code)
+        params: dict[str, Any]
+        if realtime:
+            url = f"{AIRPORT_PARKING_BASE}/airportparkingRT"
+            params = {"schAirportCode": code}
+        else:
+            url = f"{PARKING_CONGESTION_BASE}/airportParkingCongestionRT"
+            params = {"schAirportCode": code, "pageNo": page_no, "numOfRows": num_of_rows}
+        data = self._http.get_xml(url, params)
+        return [
+            _build_parking_status(row, requested_airport_code=code)
+            for row in extract_items(data)
+        ]
+
+    def airport_facilities(
+        self,
+        *,
+        airport_code: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[AirportFacility]:
+        code = ensure_kac_airport(airport_code) if airport_code else None
+        params = {"apcd": code, "pageNo": page_no, "numOfRows": num_of_rows}
+        data = self._http.get_xml(f"{AIRPORT_FACILITIES_BASE}/getAirportFacilities", params)
+        return [
+            _build_airport_facility(row, requested_airport_code=code)
+            for row in extract_items(data)
+        ]
+
+    def airport_buses(
+        self,
+        *,
+        airport_code: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[BusRoute]:
+        code = ensure_kac_airport(airport_code) if airport_code else None
+        params = {"schAirport": code, "pageNo": page_no, "numOfRows": num_of_rows}
+        data = self._http.get_xml(f"{AIRPORT_BUS_BASE}/businfo", params)
+        return [
+            _build_bus_route(row, provider="kac", airport_code=code)
+            for row in extract_items(data)
+        ]
+
+    def jeju_taxi_wait(
+        self,
+        *,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[TaxiStatus]:
+        params = {"pageNo": page_no, "numOfRows": num_of_rows}
+        data = self._http.get_xml(f"{JEJU_TAXI_WAIT_BASE}/getJejuTaxiWaitInfo", params)
+        return [
+            _build_taxi_status(row, provider="kac", airport_code="CJU")
+            for row in extract_items(data)
+        ]
+
+    def raw_items(
+        self,
+        service: str,
+        operation: str,
+        params: Mapping[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return raw normalized XML items for a KAC REST service operation."""
+
+        _validate_path_part(service)
+        _validate_path_part(operation)
+        data = self._http.get_xml(
+            f"https://openapi.airport.co.kr/service/rest/{service}/{operation}",
+            dict(params or {}),
+        )
+        return extract_items(data)
+
 
 def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: str) -> Flight:
     try:
@@ -247,3 +406,132 @@ def _build_parking_fee(row: Mapping[str, Any], *, requested_airport_code: str | 
         )
     except (TypeError, ValueError) as exc:
         raise KrairportParseError(f"failed to parse KAC parking fee record: {exc}") from exc
+
+
+def _build_airport_code(row: Mapping[str, Any]) -> AirportCode:
+    return AirportCode(
+        code=str(first_value(row, "cityCode", "airportCode", "code") or ""),
+        korean_name=strip_or_none(first_value(row, "cityKor", "airportKor", "koreanName")),
+        english_name=strip_or_none(first_value(row, "cityEng", "airportEng", "englishName")),
+        japanese_name=strip_or_none(first_value(row, "cityJpn", "japaneseName")),
+        chinese_name=strip_or_none(first_value(row, "cityChn", "chineseName")),
+        raw=dict(row),
+    )
+
+
+def _build_flight_schedule(
+    row: Mapping[str, Any], *, direction: str, international: bool
+) -> FlightSchedule:
+    return FlightSchedule(
+        provider="kac",
+        direction="departure" if direction == "departure" else "arrival",
+        flight_id=str(first_value(row, "domesticNum", "internationalNum", "flightNum") or ""),
+        airline_code=strip_or_none(first_value(row, "airlineKorean", "airlineEnglish", "airline")),
+        airline_name=strip_or_none(first_value(row, "airlineKorean", "airlineEnglish")),
+        departure_airport_code=strip_or_none(
+            first_value(row, "startcity", "schDeptCityCode", "deptCityCode")
+        ),
+        arrival_airport_code=strip_or_none(
+            first_value(row, "arrivalcity", "schArrvCityCode", "arrvCityCode")
+        ),
+        scheduled_time=strip_or_none(first_value(row, "domesticStartTime", "internationalTime")),
+        start_date=strip_or_none(first_value(row, "domesticStdate", "internationalStdate")),
+        end_date=strip_or_none(first_value(row, "domesticEddate", "internationalEddate")),
+        days=strip_or_none(first_value(row, "domesticMon", "internationalMon", "days")),
+        season="international" if international else "domestic",
+        raw=dict(row),
+    )
+
+
+def _build_parking_status(
+    row: Mapping[str, Any], *, requested_airport_code: str
+) -> ParkingAreaStatus:
+    try:
+        return ParkingAreaStatus(
+            airport_code=str(
+                first_value(row, "airportCode", "parkingAirportCode", "schAirportCode")
+                or requested_airport_code
+            ),
+            terminal=strip_or_none(first_value(row, "terminal", "terminalId")),
+            parking_area=str(
+                first_value(row, "parkingName", "parkingArea", "parkingAirportName") or ""
+            ),
+            occupied=to_int_or_none(
+                first_value(row, "parkingOccupiedSpace", "occupied", "parkingIstay")
+            ),
+            capacity=to_int_or_none(
+                first_value(row, "parkingTotalSpace", "capacity", "parkingFullSpace")
+            ),
+            updated_at=parse_kst_datetime(first_value(row, "sysGetdate", "datetm", "updateTime")),
+            raw=dict(row),
+        )
+    except (TypeError, ValueError) as exc:
+        raise KrairportParseError(f"failed to parse KAC parking status record: {exc}") from exc
+
+
+def _build_airport_facility(
+    row: Mapping[str, Any], *, requested_airport_code: str | None
+) -> AirportFacility:
+    return AirportFacility(
+        provider="kac",
+        airport_code=strip_or_none(first_value(row, "apcd", "airportCode"))
+        or requested_airport_code,
+        terminal=strip_or_none(first_value(row, "terminal", "terminalId")),
+        name=str(first_value(row, "facilityNm", "facilityName", "name") or ""),
+        category=strip_or_none(first_value(row, "lclas", "category", "facilityType")),
+        floor=strip_or_none(first_value(row, "floor", "floorInfo")),
+        location=strip_or_none(first_value(row, "loc", "location", "area")),
+        business_hours=strip_or_none(first_value(row, "operTime", "businessHours")),
+        telephone=strip_or_none(first_value(row, "tel", "telephone", "phone")),
+        raw=dict(row),
+    )
+
+
+def _build_bus_route(
+    row: Mapping[str, Any], *, provider: str, airport_code: str | None
+) -> BusRoute:
+    try:
+        return BusRoute(
+            provider="kac" if provider == "kac" else "iiac",
+            airport_code=strip_or_none(first_value(row, "airportCode", "schAirport"))
+            or airport_code,
+            area=strip_or_none(first_value(row, "area", "region")),
+            bus_number=str(first_value(row, "busnumber", "busNo", "busNum") or ""),
+            bus_class=strip_or_none(first_value(row, "busclass", "busClass", "busType")),
+            operator=strip_or_none(first_value(row, "company", "operator", "busCompany")),
+            platform=strip_or_none(first_value(row, "t1wdayt", "platform", "rideLocation")),
+            adult_fare=to_int_or_none(first_value(row, "adultfare", "adultFare", "fare")),
+            route_info=strip_or_none(first_value(row, "routeinfo", "routeInfo", "route")),
+            first_time_to_airport=strip_or_none(first_value(row, "toawfirst", "firstTime")),
+            last_time_to_airport=strip_or_none(first_value(row, "toawlast", "lastTime")),
+            raw=dict(row),
+        )
+    except (TypeError, ValueError) as exc:
+        raise KrairportParseError(f"failed to parse KAC bus route record: {exc}") from exc
+
+
+def _build_taxi_status(
+    row: Mapping[str, Any], *, provider: str, airport_code: str | None
+) -> TaxiStatus:
+    try:
+        return TaxiStatus(
+            provider="kac" if provider == "kac" else "iiac",
+            airport_code=airport_code,
+            terminal=strip_or_none(first_value(row, "terno", "terminal", "terminalId")),
+            stand=strip_or_none(first_value(row, "stand", "taxistand", "bestVantaxistand")),
+            seoul_count=to_int_or_none(first_value(row, "seoultaxicnt", "seoulCount")),
+            incheon_count=to_int_or_none(first_value(row, "incheontaxicnt", "incheonCount")),
+            gyeonggi_count=to_int_or_none(first_value(row, "gyenggitaxicnt", "gyeonggiCount")),
+            intercity_count=to_int_or_none(first_value(row, "intercitytaxicnt", "intercityCount")),
+            deluxe_count=to_int_or_none(first_value(row, "besttaxicnt", "deluxeCount")),
+            jumbo_count=to_int_or_none(first_value(row, "jumbotaxicnt", "jumboCount")),
+            updated_at=parse_kst_datetime(first_value(row, "datetm", "updatedAt", "sysGetdate")),
+            raw=dict(row),
+        )
+    except (TypeError, ValueError) as exc:
+        raise KrairportParseError(f"failed to parse taxi status record: {exc}") from exc
+
+
+def _validate_path_part(value: str) -> None:
+    if not _SAFE_PATH_PART.fullmatch(value):
+        raise ValueError(f"unsafe KAC service path component: {value!r}")

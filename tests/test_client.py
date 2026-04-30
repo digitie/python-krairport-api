@@ -129,3 +129,48 @@ def test_unified_client_routes_remaining_methods(load_fixture) -> None:  # type:
     assert client.parking_fees(airport_code="GMP")[0].small_basic_fee == 1000
     assert client.arrival_congestion(terminal="T1")[0].korean_count == 1
     assert client.passenger_forecast()[0].t1_departure_total == 3
+
+
+def test_unified_client_routes_new_missing_api_methods() -> None:
+    def response(item):  # type: ignore[no-untyped-def]
+        return FakeResponse(json_data=_json_response(item))
+
+    session = FakeSession(
+        [
+            response({"flightId": "KE1", "scheduleTime": "0900"}),
+            response({"facility_nm": "편의점"}),
+            response({"busnumber": "6100", "adultfare": "18000"}),
+            response({"seoultaxicnt": "3"}),
+            response({"airportCode": "NRT", "cityCode": "TYO"}),
+        ]
+    )
+    client = KrairportClient(
+        kac_service_key="KAC_KEY",
+        iiac_service_key="IIAC_KEY",
+        session=session,
+        retries=0,
+    )
+
+    assert client.flight_schedules(airport_code="ICN", direction="arrival")[0].flight_id == "KE1"
+    assert client.airport_facilities(airport_code="ICN")[0].name == "편의점"
+    assert client.bus_routes(airport_code="ICN")[0].bus_number == "6100"
+    assert client.taxi_status(airport_code="ICN")[0].seoul_count == 3
+    assert client.service_destinations()[0].city_code == "TYO"
+
+
+def test_unified_client_raw_items(load_fixture) -> None:  # type: ignore[no-untyped-def]
+    session = FakeSession(
+        [
+            FakeResponse(text=load_fixture("kac_arrivals_single.xml")),
+            FakeResponse(json_data=_json_response({"foo": "bar"})),
+        ]
+    )
+    client = KrairportClient(
+        kac_service_key="KAC_KEY",
+        iiac_service_key="IIAC_KEY",
+        session=session,
+        retries=0,
+    )
+
+    assert client.kac_raw_items("StatusOfFlights", "getArrFlightStatusList")[0]["flightId"]
+    assert client.iiac_raw_items("ShtbusInfo", "getShtbusInfo")[0]["foo"] == "bar"

@@ -25,6 +25,13 @@
 | 주차현황 | IIAC | `getTrackingParking` | T1/T2 주차장별 |
 | 입국장 혼잡도 | IIAC | `getArrivalsCongestion` | 현재시간 기준 -2h ~ +2h |
 | 승객예고 | IIAC | `getfPassengerNoticeIKR` | 조회일과 다음날 |
+| 공항코드 | KAC | `getAirportCodeList` | 전국공항 코드 |
+| 정기운항 스케줄 | KAC/IIAC | KAC `FlightScheduleList`, IIAC `PaxFltSched` | 국내/국제, 도착/출발 |
+| 공항시설/상업시설 | KAC/IIAC | KAC `AirportFacilities`, IIAC `StatusOfFacility` | 시설명/층/위치 |
+| 버스 | KAC/IIAC | KAC `AirportBusInfo`, IIAC `BusInformation` | 노선/요금/승차장 |
+| 택시 | KAC/IIAC | KAC `taxiWaitInfo`, IIAC `StatusOfTaxi` | 제주 택시대기, 인천 택시출차 |
+| 세계날씨 | IIAC | `StatusOfPassengerWorldWeatherInfo` | 상대 공항 기상 |
+| 취항도시 | IIAC | `StatusOfSrvDestinations` | 도시/공항 코드 |
 
 ## 2. 공급자 불변조건
 
@@ -166,6 +173,17 @@ def passenger_forecast(
     num_of_rows: int = 100,
 ) -> list[PassengerForecast]: ...
 ```
+
+### 3.6 누락/확장 API raw access
+
+typed 모델로 고정하지 않은 공식 엔드포인트는 다음으로 접근합니다.
+
+```python
+client.kac_raw_items("noise", "getNoise", {"pageNo": 1})
+client.iiac_raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1})
+```
+
+`service`와 `operation`은 영문/숫자/underscore만 허용합니다.
 
 ## 4. 모델 규칙
 
@@ -347,6 +365,7 @@ KrairportError
 - `passenger_forecast`의 구역별 합계 필드 변환
 - CLI JSON 직렬화와 public export
 - coverage gate: `--cov=pykrairport --cov-fail-under=85`
+- API 커버리지 문서: `docs/api-coverage.md`
 
 Live 테스트:
 

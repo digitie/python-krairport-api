@@ -12,11 +12,12 @@
 
 - **KAC + IIAC 통합 인터페이스**: 사용자는 공항코드만 넘기고, 라이브러리가 적절한 공급자 API를 선택합니다.
 - **공항 라우팅 내장**: `ICN`은 IIAC, 그 외 KAC 운영 공항은 KAC API로 자동 분기합니다.
-- **운항/주차/혼잡도 중심 초기 범위**: 항공편 도착/출발, 항공기 등록번호/기종, 주차요금, 주차현황, 입국장 혼잡도, 승객예고를 우선 지원 대상으로 둡니다.
+- **운항/주차/교통/시설 중심 초기 범위**: 항공편 도착/출발, 정기 운항스케줄, 항공기 등록번호/기종, 주차요금/현황, 입국장 혼잡도, 승객예고, 공항버스/택시, 시설/취항지/기상을 우선 지원 대상으로 둡니다.
 - **JSON/XML 차이 흡수**: KAC의 XML 중심 응답과 IIAC의 JSON/XML 응답을 내부에서 정규화합니다.
 - **KST datetime 표준화**: `YYYYMMDD`, `HHMM`, `YYYYMMDDHHMM`, 과학적 표기 숫자 문자열 등을 timezone-aware `datetime`이나 `int`/`str`로 변환합니다.
 - **공급자별 필드명 흡수**: `airport_code`, `schAirCode`, `airport`, `flight_id`, `f_id`, `schFID`처럼 기관마다 다른 필드명을 Pythonic 인터페이스로 통합합니다.
 - **타입 안전 모델**: `Flight`, `AircraftAssignment`, `ParkingFee`, `ArrivalCongestion`, `PassengerForecast` 같은 frozen dataclass를 목표 모델로 둡니다.
+- **누락 API raw fallback**: 아직 typed 모델로 고정하지 않은 KAC/IIAC 공식 엔드포인트도 `kac_raw_items()` / `iiac_raw_items()`로 접근할 수 있습니다.
 - **fixture 기반 테스트 우선**: 기본 테스트는 실 API 호출 없이 동작하고, live 테스트는 각 기관 서비스키가 있을 때만 분리 실행합니다.
 
 ---
@@ -94,9 +95,20 @@ for plane in airport.aircraft_assignments(airport_code="CJU", sch_st_time="20260
 | `KrairportClient.arrivals(...)` | KAC 또는 IIAC | KAC `getArrFlightStatusList`, IIAC `getPassengerArrivalsDeOdp`/`getPassengerArrivalsOdp` | `list[Flight]` |
 | `KrairportClient.aircraft_assignments(...)` | KAC | `getFlightStatusAPLList` | `list[AircraftAssignment]` |
 | `KrairportClient.parking_fees(...)` | KAC | `parkingfee` | `list[ParkingFee]` |
-| `KrairportClient.parking_status(...)` | IIAC | `getTrackingParking` | `list[ParkingAreaStatus]` |
+| `KrairportClient.parking_status(...)` | KAC 또는 IIAC | KAC `airportParkingCongestionRT`, IIAC `getTrackingParking` | `list[ParkingAreaStatus]` |
 | `KrairportClient.arrival_congestion(...)` | IIAC | `getArrivalsCongestion` | `list[ArrivalCongestion]` |
 | `KrairportClient.passenger_forecast(...)` | IIAC | `getfPassengerNoticeIKR` | `list[PassengerForecast]` |
+| `KrairportClient.airport_codes(...)` | KAC | `getAirportCodeList` | `list[AirportCode]` |
+| `KrairportClient.flight_schedules(...)` | KAC 또는 IIAC | KAC `getDflightScheduleList`/`getIflightScheduleList`, IIAC `getPaxFltSchedArrivals`/`getPaxFltSchedDepartures` | `list[FlightSchedule]` |
+| `KrairportClient.airport_facilities(...)` | KAC 또는 IIAC | KAC `getAirportFacilities`, IIAC `getFacilityKR` | `list[AirportFacility]` |
+| `KrairportClient.bus_routes(...)` | KAC 또는 IIAC | KAC `businfo`, IIAC `getBusInfo` | `list[BusRoute]` |
+| `KrairportClient.taxi_status(...)` | KAC 또는 IIAC | KAC `getJejuTaxiWaitInfo`, IIAC `getTaxiStatus` | `list[TaxiStatus]` |
+| `KrairportClient.world_weather(...)` | IIAC | `getPassengerArrivalsWorldWeather`/`getPassengerDeparturesWorldWeather` | `list[WorldWeather]` |
+| `KrairportClient.service_destinations(...)` | IIAC | `getServiceDestinationInfo` | `list[ServiceDestination]` |
+| `KrairportClient.kac_raw_items(...)` | KAC | 임의 KAC service/operation | `list[dict]` |
+| `KrairportClient.iiac_raw_items(...)` | IIAC | 임의 B551177 service/operation | `list[dict]` |
+
+자세한 커버리지와 raw 지원 범위는 [docs/api-coverage.md](docs/api-coverage.md)를 참고하세요.
 
 확장 권장 순서:
 
@@ -104,6 +116,7 @@ for plane in airport.aircraft_assignments(airport_code="CJU", sch_st_time="20260
 2. `aircraft_assignments()`로 KAC 운항 부가정보 연동
 3. `parking_fees()` / `parking_status()`로 주차 계열 분리
 4. `arrival_congestion()` / `passenger_forecast()`로 IIAC 혼잡도 계열 추가
+5. `kac_raw_items()` / `iiac_raw_items()`로 아직 typed 모델이 없는 공식 엔드포인트를 먼저 연결한 뒤 fixture가 쌓이면 모델 승격
 
 ---
 
@@ -332,6 +345,7 @@ tests/
 - KAC와 IIAC는 **같은 공항 데이터처럼 보여도 파라미터명과 시간 의미가 다릅니다**.
 - KAC는 XML-only 엔드포인트가 아직 많으므로 JSON 가정 금지입니다.
 - IIAC는 동일한 주제에 `당일 Odp`, `상세 DeOdp`, `혼잡도`, `승객예고`처럼 API가 나뉘므로 이름이 비슷해도 응답 스키마가 다릅니다.
+- IIAC 공공데이터포털 서비스는 2026년에도 URL 변경 공지가 있었으므로, 새 API를 typed 모델로 올리기 전 `docs/api-coverage.md`와 변경 공지를 먼저 확인합니다.
 - 상세 운항 API는 KAC/IIAC 모두 `D-3 ~ D+6` 범위 문서가 많지만, 당일 운항 API는 `당일` 또는 `H-2 ~ H+2` 같은 더 좁은 범위를 사용합니다.
 - 일부 IIAC 응답 예시에는 `estimatedtime`, `scheduletime`이 일반 문자열이 아니라 과학적 표기처럼 보이는 예시가 있어 파서가 느슨해야 합니다.
 - 문서상 `serviceURL`과 실제 요청 함수명이 분리되므로 base URL + operation 경로를 함께 관리해야 합니다.
@@ -357,4 +371,4 @@ tests/
 
 ## 변경 이력
 
-- `0.1.0`: KAC/IIAC 통합 클라이언트, provider adapter, KST 시간/타입 변환, XML/JSON 파서, CLI, fixture 기반 테스트 53개와 문서 보강.
+- `0.1.0`: KAC/IIAC 통합 클라이언트, provider adapter, KST 시간/타입 변환, XML/JSON 파서, CLI, fixture 기반 테스트와 문서 보강.

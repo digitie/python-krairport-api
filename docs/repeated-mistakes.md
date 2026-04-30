@@ -53,3 +53,21 @@
 - 증상: happy path 테스트는 많지만 CLI, 예외 경로, 변환 helper가 방치됨
 - 원인: 테스트 개수만 보고 위험한 분기 coverage를 확인하지 않음
 - 가드레일: `pytest --cov=pykrairport --cov-fail-under=85`를 기본 검증에 포함
+
+## 10. 공식 API 목록 확인 없이 "지원 완료"라고 쓰는 실수
+
+- 증상: 운항/주차 API만 구현하고 통계/시설/교통/기상 API가 누락됨
+- 원인: KAC 서비스 목록과 IIAC B551177 데이터셋 목록을 별도로 대조하지 않음
+- 가드레일: [api-coverage.md](api-coverage.md)에 typed/raw 지원 상태를 기록하고, 미모델링 API는 `raw_items`로 접근 가능하게 유지
+
+## 11. raw endpoint access를 너무 열어 두는 실수
+
+- 증상: 임의 URL 또는 path traversal 형태의 service/operation이 들어갈 수 있음
+- 원인: service 이름을 그대로 URL에 붙임
+- 가드레일: `kac_raw_items()` / `iiac_raw_items()`는 영문/숫자/underscore path component만 허용
+
+## 12. 공공데이터포털 변경 공지를 놓치는 실수
+
+- 증상: 예전 IIAC service/operation 조합을 문서에 남겨 실제 호출이 실패
+- 원인: 공공데이터포털은 2026년에도 `FlightClosingInfoSpot`, `statusOfFltacdmmlstnAirTrafficPublic` 같은 변경 공지를 냈음
+- 가드레일: 새 IIAC API를 typed 모델로 승격하기 전 [api-coverage.md](api-coverage.md)와 공공데이터포털 변경 공지를 함께 확인

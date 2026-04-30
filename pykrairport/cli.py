@@ -22,7 +22,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_flight_args(arrivals)
 
     parking = subparsers.add_parser("parking-status")
-    parking.add_argument("--airport-code", default="ICN")
+    parking.add_argument("--airport-code", required=True)
 
     args = parser.parse_args(argv)
     client = KrairportClient.from_env()

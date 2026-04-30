@@ -170,3 +170,112 @@ def test_passenger_forecast_converts_counts() -> None:
     assert rows[0].time_range == "06_07"
     assert rows[0].t1_arrival_east == 100
     assert rows[0].t2_departure_total == 500
+
+
+def test_taxi_bus_weather_schedule_destination_and_facility() -> None:
+    session = FakeSession(
+        [
+            FakeResponse(
+                json_data=_json_response(
+                    {
+                        "terno": "P01",
+                        "seoultaxicnt": "3",
+                        "incheontaxicnt": "4",
+                        "datetm": "202604301200",
+                    }
+                )
+            ),
+            FakeResponse(
+                json_data=_json_response(
+                    {
+                        "area": "1",
+                        "busnumber": "6100",
+                        "adultfare": "18000",
+                        "routeinfo": "서울",
+                    }
+                )
+            ),
+            FakeResponse(
+                json_data=_json_response(
+                    {
+                        "flightId": "KE1",
+                        "airport": "NRT",
+                        "weather": "맑음",
+                        "temperature": "20",
+                        "humidity": "50",
+                    }
+                )
+            ),
+            FakeResponse(
+                json_data=_json_response(
+                    {
+                        "flightId": "KE1",
+                        "airlineNm": "대한항공",
+                        "airport": "NRT",
+                        "scheduleTime": "0900",
+                        "week": "1234567",
+                    }
+                )
+            ),
+            FakeResponse(
+                json_data=_json_response(
+                    {
+                        "airportCode": "NRT",
+                        "airportName": "Narita",
+                        "cityCode": "TYO",
+                        "cityName": "Tokyo",
+                        "countryName": "Japan",
+                    }
+                )
+            ),
+            FakeResponse(
+                json_data=_json_response(
+                    {
+                        "facility_nm": "편의점",
+                        "terminal": "T1",
+                        "floor": "1F",
+                    }
+                )
+            ),
+        ]
+    )
+    client = IiacClient("IIAC_KEY", session=session, retries=0)
+
+    assert client.taxi_status(terminal="P01")[0].seoul_count == 3
+    assert client.bus_routes(area="1")[0].adult_fare == 18000
+    assert client.world_weather(direction="arrival")[0].temperature == 20
+    assert client.flight_schedules(direction="arrival")[0].flight_id == "KE1"
+    assert client.service_destinations()[0].city_code == "TYO"
+    assert client.facilities()[0].name == "편의점"
+
+    assert session.calls[0].url.endswith("/getTaxiStatus")
+    assert session.calls[1].url.endswith("/getBusInfo")
+    assert session.calls[2].url.endswith("/getPassengerArrivalsWorldWeather")
+    assert session.calls[3].url.endswith("/getPaxFltSchedArrivals")
+    assert session.calls[4].url.endswith("/getServiceDestinationInfo")
+    assert session.calls[5].url.endswith("/getFacilityKR")
+
+
+def test_iiac_raw_items_and_path_validation() -> None:
+    session = FakeSession(
+        [
+            FakeResponse(json_data=_json_response({"foo": "bar"})),
+            FakeResponse(json_data=_json_response({"flightId": "KE1"})),
+        ]
+    )
+    client = IiacClient("IIAC_KEY", session=session, retries=0)
+
+    rows = client.raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1})
+    changed_url_rows = client.raw_items(
+        "FlightClosingInfoSpot",
+        "getFlightClosingInfoSpot",
+        {"pageNo": 1},
+    )
+
+    assert session.calls[0].url.endswith("/ShtbusInfo/getShtbusInfo")
+    assert session.calls[0].params["type"] == "json"
+    assert session.calls[1].url.endswith("/FlightClosingInfoSpot/getFlightClosingInfoSpot")
+    assert rows[0]["foo"] == "bar"
+    assert changed_url_rows[0]["flightId"] == "KE1"
+    with pytest.raises(ValueError):
+        client.raw_items("http://example.com", "getShtbusInfo")
