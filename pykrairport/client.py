@@ -9,10 +9,13 @@ from typing import Any
 
 from pykrairport._http import SessionLike
 from pykrairport._routing import provider_for_airport
+from pykrairport.airports import get_airport, list_airports, nearest_airport
+from pykrairport.enums import Provider
 from pykrairport.models import (
     AircraftAssignment,
     AirportCode,
     AirportFacility,
+    AirportMetadata,
     ArrivalCongestion,
     BusRoute,
     Flight,
@@ -25,6 +28,7 @@ from pykrairport.models import (
     WorldWeather,
 )
 from pykrairport.providers import IiacClient, KacClient
+from pykrairport.types import DirectionLike, ProviderLike
 
 
 class KrairportClient:
@@ -89,7 +93,7 @@ class KrairportClient:
 
         provider = provider_for_airport(airport_code)
         searchday_text = _date_to_yyyymmdd(searchday)
-        if provider == "iiac":
+        if provider is Provider.IIAC:
             return self.iiac.departures(
                 airport_code=airport_code,
                 searchday=searchday_text,
@@ -138,7 +142,7 @@ class KrairportClient:
 
         provider = provider_for_airport(airport_code)
         searchday_text = _date_to_yyyymmdd(searchday)
-        if provider == "iiac":
+        if provider is Provider.IIAC:
             return self.iiac.arrivals(
                 airport_code=airport_code,
                 searchday=searchday_text,
@@ -212,7 +216,7 @@ class KrairportClient:
         `ICN`은 IIAC, 그 외 KAC 공항은 KAC 주차 혼잡도 API로 조회합니다.
         """
 
-        if provider_for_airport(airport_code) == "iiac":
+        if provider_for_airport(airport_code) is Provider.IIAC:
             return self.iiac.parking_status(
                 airport_code=airport_code,
                 page_no=page_no,
@@ -283,7 +287,7 @@ class KrairportClient:
         self,
         *,
         airport_code: str,
-        direction: str,
+        direction: DirectionLike,
         counterpart_airport_code: str | None = None,
         sch_date: str | None = None,
         airline_code: str | None = None,
@@ -295,7 +299,7 @@ class KrairportClient:
     ) -> list[FlightSchedule]:
         """정기 운항편 스케줄을 조회합니다."""
 
-        if provider_for_airport(airport_code) == "iiac":
+        if provider_for_airport(airport_code) is Provider.IIAC:
             return self.iiac.flight_schedules(
                 direction=direction,
                 airport_code=airport_code,
@@ -328,7 +332,7 @@ class KrairportClient:
     ) -> list[AirportFacility]:
         """공항 시설/상업시설 정보를 조회합니다."""
 
-        if provider_for_airport(airport_code) == "iiac":
+        if provider_for_airport(airport_code) is Provider.IIAC:
             return self.iiac.facilities(
                 airport_code=airport_code,
                 facility_name=facility_name,
@@ -351,7 +355,7 @@ class KrairportClient:
     ) -> list[BusRoute]:
         """공항 버스 정보를 조회합니다."""
 
-        if provider_for_airport(airport_code) == "iiac":
+        if provider_for_airport(airport_code) is Provider.IIAC:
             return self.iiac.bus_routes(
                 airport_code=airport_code,
                 area=area,
@@ -377,7 +381,7 @@ class KrairportClient:
         `ICN`은 IIAC 택시출차, `CJU`는 KAC 제주 택시대기 정보를 사용합니다.
         """
 
-        if provider_for_airport(airport_code) == "iiac":
+        if provider_for_airport(airport_code) is Provider.IIAC:
             return self.iiac.taxi_status(
                 airport_code=airport_code,
                 terminal=terminal,
@@ -391,7 +395,7 @@ class KrairportClient:
     def world_weather(
         self,
         *,
-        direction: str,
+        direction: DirectionLike,
         airport_code: str = "ICN",
         from_time: str | None = None,
         to_time: str | None = None,
@@ -453,6 +457,33 @@ class KrairportClient:
         """IIAC B551177 공식 REST 엔드포인트의 raw item 목록을 반환합니다."""
 
         return self.iiac.raw_items(service, operation, params)
+
+    def airport_metadata(self, airport_code: str) -> AirportMetadata:
+        """번들 공항 메타데이터를 조회합니다."""
+
+        return get_airport(airport_code)
+
+    def airports(
+        self,
+        *,
+        provider: ProviderLike | None = None,
+        active: bool | None = None,
+    ) -> tuple[AirportMetadata, ...]:
+        """번들 공항 메타데이터 목록을 반환합니다."""
+
+        return list_airports(provider=provider, active=active)
+
+    def nearest_airport(
+        self,
+        latitude: object,
+        longitude: object,
+        *,
+        provider: ProviderLike | None = None,
+        active: bool | None = True,
+    ) -> AirportMetadata | None:
+        """위경도 기준 가장 가까운 번들 공항 메타데이터를 반환합니다."""
+
+        return nearest_airport(latitude, longitude, provider=provider, active=active)
 
 
 def _date_to_yyyymmdd(value: str | date | None) -> str | None:

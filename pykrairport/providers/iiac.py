@@ -11,12 +11,15 @@ from pykrairport._convert import (
     first_value,
     strip_or_none,
     to_bool_or_none,
+    to_float_or_none,
     to_int_or_none,
 )
 from pykrairport._http import HttpClient, SessionLike
 from pykrairport._routing import ensure_iiac_airport
 from pykrairport._time import parse_kst_datetime
+from pykrairport.enums import Direction, Provider, normalize_direction
 from pykrairport.exceptions import KrairportParseError
+from pykrairport.geo import coordinate_from_mapping
 from pykrairport.models import (
     AirportFacility,
     ArrivalCongestion,
@@ -97,7 +100,7 @@ class IiacClient:
             "numOfRows": num_of_rows,
         }
         data = self._http.get_json(f"{base}/{operation}", params)
-        return [_build_flight(row, direction="departure") for row in _extract_items(data)]
+        return [_build_flight(row, direction=Direction.DEPARTURE) for row in _extract_items(data)]
 
     def arrivals(
         self,
@@ -134,7 +137,7 @@ class IiacClient:
             "numOfRows": num_of_rows,
         }
         data = self._http.get_json(f"{base}/{operation}", params)
-        return [_build_flight(row, direction="arrival") for row in _extract_items(data)]
+        return [_build_flight(row, direction=Direction.ARRIVAL) for row in _extract_items(data)]
 
     def parking_status(
         self,
@@ -223,7 +226,7 @@ class IiacClient:
     def world_weather(
         self,
         *,
-        direction: str,
+        direction: str | Direction,
         airport_code: str = "ICN",
         from_time: str | None = None,
         to_time: str | None = None,
@@ -235,12 +238,11 @@ class IiacClient:
         num_of_rows: int = 100,
     ) -> list[WorldWeather]:
         ensure_iiac_airport(airport_code)
-        if direction == "arrival":
+        direction_value = normalize_direction(direction)
+        if direction_value is Direction.ARRIVAL:
             operation = "getPassengerArrivalsWorldWeather"
-        elif direction == "departure":
+        elif direction_value is Direction.DEPARTURE:
             operation = "getPassengerDeparturesWorldWeather"
-        else:
-            raise ValueError("direction must be 'arrival' or 'departure'")
         params = {
             "type": "json",
             "from_time": from_time,
@@ -253,12 +255,15 @@ class IiacClient:
             "numOfRows": num_of_rows,
         }
         data = self._http.get_json(f"{WEATHER_BASE}/{operation}", params)
-        return [_build_world_weather(row, direction=direction) for row in _extract_items(data)]
+        return [
+            _build_world_weather(row, direction=direction_value)
+            for row in _extract_items(data)
+        ]
 
     def flight_schedules(
         self,
         *,
-        direction: str,
+        direction: str | Direction,
         airport_code: str = "ICN",
         counterpart_airport_code: str | None = None,
         airline_code: str | None = None,
@@ -268,12 +273,11 @@ class IiacClient:
         num_of_rows: int = 100,
     ) -> list[FlightSchedule]:
         ensure_iiac_airport(airport_code)
-        if direction == "arrival":
+        direction_value = normalize_direction(direction)
+        if direction_value is Direction.ARRIVAL:
             operation = "getPaxFltSchedArrivals"
-        elif direction == "departure":
+        elif direction_value is Direction.DEPARTURE:
             operation = "getPaxFltSchedDepartures"
-        else:
-            raise ValueError("direction must be 'arrival' or 'departure'")
         params = {
             "type": "json",
             "airport_code": counterpart_airport_code,
@@ -284,7 +288,10 @@ class IiacClient:
             "numOfRows": num_of_rows,
         }
         data = self._http.get_json(f"{PAX_SCHEDULE_BASE}/{operation}", params)
-        return [_build_flight_schedule(row, direction=direction) for row in _extract_items(data)]
+        return [
+            _build_flight_schedule(row, direction=direction_value)
+            for row in _extract_items(data)
+        ]
 
     def service_destinations(
         self,
@@ -363,15 +370,15 @@ def _extract_items(data: Mapping[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def _build_flight(row: Mapping[str, Any], *, direction: str) -> Flight:
+def _build_flight(row: Mapping[str, Any], *, direction: Direction) -> Flight:
     try:
         flight_id = str(first_value(row, "flightId", "flight_id", "airFln", "airfln") or "")
         return Flight(
-            provider="iiac",
+            provider=Provider.IIAC,
             airport_code="ICN",
             flight_id=flight_id,
             flight_unique_id=strip_or_none(first_value(row, "f_id", "fid", "ufid")),
-            direction="departure" if direction == "departure" else "arrival",
+            direction=direction,
             airline_name=strip_or_none(
                 first_value(row, "airline", "airlineKorean", "airlineEnglish", "airlineNm")
             ),
@@ -461,7 +468,7 @@ def _build_passenger_forecast(row: Mapping[str, Any]) -> PassengerForecast:
 def _build_taxi_status(row: Mapping[str, Any], *, terminal_hint: str | None) -> TaxiStatus:
     try:
         return TaxiStatus(
-            provider="iiac",
+            provider=Provider.IIAC,
             airport_code="ICN",
             terminal=strip_or_none(first_value(row, "terno", "terminal")) or terminal_hint,
             stand=strip_or_none(first_value(row, "taxistand", "bestVantaxistand", "stand")),
@@ -481,7 +488,7 @@ def _build_taxi_status(row: Mapping[str, Any], *, terminal_hint: str | None) -> 
 def _build_bus_route(row: Mapping[str, Any]) -> BusRoute:
     try:
         return BusRoute(
-            provider="iiac",
+            provider=Provider.IIAC,
             airport_code="ICN",
             area=strip_or_none(first_value(row, "area")),
             bus_number=str(first_value(row, "busnumber", "busNo", "busNum") or ""),
@@ -498,10 +505,10 @@ def _build_bus_route(row: Mapping[str, Any]) -> BusRoute:
         raise KrairportParseError(f"failed to parse IIAC bus route record: {exc}") from exc
 
 
-def _build_world_weather(row: Mapping[str, Any], *, direction: str) -> WorldWeather:
+def _build_world_weather(row: Mapping[str, Any], *, direction: Direction) -> WorldWeather:
     try:
         return WorldWeather(
-            direction="arrival" if direction == "arrival" else "departure",
+            direction=direction,
             flight_id=strip_or_none(first_value(row, "flightId", "flight_id", "airFln")),
             airline_name=strip_or_none(first_value(row, "airline", "airlineKorean")),
             airport_code=strip_or_none(first_value(row, "airport", "airportCode")),
@@ -516,20 +523,20 @@ def _build_world_weather(row: Mapping[str, Any], *, direction: str) -> WorldWeat
             ),
             terminal=strip_or_none(first_value(row, "terminalid", "terminal")),
             weather=strip_or_none(first_value(row, "weather", "wthr", "weatherStatus")),
-            temperature=to_int_or_none(first_value(row, "temperature", "temp", "obsrValue")),
-            feels_like=to_int_or_none(first_value(row, "sensorytem", "feelsLike")),
+            temperature=to_float_or_none(first_value(row, "temperature", "temp", "obsrValue")),
+            feels_like=to_float_or_none(first_value(row, "sensorytem", "feelsLike")),
             humidity=to_int_or_none(first_value(row, "humidity", "hum")),
-            wind_speed=to_int_or_none(first_value(row, "wind", "windSpeed")),
+            wind_speed=to_float_or_none(first_value(row, "wind", "windSpeed")),
             raw=dict(row),
         )
     except (TypeError, ValueError) as exc:
         raise KrairportParseError(f"failed to parse IIAC weather record: {exc}") from exc
 
 
-def _build_flight_schedule(row: Mapping[str, Any], *, direction: str) -> FlightSchedule:
+def _build_flight_schedule(row: Mapping[str, Any], *, direction: Direction) -> FlightSchedule:
     return FlightSchedule(
-        provider="iiac",
-        direction="arrival" if direction == "arrival" else "departure",
+        provider=Provider.IIAC,
+        direction=direction,
         flight_id=str(first_value(row, "flightId", "flight_id", "fltNo") or ""),
         airline_code=strip_or_none(first_value(row, "airlineCode", "airline")),
         airline_name=strip_or_none(first_value(row, "airlineNm", "airlineName", "airlineKorean")),
@@ -555,13 +562,14 @@ def _build_service_destination(row: Mapping[str, Any]) -> ServiceDestination:
         city_code=strip_or_none(first_value(row, "cityCode", "city_code")),
         city_name=strip_or_none(first_value(row, "city", "cityName", "cityNm")),
         country_name=strip_or_none(first_value(row, "country", "countryName", "countryNm")),
+        coordinate=coordinate_from_mapping(row),
         raw=dict(row),
     )
 
 
 def _build_facility(row: Mapping[str, Any]) -> AirportFacility:
     return AirportFacility(
-        provider="iiac",
+        provider=Provider.IIAC,
         airport_code="ICN",
         terminal=strip_or_none(first_value(row, "terminal", "terminalid", "terno")),
         name=str(first_value(row, "facility_nm", "facilityName", "name", "shopName") or ""),
@@ -570,6 +578,7 @@ def _build_facility(row: Mapping[str, Any]) -> AirportFacility:
         location=strip_or_none(first_value(row, "location", "loc", "area")),
         business_hours=strip_or_none(first_value(row, "operTime", "businessHours", "hours")),
         telephone=strip_or_none(first_value(row, "tel", "telephone", "phone")),
+        coordinate=coordinate_from_mapping(row),
         raw=dict(row),
     )
 

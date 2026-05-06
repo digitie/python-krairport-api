@@ -14,4 +14,5 @@
 - IIAC 스케줄, 취항도시, 기상, 택시, 버스, 시설 API 추가
 - KAC/IIAC raw item access 추가
 - KAC 공식 서비스 목록과 IIAC 공공데이터포털 변경 공지를 반영한 API 커버리지 문서 추가
-- fixture 기반 테스트 61개 추가, coverage fail-under 85 기준 통과
+- 외부 프로그램 연동용 `StrEnum`, type alias, WGS84 `Coordinate`, 공항 메타데이터 레지스트리 추가
+- fixture 기반 테스트 71개 추가, coverage fail-under 85 기준 통과

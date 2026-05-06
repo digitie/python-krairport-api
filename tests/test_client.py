@@ -174,3 +174,11 @@ def test_unified_client_raw_items(load_fixture) -> None:  # type: ignore[no-unty
 
     assert client.kac_raw_items("StatusOfFlights", "getArrFlightStatusList")[0]["flightId"]
     assert client.iiac_raw_items("ShtbusInfo", "getShtbusInfo")[0]["foo"] == "bar"
+
+
+def test_unified_client_exposes_airport_metadata_helpers() -> None:
+    client = KrairportClient(kac_service_key="KAC_KEY", iiac_service_key="IIAC_KEY")
+
+    assert client.airport_metadata("icn").provider == "iiac"
+    assert client.airports(provider="kac", active=False)[0].code == "MPK"
+    assert client.nearest_airport("37.56", "126.79").code == "GMP"

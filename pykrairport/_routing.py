@@ -3,35 +3,17 @@
 from __future__ import annotations
 
 from pykrairport._convert import normalize_airport_code
+from pykrairport.airports import KAC_AIRPORTS
+from pykrairport.enums import Provider
 from pykrairport.exceptions import UnsupportedAirportError
 
-KAC_AIRPORTS = frozenset(
-    {
-        "GMP",
-        "PUS",
-        "CJU",
-        "TAE",
-        "CJJ",
-        "KWJ",
-        "RSU",
-        "USN",
-        "MWX",
-        "YNY",
-        "KUV",
-        "HIN",
-        "WJU",
-        "KPO",
-        "MPK",
-    }
-)
 
-
-def provider_for_airport(airport_code: str) -> str:
+def provider_for_airport(airport_code: str) -> Provider:
     code = normalize_airport_code(airport_code)
     if code == "ICN":
-        return "iiac"
+        return Provider.IIAC
     if code in KAC_AIRPORTS:
-        return "kac"
+        return Provider.KAC
     raise UnsupportedAirportError(f"unsupported Korean airport code: {airport_code!r}")
 
 

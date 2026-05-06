@@ -11,7 +11,10 @@ from pykrairport._http import HttpClient, SessionLike
 from pykrairport._routing import ensure_kac_airport
 from pykrairport._time import parse_kst_datetime
 from pykrairport._xml import extract_items
+from pykrairport.airports import get_airport_or_none
+from pykrairport.enums import Direction, Provider, normalize_direction
 from pykrairport.exceptions import KrairportParseError
+from pykrairport.geo import coordinate_from_mapping
 from pykrairport.models import (
     AircraftAssignment,
     AirportCode,
@@ -86,7 +89,7 @@ class KacClient:
         }
         data = self._http.get_xml(f"{STATUS_BASE}/getDepFlightStatusList", params)
         return [
-            _build_flight(row, airport_code=code, direction="departure")
+            _build_flight(row, airport_code=code, direction=Direction.DEPARTURE)
             for row in extract_items(data)
         ]
 
@@ -119,7 +122,7 @@ class KacClient:
         }
         data = self._http.get_xml(f"{STATUS_BASE}/getArrFlightStatusList", params)
         return [
-            _build_flight(row, airport_code=code, direction="arrival")
+            _build_flight(row, airport_code=code, direction=Direction.ARRIVAL)
             for row in extract_items(data)
         ]
 
@@ -184,7 +187,7 @@ class KacClient:
     def flight_schedules(
         self,
         *,
-        direction: str,
+        direction: str | Direction,
         airport_code: str | None = None,
         counterpart_airport_code: str | None = None,
         sch_date: str | None = None,
@@ -196,14 +199,13 @@ class KacClient:
     ) -> list[FlightSchedule]:
         code = ensure_kac_airport(airport_code) if airport_code else None
         operation = "getIflightScheduleList" if international else "getDflightScheduleList"
-        if direction == "departure":
+        direction_value = normalize_direction(direction)
+        if direction_value is Direction.DEPARTURE:
             dept_code = code
             arrv_code = counterpart_airport_code
-        elif direction == "arrival":
+        elif direction_value is Direction.ARRIVAL:
             dept_code = counterpart_airport_code
             arrv_code = code
-        else:
-            raise ValueError("direction must be 'arrival' or 'departure'")
         params = {
             "schDate": sch_date,
             "schDeptCityCode": dept_code,
@@ -215,7 +217,7 @@ class KacClient:
         }
         data = self._http.get_xml(f"{FLIGHT_SCHEDULE_BASE}/{operation}", params)
         return [
-            _build_flight_schedule(row, direction=direction, international=international)
+            _build_flight_schedule(row, direction=direction_value, international=international)
             for row in extract_items(data)
         ]
 
@@ -267,7 +269,7 @@ class KacClient:
         params = {"schAirport": code, "pageNo": page_no, "numOfRows": num_of_rows}
         data = self._http.get_xml(f"{AIRPORT_BUS_BASE}/businfo", params)
         return [
-            _build_bus_route(row, provider="kac", airport_code=code)
+            _build_bus_route(row, provider=Provider.KAC, airport_code=code)
             for row in extract_items(data)
         ]
 
@@ -280,7 +282,7 @@ class KacClient:
         params = {"pageNo": page_no, "numOfRows": num_of_rows}
         data = self._http.get_xml(f"{JEJU_TAXI_WAIT_BASE}/getJejuTaxiWaitInfo", params)
         return [
-            _build_taxi_status(row, provider="kac", airport_code="CJU")
+            _build_taxi_status(row, provider=Provider.KAC, airport_code="CJU")
             for row in extract_items(data)
         ]
 
@@ -301,7 +303,7 @@ class KacClient:
         return extract_items(data)
 
 
-def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: str) -> Flight:
+def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direction) -> Flight:
     try:
         flight_id = str(first_value(row, "flightId", "flight_id", "airFln", "schFln") or "")
         scheduled = parse_kst_datetime(
@@ -323,11 +325,11 @@ def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: str) 
             )
         )
         return Flight(
-            provider="kac",
+            provider=Provider.KAC,
             airport_code=airport_code,
             flight_id=flight_id,
             flight_unique_id=strip_or_none(first_value(row, "f_id", "fid", "schFID")),
-            direction="departure" if direction == "departure" else "arrival",
+            direction=direction,
             airline_name=strip_or_none(
                 first_value(row, "airline", "airlineKorean", "airlineEnglish")
             ),
@@ -409,22 +411,28 @@ def _build_parking_fee(row: Mapping[str, Any], *, requested_airport_code: str | 
 
 
 def _build_airport_code(row: Mapping[str, Any]) -> AirportCode:
+    code = str(first_value(row, "cityCode", "airportCode", "code") or "")
+    metadata = get_airport_or_none(code)
     return AirportCode(
-        code=str(first_value(row, "cityCode", "airportCode", "code") or ""),
+        code=code,
         korean_name=strip_or_none(first_value(row, "cityKor", "airportKor", "koreanName")),
         english_name=strip_or_none(first_value(row, "cityEng", "airportEng", "englishName")),
         japanese_name=strip_or_none(first_value(row, "cityJpn", "japaneseName")),
         chinese_name=strip_or_none(first_value(row, "cityChn", "chineseName")),
+        icao_code=metadata.icao_code if metadata else None,
+        provider=metadata.provider if metadata else None,
+        municipality=metadata.municipality if metadata else None,
+        coordinate=metadata.coordinate if metadata else coordinate_from_mapping(row),
         raw=dict(row),
     )
 
 
 def _build_flight_schedule(
-    row: Mapping[str, Any], *, direction: str, international: bool
+    row: Mapping[str, Any], *, direction: Direction, international: bool
 ) -> FlightSchedule:
     return FlightSchedule(
-        provider="kac",
-        direction="departure" if direction == "departure" else "arrival",
+        provider=Provider.KAC,
+        direction=direction,
         flight_id=str(first_value(row, "domesticNum", "internationalNum", "flightNum") or ""),
         airline_code=strip_or_none(first_value(row, "airlineKorean", "airlineEnglish", "airline")),
         airline_name=strip_or_none(first_value(row, "airlineKorean", "airlineEnglish")),
@@ -473,7 +481,7 @@ def _build_airport_facility(
     row: Mapping[str, Any], *, requested_airport_code: str | None
 ) -> AirportFacility:
     return AirportFacility(
-        provider="kac",
+        provider=Provider.KAC,
         airport_code=strip_or_none(first_value(row, "apcd", "airportCode"))
         or requested_airport_code,
         terminal=strip_or_none(first_value(row, "terminal", "terminalId")),
@@ -483,16 +491,17 @@ def _build_airport_facility(
         location=strip_or_none(first_value(row, "loc", "location", "area")),
         business_hours=strip_or_none(first_value(row, "operTime", "businessHours")),
         telephone=strip_or_none(first_value(row, "tel", "telephone", "phone")),
+        coordinate=coordinate_from_mapping(row),
         raw=dict(row),
     )
 
 
 def _build_bus_route(
-    row: Mapping[str, Any], *, provider: str, airport_code: str | None
+    row: Mapping[str, Any], *, provider: Provider, airport_code: str | None
 ) -> BusRoute:
     try:
         return BusRoute(
-            provider="kac" if provider == "kac" else "iiac",
+            provider=provider,
             airport_code=strip_or_none(first_value(row, "airportCode", "schAirport"))
             or airport_code,
             area=strip_or_none(first_value(row, "area", "region")),
@@ -511,11 +520,11 @@ def _build_bus_route(
 
 
 def _build_taxi_status(
-    row: Mapping[str, Any], *, provider: str, airport_code: str | None
+    row: Mapping[str, Any], *, provider: Provider, airport_code: str | None
 ) -> TaxiStatus:
     try:
         return TaxiStatus(
-            provider="kac" if provider == "kac" else "iiac",
+            provider=provider,
             airport_code=airport_code,
             terminal=strip_or_none(first_value(row, "terno", "terminal", "terminalId")),
             stand=strip_or_none(first_value(row, "stand", "taxistand", "bestVantaxistand")),

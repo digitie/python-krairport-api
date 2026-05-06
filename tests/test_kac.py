@@ -112,6 +112,9 @@ def test_airport_codes() -> None:
     assert session.calls[0].params["cityCode"] == "GMP"
     assert rows[0].code == "GMP"
     assert rows[0].english_name == "Gimpo"
+    assert rows[0].icao_code == "RKSS"
+    assert rows[0].coordinate is not None
+    assert rows[0].coordinate.latitude == 37.5583
 
 
 def test_flight_schedules() -> None:

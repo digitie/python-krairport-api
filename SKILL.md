@@ -29,6 +29,11 @@ You are helping build and maintain `pykrairport`, a Python client that unifies K
    - requests for `ICN` on KAC endpoints must raise `UnsupportedAirportError`
 8. **Default tests are offline**:
    - fixture/mock based, no live traffic during ordinary test runs
+9. **Public enums remain string-compatible**:
+   - use `StrEnum` so existing string comparisons and JSON serialization keep working
+10. **Coordinates are WGS84 decimal degrees**:
+   - expose `(latitude, longitude)` for human/geodesic use
+   - expose `(longitude, latitude)` only through GeoJSON-specific helpers
 
 ## Initial supported endpoints
 
@@ -54,6 +59,9 @@ Start with these.
 | `KrairportClient.service_destinations()` | IIAC | `StatusOfSrvDestinations` |
 | `KrairportClient.kac_raw_items()` | KAC | unmodeled KAC REST operations |
 | `KrairportClient.iiac_raw_items()` | IIAC | unmodeled B551177 REST operations |
+| `KrairportClient.airport_metadata()` | local | bundled airport metadata |
+| `KrairportClient.airports()` | local | provider/active-filtered airport metadata |
+| `KrairportClient.nearest_airport()` | local | nearest WGS84 airport lookup |
 
 Do not widen scope until the routing, parsing, and model layer are stable.
 
@@ -69,8 +77,11 @@ pykrairport/
 │   ├── __init__.py
 │   ├── kac.py             # KacClient or adapter
 │   └── iiac.py            # IiacClient or adapter
+├── airports.py            # bundled airport metadata and nearest lookup
+├── geo.py                 # WGS84 Coordinate and lat/lon parsing
 ├── models.py
 ├── enums.py
+├── types.py               # public type aliases
 ├── exceptions.py
 ├── _http.py
 ├── _xml.py
@@ -88,6 +99,7 @@ README.md
 krairport-api.md
 SKILL.md
 docs/testing.md
+docs/coordinates-and-types.md
 docs/repeated-mistakes.md
 docs/troubleshooting.md
 ```
@@ -145,6 +157,15 @@ Support these fields across providers:
 
 KAC and IIAC use different field names. Normalize them at the model boundary.
 
+### Enums, types, coordinates
+
+- Keep `Provider`, `Direction`, `Airport`, `AirportType`, `ApiLanguage`, `ScheduleType` as `StrEnum`.
+- Keep public type aliases in `pykrairport.types`; wrappers should be able to import `AirportCodeLike`, `DirectionLike`, and `ProviderLike`.
+- Keep `Coordinate` as WGS84 decimal degrees.
+- `Coordinate.as_tuple()` returns `(latitude, longitude)`.
+- `Coordinate.as_geojson_position()` returns `(longitude, latitude)`.
+- Bundled airport metadata is convenience data for app maps/search, not aviation navigation data.
+
 ## Type conversion policy
 
 ### Keep as `str`
@@ -174,6 +195,13 @@ KAC and IIAC use different field names. Normalize them at the model boundary.
 ### Convert to `bool`
 
 - codeshare flags like `Y` / `N`
+
+### Convert to `float`
+
+- temperature
+- wind speed
+- coordinate components
+- ratio or decimal quantities
 
 ### Normalize empties
 
@@ -309,6 +337,11 @@ Required offline tests:
 - result-code / HTTP error mapping
 - CLI JSON serialization
 - raw endpoint path validation
+- enum string compatibility
+- WGS84 coordinate parsing/range validation
+- GeoJSON coordinate order
+- bundled airport metadata provider/active filtering
+- nearest airport lookup
 - coverage gate: `pytest --cov=pykrairport --cov-fail-under=85`
 
 Optional live tests:
@@ -334,6 +367,8 @@ Optional live tests:
 12. Claiming API coverage without updating `docs/api-coverage.md`.
 13. Allowing arbitrary raw endpoint path strings.
 14. Ignoring data.go.kr change notices before adding or documenting IIAC endpoints.
+15. Mixing GeoJSON `(lon, lat)` with human/geodesic `(lat, lon)`.
+16. Breaking string compatibility when adding enum types.
 
 When one of these is fixed, update `docs/repeated-mistakes.md`.
 
@@ -342,5 +377,6 @@ When one of these is fixed, update `docs/repeated-mistakes.md`.
 - Update `README.md` for user-facing API changes.
 - Update `krairport-api.md` for endpoint scope, parameter differences, and model rules.
 - Update `docs/testing.md` when fixture policy or live markers change.
+- Update `docs/coordinates-and-types.md` when enum/type/coordinate policy changes.
 - Update `docs/troubleshooting.md` when a user-visible failure gains a known fix.
 - Update `CHANGELOG.md` for release-facing changes.

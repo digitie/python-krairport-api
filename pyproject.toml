@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pykrairport"
 version = "0.1.0"
-description = "Python client design scaffold for Korean airport APIs across KAC and IIAC."
+description = "Typed Python client for Korean airport APIs across KAC and IIAC."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
   {name = "digitie"}
 ]
-keywords = ["airport", "korea", "kac", "iiac", "incheon", "flight", "parking"]
+keywords = ["airport", "korea", "kac", "iiac", "incheon", "flight", "parking", "geo"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",

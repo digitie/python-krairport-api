@@ -71,3 +71,15 @@
 - 증상: 예전 IIAC service/operation 조합을 문서에 남겨 실제 호출이 실패
 - 원인: 공공데이터포털은 2026년에도 `FlightClosingInfoSpot`, `statusOfFltacdmmlstnAirTrafficPublic` 같은 변경 공지를 냈음
 - 가드레일: 새 IIAC API를 typed 모델로 승격하기 전 [api-coverage.md](api-coverage.md)와 공공데이터포털 변경 공지를 함께 확인
+
+## 13. 좌표 순서를 섞는 실수
+
+- 증상: 지도에서 공항이 바다나 다른 국가에 표시됨
+- 원인: 일반 좌표 `(latitude, longitude)`와 GeoJSON 좌표 `(longitude, latitude)` 순서를 혼동
+- 가드레일: `Coordinate.as_tuple()`과 `Coordinate.as_geojson_position()`을 분리하고 테스트로 고정
+
+## 14. enum 도입으로 문자열 호환성을 깨는 실수
+
+- 증상: 기존 사용자의 `flight.provider == "kac"` 비교나 JSON 직렬화가 실패
+- 원인: 일반 `Enum`을 반환하거나 모델 필드를 enum-only로 급격히 바꿈
+- 가드레일: public enum은 모두 `StrEnum`으로 두고 기존 문자열 비교 테스트를 유지

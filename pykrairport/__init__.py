@@ -1,6 +1,25 @@
 """Python client for Korean airport public APIs."""
 
+from pykrairport.airports import (
+    AIRPORTS,
+    IIAC_AIRPORTS,
+    KAC_AIRPORTS,
+    SUPPORTED_AIRPORT_CODES,
+    get_airport,
+    get_airport_or_none,
+    list_airports,
+    nearest_airport,
+)
 from pykrairport.client import KrairportClient
+from pykrairport.enums import (
+    Airport,
+    AirportType,
+    ApiLanguage,
+    CoordinateDatum,
+    Direction,
+    Provider,
+    ScheduleType,
+)
 from pykrairport.exceptions import (
     KrairportAuthError,
     KrairportError,
@@ -11,10 +30,17 @@ from pykrairport.exceptions import (
     KrairportServerError,
     UnsupportedAirportError,
 )
+from pykrairport.geo import (
+    Coordinate,
+    coordinate_from_mapping,
+    to_decimal_degrees,
+    to_decimal_degrees_or_none,
+)
 from pykrairport.models import (
     AircraftAssignment,
     AirportCode,
     AirportFacility,
+    AirportMetadata,
     ArrivalCongestion,
     BusRoute,
     Flight,
@@ -26,17 +52,44 @@ from pykrairport.models import (
     TaxiStatus,
     WorldWeather,
 )
+from pykrairport.types import (
+    AirportCodeLike,
+    AirportCodeText,
+    CoordinateTuple,
+    DirectionCode,
+    DirectionLike,
+    GeoJsonPosition,
+    ProviderCode,
+    ProviderLike,
+    RawRecord,
+)
 
 __version__ = "0.1.0"
 
 __all__ = [
+    "AIRPORTS",
     "AircraftAssignment",
+    "Airport",
     "AirportCode",
+    "AirportCodeLike",
+    "AirportCodeText",
     "AirportFacility",
+    "AirportMetadata",
+    "AirportType",
+    "ApiLanguage",
     "ArrivalCongestion",
     "BusRoute",
+    "Coordinate",
+    "CoordinateDatum",
+    "CoordinateTuple",
+    "Direction",
+    "DirectionCode",
+    "DirectionLike",
     "FlightSchedule",
     "Flight",
+    "GeoJsonPosition",
+    "IIAC_AIRPORTS",
+    "KAC_AIRPORTS",
     "KrairportAuthError",
     "KrairportClient",
     "KrairportError",
@@ -48,9 +101,22 @@ __all__ = [
     "ParkingAreaStatus",
     "ParkingFee",
     "PassengerForecast",
+    "Provider",
+    "ProviderCode",
+    "ProviderLike",
+    "RawRecord",
+    "SUPPORTED_AIRPORT_CODES",
+    "ScheduleType",
     "ServiceDestination",
     "TaxiStatus",
     "UnsupportedAirportError",
     "WorldWeather",
     "__version__",
+    "coordinate_from_mapping",
+    "get_airport",
+    "get_airport_or_none",
+    "list_airports",
+    "nearest_airport",
+    "to_decimal_degrees",
+    "to_decimal_degrees_or_none",
 ]

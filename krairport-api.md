@@ -4,11 +4,13 @@
 
 ## 1. 범위
 
-`0.1.0` 범위는 다음 3개 도메인으로 제한합니다.
+`0.1.0` 범위는 다음 도메인을 포함합니다.
 
 1. 운항 조회
 2. 주차 정보
 3. 인천공항 혼잡도/승객예고
+4. 공항 교통/시설/취항지/기상
+5. 외부 프로그램용 enum/type/좌표/공항 메타데이터
 
 초기 지원 엔드포인트:
 
@@ -61,7 +63,8 @@
 
 - `ICN` 요청은 IIAC만 허용
 - `ICN` 이외 공항의 운항/주차요금 요청은 KAC 우선
-- `arrival_congestion`, `passenger_forecast`, `parking_status`는 IIAC 전용
+- `parking_status`는 `ICN`이면 IIAC, 그 외 KAC 공항이면 KAC
+- `arrival_congestion`, `passenger_forecast`는 IIAC 전용
 - 잘못된 기관-공항 조합은 `UnsupportedAirportError`
 
 ## 3. Public API 설계
@@ -174,7 +177,37 @@ def passenger_forecast(
 ) -> list[PassengerForecast]: ...
 ```
 
-### 3.6 누락/확장 API raw access
+### 3.6 공항 메타데이터 / 좌표
+
+```python
+def airport_metadata(self, airport_code: str) -> AirportMetadata: ...
+
+def airports(
+    self,
+    *,
+    provider: ProviderLike | None = None,
+    active: bool | None = None,
+) -> tuple[AirportMetadata, ...]: ...
+
+def nearest_airport(
+    self,
+    latitude: object,
+    longitude: object,
+    *,
+    provider: ProviderLike | None = None,
+    active: bool | None = True,
+) -> AirportMetadata | None: ...
+```
+
+정책:
+
+- 번들 좌표는 WGS84 decimal degrees를 표준으로 둡니다.
+- `Coordinate.as_tuple()`은 `(latitude, longitude)`입니다.
+- `Coordinate.as_geojson_position()`은 GeoJSON 표준인 `(longitude, latitude)`입니다.
+- `Airport`, `Provider`, `Direction`은 모두 `StrEnum`이므로 문자열 비교와 JSON 직렬화가 가능합니다.
+- 타입 alias는 `pykrairport.types`에서 public API로 제공합니다.
+
+### 3.7 누락/확장 API raw access
 
 typed 모델로 고정하지 않은 공식 엔드포인트는 다음으로 접근합니다.
 
@@ -191,7 +224,9 @@ client.iiac_raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1})
 
 - `@dataclass(frozen=True, slots=True)`
 - 공급자 원본 스키마를 그대로 흘리지 않음
-- 디버깅용 `raw: dict`는 유지 가능
+- 디버깅용 `raw: RawRecord`는 유지하되 기본값은 빈 mapping
+- provider/direction은 public 표면에서 `Provider`, `Direction` enum 사용
+- 좌표는 `Coordinate | None`으로 표준화
 
 필수 모델:
 
@@ -202,6 +237,9 @@ ParkingFee
 ParkingAreaStatus
 ArrivalCongestion
 PassengerForecast
+AirportCode
+AirportMetadata
+Coordinate
 ```
 
 ## 5. 타입 변환 규칙
@@ -219,10 +257,29 @@ PassengerForecast
 ### 5.2 숫자
 
 - 승객수, 요금, 총면수, 주차대수: `int`
-- 비율/거리/소수값이 있는 경우만 `float`
+- 비율/거리/기온/풍속/소수값이 있는 경우만 `float`
 - 빈 문자열, 공백, `-`: `None`
 
-### 5.3 문자열 유지 규칙
+### 5.3 Enum / type alias
+
+- `Provider`: `kac`, `iiac`
+- `Direction`: `arrival`, `departure`
+- `Airport`: 지원 IATA 공항코드
+- `AirportCodeLike`: `str | Airport`
+- `ProviderLike`: `str | Provider`
+- `DirectionLike`: `str | Direction`
+
+모든 enum은 `StrEnum`으로 구현해 기존 문자열 기반 코드와 호환합니다.
+
+### 5.4 좌표
+
+- 내부 표준: WGS84 decimal degrees
+- 사람/거리계산 순서: `(latitude, longitude)`
+- GeoJSON 순서: `(longitude, latitude)`
+- DMS 문자열과 `N/E/S/W` hemisphere는 decimal degrees로 변환
+- 범위 밖 위도/경도는 `ValueError`
+
+### 5.5 문자열 유지 규칙
 
 다음 값은 절대 `int`로 바꾸지 않습니다.
 
@@ -366,6 +423,8 @@ KrairportError
 - CLI JSON 직렬화와 public export
 - coverage gate: `--cov=pykrairport --cov-fail-under=85`
 - API 커버리지 문서: `docs/api-coverage.md`
+- enum/type/좌표 표준화: `docs/coordinates-and-types.md`
+- 좌표 DMS/decimal 변환, GeoJSON 순서, 근접 공항 계산
 
 Live 테스트:
 
@@ -384,6 +443,8 @@ Live 테스트:
 6. `f_id`와 `flight_id`를 혼동하지 않습니다.
 7. 승객예고는 "예상치", 입국장 혼잡도는 "실시간성 현황"이라는 의미 차이를 유지합니다.
 8. 주차요금과 주차현황은 서로 다른 도메인 모델로 유지합니다.
+9. GeoJSON 좌표 순서를 일반 `(lat, lon)` 순서와 섞지 않습니다.
+10. enum을 추가해도 기존 문자열 비교/직렬화 호환성을 깨지 않습니다.
 
 ## 11. 문서 업데이트 규칙
 
@@ -391,12 +452,13 @@ Live 테스트:
 - `krairport-api.md`: 공급자/엔드포인트/타입 규칙
 - `SKILL.md`: AI 구현 가이드
 - `docs/testing.md`: fixture, marker, live test 정책
+- `docs/coordinates-and-types.md`: enum/type/좌표/공항 메타데이터 정책
 - `docs/repeated-mistakes.md`: 재발 방지 규칙
 - `docs/troubleshooting.md`: 운영 중 자주 보는 오류와 해결책
 
 ## 12. 출처
 
-확인일: 2026-04-30
+확인일: 2026-05-06
 
 - KAC 서비스 목록: https://openapi.airport.co.kr/service
 - KAC 실시간 항공운항 상세: https://www.data.go.kr/data/15113771/openapi.do
@@ -407,3 +469,4 @@ Live 테스트:
 - IIAC 주차 정보: https://www.data.go.kr/data/15095047/openapi.do
 - IIAC 입국장현황: https://www.data.go.kr/data/15095061/openapi.do
 - IIAC 승객예고: https://www.data.go.kr/data/15095066/openapi.do
+- OurAirports data downloads: https://ourairports.com/data/

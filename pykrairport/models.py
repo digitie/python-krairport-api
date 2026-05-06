@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal
 
-RawRecord = Mapping[str, Any]
+from pykrairport.enums import AirportType, Direction, Provider
+from pykrairport.geo import Coordinate
+from pykrairport.types import RawRecord
 
 
 @dataclass(frozen=True, slots=True)
 class Flight:
-    provider: Literal["kac", "iiac"]
+    provider: Provider
     airport_code: str
     flight_id: str
     flight_unique_id: str | None
-    direction: Literal["arrival", "departure"]
+    direction: Direction
     airline_name: str | None
     airline_code: str | None
     departure_airport_code: str | None
@@ -28,7 +28,7 @@ class Flight:
     terminal: str | None
     gate: str | None
     codeshare: bool | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,7 +42,7 @@ class AircraftAssignment:
     scheduled_at: datetime | None
     estimated_at: datetime | None
     gate: str | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +55,7 @@ class ParkingFee:
     large_basic_fee: int | None
     small_daily_max_fee: int | None
     large_daily_max_fee: int | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,7 +66,7 @@ class ParkingAreaStatus:
     occupied: int | None
     capacity: int | None
     updated_at: datetime | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +80,7 @@ class ArrivalCongestion:
     estimated_at: datetime | None
     korean_count: int | None
     foreign_count: int | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,7 +92,7 @@ class PassengerForecast:
     t1_departure_total: int | None
     t2_arrival_total: int | None
     t2_departure_total: int | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,13 +102,17 @@ class AirportCode:
     english_name: str | None
     japanese_name: str | None
     chinese_name: str | None
-    raw: RawRecord = field(repr=False)
+    icao_code: str | None = None
+    provider: Provider | None = None
+    municipality: str | None = None
+    coordinate: Coordinate | None = None
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
 class FlightSchedule:
-    provider: Literal["kac", "iiac"]
-    direction: Literal["arrival", "departure"]
+    provider: Provider
+    direction: Direction
     flight_id: str
     airline_code: str | None
     airline_name: str | None
@@ -119,12 +123,12 @@ class FlightSchedule:
     end_date: str | None
     days: str | None
     season: str | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
 class AirportFacility:
-    provider: Literal["kac", "iiac"]
+    provider: Provider
     airport_code: str | None
     terminal: str | None
     name: str
@@ -133,12 +137,13 @@ class AirportFacility:
     location: str | None
     business_hours: str | None
     telephone: str | None
-    raw: RawRecord = field(repr=False)
+    coordinate: Coordinate | None = None
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
 class BusRoute:
-    provider: Literal["kac", "iiac"]
+    provider: Provider
     airport_code: str | None
     area: str | None
     bus_number: str
@@ -149,12 +154,12 @@ class BusRoute:
     route_info: str | None
     first_time_to_airport: str | None
     last_time_to_airport: str | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
 class TaxiStatus:
-    provider: Literal["kac", "iiac"]
+    provider: Provider
     airport_code: str | None
     terminal: str | None
     stand: str | None
@@ -165,12 +170,12 @@ class TaxiStatus:
     deluxe_count: int | None
     jumbo_count: int | None
     updated_at: datetime | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
 class WorldWeather:
-    direction: Literal["arrival", "departure"]
+    direction: Direction
     flight_id: str | None
     airline_name: str | None
     airport_code: str | None
@@ -183,7 +188,7 @@ class WorldWeather:
     feels_like: float | None
     humidity: int | None
     wind_speed: float | None
-    raw: RawRecord = field(repr=False)
+    raw: RawRecord = field(default_factory=dict, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -193,4 +198,22 @@ class ServiceDestination:
     city_code: str | None
     city_name: str | None
     country_name: str | None
-    raw: RawRecord = field(repr=False)
+    coordinate: Coordinate | None = None
+    raw: RawRecord = field(default_factory=dict, repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class AirportMetadata:
+    code: str
+    provider: Provider
+    name_english: str
+    name_korean: str | None = None
+    icao_code: str | None = None
+    municipality: str | None = None
+    country_code: str = "KR"
+    timezone: str = "Asia/Seoul"
+    coordinate: Coordinate | None = None
+    elevation_ft: int | None = None
+    airport_type: AirportType = AirportType.UNKNOWN
+    active: bool = True
+    source: str | None = None
