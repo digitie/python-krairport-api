@@ -1,4 +1,4 @@
-"""Conversion helpers for provider response values."""
+"""공급자 응답 값 변환 도우미."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ def strip_or_none(value: Any) -> str | None:
 
 
 def first_value(record: Mapping[str, Any], *keys: str) -> Any:
-    """Return the first non-empty value for the given provider field names."""
+    """주어진 공급자 필드명 중 첫 번째 비어 있지 않은 값을 반환합니다."""
 
     for key in keys:
         value = strip_or_none(record.get(key))

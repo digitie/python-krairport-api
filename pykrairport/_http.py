@@ -1,4 +1,4 @@
-"""HTTP helpers with provider error mapping."""
+"""공급자 오류 매핑을 포함한 HTTP 도우미."""
 
 from __future__ import annotations
 

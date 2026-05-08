@@ -1,4 +1,4 @@
-"""Bundled Korean airport metadata and coordinate helpers."""
+"""번들 한국 공항 메타데이터와 좌표 도우미."""
 
 from __future__ import annotations
 
@@ -257,7 +257,7 @@ IIAC_AIRPORTS = frozenset(
 
 
 def get_airport(airport_code: str | Airport) -> AirportMetadata:
-    """Return bundled metadata for a supported airport code."""
+    """지원 공항코드의 번들 메타데이터를 반환합니다."""
 
     code = normalize_airport_code(str(airport_code))
     try:
@@ -267,7 +267,7 @@ def get_airport(airport_code: str | Airport) -> AirportMetadata:
 
 
 def get_airport_or_none(airport_code: str | Airport | None) -> AirportMetadata | None:
-    """Return bundled metadata or `None` if the code is missing/unsupported."""
+    """공항코드가 없거나 지원하지 않으면 `None`을 반환합니다."""
 
     if airport_code is None:
         return None
@@ -282,7 +282,7 @@ def list_airports(
     provider: ProviderLike | None = None,
     active: bool | None = None,
 ) -> tuple[AirportMetadata, ...]:
-    """Return bundled airports filtered by provider and active status."""
+    """공급자와 활성 상태로 필터링한 번들 공항 목록을 반환합니다."""
 
     provider_value = normalize_provider(provider) if provider is not None else None
     airports = list(AIRPORTS.values())
@@ -300,7 +300,7 @@ def nearest_airport(
     provider: ProviderLike | None = None,
     active: bool | None = True,
 ) -> AirportMetadata | None:
-    """Return the nearest bundled airport to a WGS84 latitude/longitude pair."""
+    """WGS84 위경도 기준 가장 가까운 번들 공항을 반환합니다."""
 
     origin = Coordinate.from_values(latitude, longitude)
     candidates = [

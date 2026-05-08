@@ -1,4 +1,4 @@
-"""Geographic coordinate normalization helpers."""
+"""지리 좌표 정규화 도우미."""
 
 from __future__ import annotations
 
@@ -20,10 +20,10 @@ _MISSING = object()
 
 
 class Coordinate(BaseModel):
-    """WGS84 coordinate in decimal degrees.
+    """WGS84 decimal degrees 좌표.
 
-    `latitude` and `longitude` are always decimal degrees. Use
-    `as_geojson_position()` when a consumer expects `[longitude, latitude]`.
+    `latitude`와 `longitude`는 항상 decimal degrees입니다. 소비자가
+    `[longitude, latitude]` 순서를 기대하면 `as_geojson_position()`을 사용합니다.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -60,7 +60,7 @@ class Coordinate(BaseModel):
 
     @classmethod
     def from_values(cls, latitude: Any, longitude: Any) -> Coordinate:
-        """Build a coordinate from decimal or DMS-like latitude/longitude values."""
+        """decimal 또는 DMS 유사 위경도 값으로 좌표를 만듭니다."""
 
         return cls(
             latitude=to_decimal_degrees(latitude, kind="latitude"),
@@ -75,7 +75,7 @@ class Coordinate(BaseModel):
         latitude_keys: tuple[str, ...] = ("latitude", "lat", "latitude_deg", "y"),
         longitude_keys: tuple[str, ...] = ("longitude", "lon", "lng", "longitude_deg", "x"),
     ) -> Coordinate | None:
-        """Build a coordinate from common provider latitude/longitude field names."""
+        """공급자가 자주 쓰는 위경도 필드명에서 좌표를 만듭니다."""
 
         latitude = _first_present(record, latitude_keys)
         longitude = _first_present(record, longitude_keys)
@@ -84,17 +84,17 @@ class Coordinate(BaseModel):
         return cls.from_values(latitude, longitude)
 
     def as_tuple(self) -> CoordinateTuple:
-        """Return `(latitude, longitude)` for human-readable/geodesic use."""
+        """사람이 읽거나 거리 계산에 쓰기 좋은 `(latitude, longitude)`를 반환합니다."""
 
         return (self.latitude, self.longitude)
 
     def as_geojson_position(self) -> GeoJsonPosition:
-        """Return `(longitude, latitude)` for GeoJSON-compatible consumers."""
+        """GeoJSON 호환 소비자를 위한 `(longitude, latitude)`를 반환합니다."""
 
         return (self.longitude, self.latitude)
 
     def distance_to_km(self, other: Coordinate) -> float:
-        """Return great-circle distance to another coordinate in kilometers."""
+        """다른 좌표까지의 대권 거리를 킬로미터 단위로 반환합니다."""
 
         radius_km = 6371.0088
         lat1 = math.radians(self.latitude)
@@ -109,7 +109,7 @@ class Coordinate(BaseModel):
 
 
 def to_decimal_degrees(value: Any, *, kind: CoordinateKind | None = None) -> float:
-    """Normalize decimal or DMS-like coordinate values to decimal degrees."""
+    """decimal 또는 DMS 유사 좌표 값을 decimal degrees로 정규화합니다."""
 
     text = _strip_coordinate_text(value)
     if text is None:
@@ -143,7 +143,7 @@ def to_decimal_degrees_or_none(
     *,
     kind: CoordinateKind | None = None,
 ) -> float | None:
-    """Return decimal degrees or `None` for empty coordinate values."""
+    """빈 좌표 값이면 `None`, 값이 있으면 decimal degrees를 반환합니다."""
 
     if _strip_coordinate_text(value) is None:
         return None
@@ -151,7 +151,7 @@ def to_decimal_degrees_or_none(
 
 
 def coordinate_from_mapping(record: RawRecord) -> Coordinate | None:
-    """Return a WGS84 coordinate from a mapping with common lat/lon keys."""
+    """일반적인 lat/lon key를 가진 mapping에서 WGS84 좌표를 반환합니다."""
 
     return Coordinate.from_mapping(record)
 

@@ -1,4 +1,4 @@
-"""한국공항공사(KAC) provider adapter."""
+"""한국공항공사(KAC) 공급자 어댑터."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ _SAFE_PATH_PART = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 class KacClient:
-    """Low-level client for Korea Airports Corporation APIs."""
+    """한국공항공사 API용 저수준 클라이언트."""
 
     def __init__(
         self,
@@ -292,7 +292,7 @@ class KacClient:
         operation: str,
         params: Mapping[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        """Return raw normalized XML items for a KAC REST service operation."""
+        """KAC REST 서비스 작업의 정규화된 XML item 목록을 반환합니다."""
 
         _validate_path_part(service)
         _validate_path_part(operation)

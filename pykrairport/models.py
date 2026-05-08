@@ -1,4 +1,4 @@
-"""Public response models."""
+"""공개 응답 모델."""
 
 from __future__ import annotations
 
@@ -13,17 +13,17 @@ from pykrairport.types import RawRecord
 
 
 class KrairportModel(BaseModel):
-    """Base class for public immutable response models."""
+    """공개 불변 응답 모델의 기본 클래스."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     def to_dict(self) -> dict[str, Any]:
-        """Return a JSON-ready dictionary using Pydantic v2 serialization."""
+        """Pydantic v2 직렬화로 JSON에 바로 쓸 수 있는 dict를 반환합니다."""
 
         return self.model_dump(mode="json")
 
     def to_json(self) -> str:
-        """Return a JSON string using Pydantic v2 serialization."""
+        """Pydantic v2 직렬화로 JSON 문자열을 반환합니다."""
 
         return self.model_dump_json()
 

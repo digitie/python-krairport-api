@@ -1,4 +1,4 @@
-"""Python client for Korean airport public APIs."""
+"""한국 공항 공공 API Python 클라이언트."""
 
 from pykrairport.airports import (
     AIRPORTS,

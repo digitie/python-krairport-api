@@ -1,4 +1,4 @@
-"""Command-line entrypoint for pykrairport."""
+"""pykrairport 명령줄 진입점."""
 
 from __future__ import annotations
 

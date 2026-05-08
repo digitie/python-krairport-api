@@ -1,4 +1,4 @@
-"""KST-aware datetime parsing helpers."""
+"""KST 기준 datetime 파싱 도우미."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ except ZoneInfoNotFoundError:
 
 
 def parse_kst_datetime(value: Any, *, base_date: str | date | None = None) -> datetime | None:
-    """Parse provider timestamp values as timezone-aware KST datetimes."""
+    """공급자 timestamp 값을 timezone 정보가 있는 KST datetime으로 파싱합니다."""
 
     if value is None:
         return None

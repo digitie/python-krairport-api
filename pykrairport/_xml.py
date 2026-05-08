@@ -1,4 +1,4 @@
-"""XML helpers for KAC-style public data responses."""
+"""KAC 스타일 공공데이터 XML 응답 도우미."""
 
 from __future__ import annotations
 

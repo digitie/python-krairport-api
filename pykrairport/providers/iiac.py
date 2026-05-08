@@ -1,4 +1,4 @@
-"""인천국제공항공사(IIAC) provider adapter."""
+"""인천국제공항공사(IIAC) 공급자 어댑터."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ _SAFE_PATH_PART = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 class IiacClient:
-    """Low-level client for Incheon International Airport Corporation APIs."""
+    """인천국제공항공사 API용 저수준 클라이언트."""
 
     def __init__(
         self,
@@ -335,7 +335,7 @@ class IiacClient:
         operation: str,
         params: Mapping[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        """Return raw normalized JSON items for an IIAC B551177 service operation."""
+        """IIAC B551177 서비스 작업의 정규화된 JSON item 목록을 반환합니다."""
 
         _validate_path_part(service)
         _validate_path_part(operation)

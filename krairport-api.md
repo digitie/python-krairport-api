@@ -458,6 +458,13 @@ Live 테스트:
 - `docs/coordinates-and-types.md`: enum/type/좌표/공항 메타데이터 정책
 - `docs/repeated-mistakes.md`: 재발 방지 규칙
 - `docs/troubleshooting.md`: 운영 중 자주 보는 오류와 해결책
+- `AGENTS.md`: 에이전트 작업 라우팅, 모듈 소유권, 검증 기준
+
+문서 작성 규칙:
+
+- 파일 위치 정보는 프로젝트 기준 상대 경로로 작성합니다. 예: `pykrairport/client.py`, `docs/testing.md`
+- Python 내부 문서(module/class/function docstring과 설명용 주석)는 한글로 작성합니다.
+- provider 원문, 코드 식별자, 명령어, URL은 원문을 유지합니다.
 
 ## 12. 출처
 

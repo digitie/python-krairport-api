@@ -89,3 +89,15 @@
 - 증상: CLI나 외부 앱에서 `asdict()`가 더 이상 응답 모델을 dict로 바꾸지 못함
 - 원인: public 응답 모델이 Pydantic `BaseModel`로 바뀌었는데 직렬화 경로를 갱신하지 않음
 - 가드레일: CLI와 문서 예시는 `model_dump(mode="json")`, `model_dump_json()`, `to_dict()`, `to_json()`을 사용
+
+## 16. 문서에 로컬 절대 경로를 남기는 실수
+
+- 증상: 다른 환경의 에이전트나 사용자가 문서의 파일 위치를 따라갈 수 없음
+- 원인: 드라이브 문자나 사용자 홈으로 시작하는 개인 개발환경 경로를 문서에 기록
+- 가드레일: 모든 문서의 파일 위치 정보는 `pykrairport/client.py`, `docs/testing.md`처럼 프로젝트 기준 상대 경로만 사용
+
+## 17. Python 내부 문서를 영어로 되돌리는 실수
+
+- 증상: 모듈 docstring, 함수 docstring, 설명용 주석이 문서 정책과 달라짐
+- 원인: 기존 예제나 외부 프로젝트에서 영어 docstring을 그대로 가져옴
+- 가드레일: Python 내부 문서는 한글로 작성하고, provider 원문/코드 식별자/URL만 원문 유지

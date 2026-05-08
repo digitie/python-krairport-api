@@ -1,0 +1,219 @@
+# AGENTS.md
+
+## 역할
+
+이 문서는 `pykrairport`에서 작업하는 Codex/agent를 위한 운영 가이드입니다. `pykma`, `pyopinet`, `pykex`의 작업 방식처럼 빠르게 방향을 잡기 위한 문서이며, 세부 API 명세와 구현 규칙은 작업 주제에 맞춰 `krairport-api.md`, `SKILL.md`, `docs/` 아래 문서를 함께 확인합니다.
+
+## 지시 우선순위
+
+1. 사용자 요청
+2. 이 `AGENTS.md`
+3. `krairport-api.md`
+4. `SKILL.md`
+5. `README.md`
+6. 기존 코드와 테스트
+7. 최소한의, 되돌릴 수 있는 가정
+
+문서가 충돌하면 더 높은 우선순위의 문서를 따르고, 낮은 우선순위 문서를 같은 변경에서 갱신합니다.
+
+## 프로젝트 기준
+
+- `pykrairport`는 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공항 OpenAPI를 통합하는 비공식 Python 클라이언트입니다.
+- `ICN`은 IIAC, 그 외 지원 공항은 KAC로 라우팅합니다.
+- public 응답은 Pydantic v2 기반 immutable 모델과 `StrEnum`으로 제공합니다.
+- 공항 좌표는 WGS84 decimal degrees `Coordinate`로 표준화합니다.
+- KAC는 XML-heavy, IIAC는 JSON 우선 호출을 기본으로 합니다.
+- 런타임 의존성은 `requests`, `pydantic`, Windows용 `tzdata`입니다.
+- 기본 테스트는 실제 KAC/IIAC 네트워크 호출 없이 동작해야 합니다.
+
+## 문서/경로 규칙
+
+- 문서의 파일 위치 정보는 항상 프로젝트 기준 상대 경로로 씁니다. 예: `pykrairport/client.py`, `docs/testing.md`.
+- 로컬 절대 경로, 사용자 홈 경로, 드라이브 경로는 문서에 쓰지 않습니다.
+- 프로젝트 문서는 한글로 작성합니다.
+- Python 내부 문서도 한글로 작성합니다. 모듈 docstring, class/function docstring, 설명용 주석은 한글을 기본으로 하고, provider 원문/코드 식별자/URL만 원문을 유지합니다.
+- public API 변경 시 `README.md`, `krairport-api.md`, `SKILL.md`, 관련 `docs/` 문서를 함께 갱신합니다.
+
+## 문서 라우팅
+
+- `README.md`: 사용자용 개요, 설치, 예제, 모델 요약.
+- `krairport-api.md`: 공급자 경계, endpoint, 타입 변환, 모델 규칙.
+- `docs/api-coverage.md`: typed/raw API 지원 범위.
+- `docs/coordinates-and-types.md`: Pydantic 모델, enum/type alias, 좌표, 공항 메타데이터.
+- `docs/testing.md`: fixture, coverage, live test 정책.
+- `docs/troubleshooting.md`: 사용자에게 보이는 실패와 해결책.
+- `docs/repeated-mistakes.md`: 이미 겪었거나 반복되기 쉬운 실수.
+- `SKILL.md`: 에이전트용 구현 불변조건과 체크리스트.
+- `AGENTS.md`: 작업 라우팅, 모듈 소유권, 검증 체크리스트.
+- `CHANGELOG.md`: 릴리스 관점 변경 이력.
+- `pyproject.toml`: 패키징, 의존성, lint/test 설정.
+
+## 모듈 지도
+
+- `pykrairport/client.py`: 통합 `KrairportClient`, provider 라우팅, 사용자용 메서드.
+- `pykrairport/providers/kac.py`: 한국공항공사 REST/XML provider adapter.
+- `pykrairport/providers/iiac.py`: 인천국제공항공사 B551177 JSON provider adapter.
+- `pykrairport/models.py`: public Pydantic 응답 모델과 `KrairportModel`.
+- `pykrairport/enums.py`: provider, direction, airport, language, schedule, coordinate enum.
+- `pykrairport/types.py`: 외부 wrapper용 type alias.
+- `pykrairport/airports.py`: 번들 공항 메타데이터와 근접 공항 helper.
+- `pykrairport/geo.py`: WGS84 좌표 정규화, DMS 파싱, 거리 계산.
+- `pykrairport/_http.py`: session, retry, HTTP/body-level error mapping.
+- `pykrairport/_xml.py`: KAC-style XML parsing과 item normalization.
+- `pykrairport/_time.py`: KST-aware datetime 파싱.
+- `pykrairport/_convert.py`: 응답 경계의 작은 타입 변환 helper.
+- `pykrairport/_routing.py`: 공항코드별 provider 결정과 조합 검증.
+- `pykrairport/cli.py`: JSON CLI 출력.
+- `tests/`: 네트워크 없는 단위 테스트와 fixture.
+
+## 반드시 지킬 것
+
+- 실제 `serviceKey`, API 키, 인증 토큰은 코드, fixture, 로그, 문서에 남기지 않습니다.
+- 기본 테스트에서 실제 API를 호출하지 않습니다.
+- `ICN`을 KAC로 보내지 않습니다.
+- KAC XML 응답을 JSON처럼 가정하지 않습니다.
+- IIAC-only API에 비-`ICN` 공항을 조용히 허용하지 않습니다.
+- `airport_code`, `airport`, `schAirCode`, `apcd` 같은 provider-native 이름을 public 모델에 그대로 흘리지 않습니다.
+- 편명, 공항코드, 내부 flight unique id처럼 선행 0이나 문자열 의미가 있는 값은 `int`로 변환하지 않습니다.
+- 좌표 순서를 섞지 않습니다. `Coordinate.as_tuple()`은 `(latitude, longitude)`, `Coordinate.as_geojson_position()`은 `(longitude, latitude)`입니다.
+- public enum은 `StrEnum`으로 유지해 문자열 비교와 JSON 직렬화 호환성을 깨지 않습니다.
+- public 응답 모델은 `KrairportModel` 기반 Pydantic 모델로 유지하고, 직렬화는 `model_dump(mode="json")`, `model_dump_json()`, `to_dict()`, `to_json()`을 사용합니다.
+
+## 작업 소유권
+
+### Provider 라우팅과 통합 클라이언트
+
+담당 파일:
+
+- `pykrairport/client.py`
+- `pykrairport/_routing.py`
+- `tests/test_client.py`
+- `tests/test_routing.py`
+
+확인할 것:
+
+- `provider_for_airport("ICN")`은 IIAC입니다.
+- KAC 공항은 KAC로 라우팅합니다.
+- 잘못된 기관-공항 조합은 `UnsupportedAirportError`입니다.
+- 새 public 메서드는 README와 명세에 예시/반환 타입을 반영합니다.
+
+### KAC adapter
+
+담당 파일:
+
+- `pykrairport/providers/kac.py`
+- `pykrairport/_xml.py`
+- `tests/test_kac.py`
+
+확인할 것:
+
+- 인증 파라미터는 `serviceKey`입니다.
+- XML `items.item`은 단일 dict와 list를 모두 처리합니다.
+- KAC raw access는 `service`/`operation` path component를 검증합니다.
+- `ICN` 요청은 KAC endpoint에서 거부합니다.
+
+### IIAC adapter
+
+담당 파일:
+
+- `pykrairport/providers/iiac.py`
+- `tests/test_iiac.py`
+
+확인할 것:
+
+- 가능하면 `type=json`을 요청합니다.
+- B551177 service/operation URL 조립을 안전하게 유지합니다.
+- IIAC-only method는 `ICN`만 허용합니다.
+- data.go.kr 변경 공지가 있는 endpoint는 `docs/api-coverage.md`에 상태를 남깁니다.
+
+### 모델, enum, 타입, 좌표
+
+담당 파일:
+
+- `pykrairport/models.py`
+- `pykrairport/enums.py`
+- `pykrairport/types.py`
+- `pykrairport/geo.py`
+- `pykrairport/airports.py`
+- `docs/coordinates-and-types.md`
+- `tests/test_pydantic_models.py`
+- `tests/test_geo.py`
+- `tests/test_airports.py`
+
+확인할 것:
+
+- Pydantic 모델은 frozen이고 unknown field를 거부합니다.
+- `Provider`, `Direction`은 문자열 비교가 유지됩니다.
+- 좌표는 WGS84 decimal degrees이며 범위 검증을 통과해야 합니다.
+- GeoJSON 순서는 별도 helper로만 제공합니다.
+- 공항 메타데이터는 앱 지도/검색 편의용이며 항법용 공식 원천으로 안내하지 않습니다.
+
+### HTTP, 에러, 변환
+
+담당 파일:
+
+- `pykrairport/_http.py`
+- `pykrairport/_convert.py`
+- `pykrairport/_time.py`
+- `pykrairport/exceptions.py`
+- `tests/test_http.py`
+- `tests/test_convert.py`
+- `tests/test_time.py`
+
+확인할 것:
+
+- HTTP 401/403, 429, 4xx, 5xx 매핑을 공통 예외 계층으로 유지합니다.
+- body-level `resultCode` 실패를 빈 성공으로 반환하지 않습니다.
+- `2400`, `YYYYMMDDHHMM`, 과학적 표기 timestamp를 KST 기준으로 처리합니다.
+- 빈 문자열, 공백, `-`는 `None`으로 정규화합니다.
+
+### 문서
+
+담당 파일:
+
+- 모든 `.md` 문서
+- Python docstring과 설명용 주석
+
+확인할 것:
+
+- 문서는 한글로 작성합니다.
+- 파일 위치는 프로젝트 기준 상대 경로만 사용합니다.
+- Python 내부 문서도 한글로 작성합니다.
+- 코드 식별자, 명령어, provider endpoint, URL은 원문을 유지합니다.
+- 새 실수나 함정은 `docs/repeated-mistakes.md`와 `SKILL.md`에 반영합니다.
+
+## 검증 기준
+
+기본 검증:
+
+```bash
+python -m compileall pykrairport tests
+python -m pytest
+python -m pytest --cov=pykrairport --cov-fail-under=85
+```
+
+정적 검증:
+
+```bash
+python -m ruff check .
+python -m mypy pykrairport
+```
+
+Skill 문서를 변경했으면 다음도 실행합니다.
+
+```bash
+python -X utf8 <skill-creator>/scripts/quick_validate.py .
+```
+
+실제 API 테스트는 opt-in으로만 둡니다.
+
+```bash
+pytest -m live_kac
+pytest -m live_iiac
+```
+
+## 커밋 위생
+
+- `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.coverage`, `__pycache__`, virtual environment는 커밋하지 않습니다.
+- 커밋은 되돌리기 쉬운 단위로 유지합니다.
+- 리모트 푸시 전 `git status --short --branch`로 작업트리를 확인합니다.

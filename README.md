@@ -307,6 +307,7 @@ pytest -m live_iiac
 ```text
 .
 ├── README.md
+├── AGENTS.md
 ├── krairport-api.md
 ├── SKILL.md
 ├── CHANGELOG.md
@@ -367,6 +368,8 @@ tests/
 - 상세 운항 API는 KAC/IIAC 모두 `D-3 ~ D+6` 범위 문서가 많지만, 당일 운항 API는 `당일` 또는 `H-2 ~ H+2` 같은 더 좁은 범위를 사용합니다.
 - 일부 IIAC 응답 예시에는 `estimatedtime`, `scheduletime`이 일반 문자열이 아니라 과학적 표기처럼 보이는 예시가 있어 파서가 느슨해야 합니다.
 - 좌표는 사람/거리계산용 `(latitude, longitude)`와 GeoJSON용 `(longitude, latitude)` 순서가 다르므로 `Coordinate.as_tuple()`과 `Coordinate.as_geojson_position()`을 구분합니다.
+- 문서의 파일 위치 정보는 `pykrairport/client.py`처럼 프로젝트 기준 상대 경로로 작성합니다.
+- Python 내부 문서(module/class/function docstring과 설명용 주석)는 한글로 작성합니다. provider 원문, 코드 식별자, URL은 원문을 유지합니다.
 - 문서상 `serviceURL`과 실제 요청 함수명이 분리되므로 base URL + operation 경로를 함께 관리해야 합니다.
 - Windows/Python 환경에는 IANA timezone database가 없을 수 있으므로 `tzdata` 의존성을 포함합니다. 설치 전 실행 환경에서도 `Asia/Seoul` 고정 UTC+9 fallback을 사용합니다.
 

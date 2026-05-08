@@ -38,6 +38,11 @@ You are helping build and maintain `pykrairport`, a Python client that unifies K
    - inherit from `KrairportModel`
    - keep `ConfigDict(frozen=True, extra="forbid")`
    - serialize with `model_dump(mode="json")` / `model_dump_json()` or `to_dict()` / `to_json()`
+12. **문서 경로는 프로젝트 기준 상대 경로**:
+   - use `pykrairport/client.py`, not local absolute paths
+13. **Python 내부 문서는 한글**:
+   - write module/class/function docstrings and explanatory comments in Korean
+   - preserve provider text, code identifiers, commands, and URLs as-is
 
 ## Initial supported endpoints
 
@@ -378,6 +383,8 @@ Optional live tests:
 15. Mixing GeoJSON `(lon, lat)` with human/geodesic `(lat, lon)`.
 16. Breaking string compatibility when adding enum types.
 17. Keeping dataclass serialization after switching public models to Pydantic.
+18. Writing document file locations as local absolute paths.
+19. Reintroducing English Python docstrings or explanatory comments.
 
 When one of these is fixed, update `docs/repeated-mistakes.md`.
 
@@ -389,3 +396,5 @@ When one of these is fixed, update `docs/repeated-mistakes.md`.
 - Update `docs/coordinates-and-types.md` when enum/type/coordinate policy changes.
 - Update `docs/troubleshooting.md` when a user-visible failure gains a known fix.
 - Update `CHANGELOG.md` for release-facing changes.
+- Write file locations in docs as project-root-relative paths.
+- Write Python docstrings and explanatory comments in Korean unless preserving provider text, code identifiers, commands, or URLs.

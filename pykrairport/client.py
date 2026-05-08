@@ -1,4 +1,4 @@
-"""User-facing unified client."""
+"""사용자용 통합 클라이언트."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from pykrairport.types import DirectionLike, ProviderLike
 
 
 class KrairportClient:
-    """Unified client for Korean airport public APIs."""
+    """한국 공항 공공 API 통합 클라이언트."""
 
     def __init__(
         self,

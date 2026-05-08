@@ -1,4 +1,4 @@
-"""Airport provider routing."""
+"""공항 공급자 라우팅."""
 
 from __future__ import annotations
 

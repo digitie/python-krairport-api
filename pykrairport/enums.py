@@ -1,4 +1,4 @@
-"""Shared enums for pykrairport."""
+"""pykrairport 공용 enum."""
 
 from __future__ import annotations
 
@@ -6,21 +6,21 @@ from enum import StrEnum
 
 
 class Provider(StrEnum):
-    """Airport API provider."""
+    """공항 API 공급자."""
 
     KAC = "kac"
     IIAC = "iiac"
 
 
 class Direction(StrEnum):
-    """Flight direction."""
+    """항공편 운항 방향."""
 
     ARRIVAL = "arrival"
     DEPARTURE = "departure"
 
 
 class Airport(StrEnum):
-    """Supported Korean IATA airport codes."""
+    """지원하는 한국 IATA 공항코드."""
 
     ICN = "ICN"
     GMP = "GMP"
@@ -41,7 +41,7 @@ class Airport(StrEnum):
 
 
 class AirportType(StrEnum):
-    """Airport size/type category used by the bundled airport registry."""
+    """번들 공항 레지스트리에서 사용하는 공항 규모/유형."""
 
     LARGE = "large_airport"
     MEDIUM = "medium_airport"
@@ -51,7 +51,7 @@ class AirportType(StrEnum):
 
 
 class ApiLanguage(StrEnum):
-    """Language code accepted by provider APIs when a language parameter exists."""
+    """언어 파라미터가 있는 공급자 API에서 사용하는 언어 코드."""
 
     KOREAN = "K"
     ENGLISH = "E"
@@ -60,25 +60,25 @@ class ApiLanguage(StrEnum):
 
 
 class ScheduleType(StrEnum):
-    """Regular flight schedule scope."""
+    """정기 운항스케줄 범위."""
 
     DOMESTIC = "domestic"
     INTERNATIONAL = "international"
 
 
 class CoordinateDatum(StrEnum):
-    """Coordinate reference datum exposed by pykrairport."""
+    """pykrairport가 노출하는 좌표 기준계."""
 
     WGS84 = "WGS84"
 
 
 def normalize_provider(value: str | Provider) -> Provider:
-    """Normalize a provider-like value to `Provider`."""
+    """공급자 유사 값을 `Provider`로 정규화합니다."""
 
     return Provider(str(value).strip().lower())
 
 
 def normalize_direction(value: str | Direction) -> Direction:
-    """Normalize a direction-like value to `Direction`."""
+    """운항 방향 유사 값을 `Direction`으로 정규화합니다."""
 
     return Direction(str(value).strip().lower())

@@ -1,4 +1,4 @@
-"""Public typing aliases for pykrairport integrations."""
+"""pykrairport 외부 연동용 공개 타입 alias."""
 
 from __future__ import annotations
 
