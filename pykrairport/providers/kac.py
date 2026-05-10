@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from pykrtour import PlaceCoordinate
+from pykrtour import Address, PlaceCoordinate
 
 from pykrairport._convert import first_value, strip_or_none, to_bool_or_none, to_int_or_none
 from pykrairport._http import HttpClient, SessionLike
@@ -490,6 +490,7 @@ def _build_airport_facility(
         category=strip_or_none(first_value(row, "lclas", "category", "facilityType")),
         floor=strip_or_none(first_value(row, "floor", "floorInfo")),
         location=strip_or_none(first_value(row, "loc", "location", "area")),
+        address=Address.from_mapping(row),
         business_hours=strip_or_none(first_value(row, "operTime", "businessHours")),
         telephone=strip_or_none(first_value(row, "tel", "telephone", "phone")),
         coordinate=PlaceCoordinate.from_mapping(row),

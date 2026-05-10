@@ -35,19 +35,23 @@ You are helping build and maintain `pykrairport`, a Python client that unifies K
    - use `pykrtour.PlaceCoordinate` directly in parameters and response models
    - do not add a `pykrairport` coordinate wrapper/helper
    - `as_tuple()` and `as_geojson_position()` are `(longitude, latitude)`; use `as_lat_lon()` for UI order
-11. **Public response models use Pydantic v2**:
+11. **Addresses use pykrtour directly**:
+   - use `pykrtour.Address` directly in response models
+   - do not add a `pykrairport` address wrapper/helper
+   - keep airport-internal location text separate from address DTOs
+12. **Public response models use Pydantic v2**:
    - inherit from `KrairportModel`
    - keep `ConfigDict(frozen=True, extra="forbid")`
    - serialize with `model_dump(mode="json")` / `model_dump_json()` or `to_dict()` / `to_json()`
-12. **문서 경로는 프로젝트 기준 상대 경로**:
+13. **문서 경로는 프로젝트 기준 상대 경로**:
    - use `pykrairport/client.py`, not local absolute paths
-13. **Python 내부 문서는 한글**:
+14. **Python 내부 문서는 한글**:
    - write module/class/function docstrings and explanatory comments in Korean
    - preserve provider text, code identifiers, commands, and URLs as-is
-14. **Windows 탐색은 PowerShell fallback 우선**:
+15. **Windows 탐색은 PowerShell fallback 우선**:
    - if `rg` is blocked by execution permissions, use `Get-ChildItem` and `Select-String`
    - read/search Korean Markdown and Python docs with `-Encoding UTF8`
-15. **불필요한 wrapper보다 직접 적용 우선**:
+16. **불필요한 wrapper보다 직접 적용 우선**:
    - do not add a wrapper or compatibility layer unless it has a clear boundary responsibility
    - when `pykma`, `pyopinet`, `pykex`, or another maintained library already has a proven implementation pattern, port that pattern directly into `pykrairport`
    - minimal edits are preferred for ordinary fixes, but a larger direct adoption is acceptable when it improves long-term consistency and removes needless indirection
@@ -183,6 +187,8 @@ KAC and IIAC use different field names. Normalize them at the model boundary.
 - Use `pykrtour.PlaceCoordinate` directly for WGS84 decimal degree coordinates.
 - `PlaceCoordinate.as_tuple()` returns `(longitude, latitude)`.
 - `PlaceCoordinate.as_lat_lon()` returns `(latitude, longitude)`.
+- Use `pykrtour.Address` directly for provider address fields.
+- Keep interior terminal/floor/area text as `location`; do not guess it as an address.
 - Bundled airport metadata is convenience data for app maps/search, not aviation navigation data.
 
 ## Type conversion policy
@@ -359,6 +365,7 @@ Required offline tests:
 - raw endpoint path validation
 - enum string compatibility
 - `pykrtour.PlaceCoordinate` parsing/range validation
+- `pykrtour.Address` parsing and serialization in facility models
 - GeoJSON coordinate order
 - bundled airport metadata provider/active filtering
 - nearest airport lookup

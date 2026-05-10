@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-from pykrtour import PlaceCoordinate
+from pykrtour import Address, PlaceCoordinate
 
 from pykrairport.enums import AirportType, Direction, Provider
 from pykrairport.types import RawRecord
@@ -144,6 +144,7 @@ class AirportFacility(KrairportModel):
     category: str | None
     floor: str | None
     location: str | None
+    address: Address | None = None
     business_hours: str | None
     telephone: str | None
     coordinate: PlaceCoordinate | None = None

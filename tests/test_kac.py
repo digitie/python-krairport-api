@@ -148,6 +148,7 @@ def test_kac_parking_status_facilities_buses_and_taxi() -> None:
     </item></items></body></response>"""
     facility_xml = """<response><header><resultCode>00</resultCode></header><body><items><item>
         <apcd>GMP</apcd><facilityNm>안내데스크</facilityNm><floor>1F</floor>
+        <address>서울특별시 강서구 하늘길 112</address>
     </item></items></body></response>"""
     bus_xml = """<response><header><resultCode>00</resultCode></header><body><items><item>
         <busnumber>6000</busnumber><adultfare>15000</adultfare><routeinfo>서울</routeinfo>
@@ -166,7 +167,10 @@ def test_kac_parking_status_facilities_buses_and_taxi() -> None:
     client = KacClient("KAC_KEY", session=session, retries=0)
 
     assert client.parking_status(airport_code="GMP")[0].occupied == 10
-    assert client.airport_facilities(airport_code="GMP")[0].name == "안내데스크"
+    facility = client.airport_facilities(airport_code="GMP")[0]
+    assert facility.name == "안내데스크"
+    assert facility.address is not None
+    assert facility.address.display_address == "서울특별시 강서구 하늘길 112"
     assert client.airport_buses(airport_code="GMP")[0].adult_fare == 15000
     assert client.jeju_taxi_wait()[0].seoul_count == 2
 

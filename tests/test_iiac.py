@@ -234,6 +234,7 @@ def test_taxi_bus_weather_schedule_destination_and_facility() -> None:
                         "facility_nm": "편의점",
                         "terminal": "T1",
                         "floor": "1F",
+                        "address": "인천광역시 중구 공항로 272",
                     }
                 )
             ),
@@ -246,7 +247,10 @@ def test_taxi_bus_weather_schedule_destination_and_facility() -> None:
     assert client.world_weather(direction="arrival")[0].temperature == 20
     assert client.flight_schedules(direction="arrival")[0].flight_id == "KE1"
     assert client.service_destinations()[0].city_code == "TYO"
-    assert client.facilities()[0].name == "편의점"
+    facility = client.facilities()[0]
+    assert facility.name == "편의점"
+    assert facility.address is not None
+    assert facility.address.display_address == "인천광역시 중구 공항로 272"
 
     assert session.calls[0].url.endswith("/getTaxiStatus")
     assert session.calls[1].url.endswith("/getBusInfo")

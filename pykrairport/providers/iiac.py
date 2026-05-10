@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from pykrtour import PlaceCoordinate
+from pykrtour import Address, PlaceCoordinate
 
 from pykrairport._convert import (
     as_list,
@@ -577,6 +577,7 @@ def _build_facility(row: Mapping[str, Any]) -> AirportFacility:
         category=strip_or_none(first_value(row, "category", "lclas", "facilityType")),
         floor=strip_or_none(first_value(row, "floor", "floorInfo")),
         location=strip_or_none(first_value(row, "location", "loc", "area")),
+        address=Address.from_mapping(row),
         business_hours=strip_or_none(first_value(row, "operTime", "businessHours", "hours")),
         telephone=strip_or_none(first_value(row, "tel", "telephone", "phone")),
         coordinate=PlaceCoordinate.from_mapping(row),

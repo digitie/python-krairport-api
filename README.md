@@ -18,6 +18,7 @@
 - **공급자별 필드명 흡수**: `airport_code`, `schAirCode`, `airport`, `flight_id`, `f_id`, `schFID`처럼 기관마다 다른 필드명을 Pythonic 인터페이스로 통합합니다.
 - **Pydantic 모델**: `Flight`, `AircraftAssignment`, `ParkingFee`, `ArrivalCongestion`, `PassengerForecast` 같은 immutable `BaseModel`과 public `StrEnum`/type alias를 제공합니다.
 - **위경도 표준화**: 공항 좌표와 provider 좌표 필드를 `pykrtour.PlaceCoordinate`로 직접 정규화하고, GeoJSON용 `(longitude, latitude)` 변환을 제공합니다.
+- **주소 표준화**: 시설 provider row의 주소 필드는 `pykrtour.Address`로 직접 정규화하고, 공항 내부 위치 문자열은 `location`에 따로 보존합니다.
 - **공항 메타데이터 레지스트리**: `get_airport()`, `list_airports()`, `nearest_airport()`로 지도/검색/근접 공항 계산을 지원합니다.
 - **누락 API raw fallback**: 아직 typed 모델로 고정하지 않은 KAC/IIAC 공식 엔드포인트도 `kac_raw_items()` / `iiac_raw_items()`로 접근할 수 있습니다.
 - **fixture 기반 테스트 우선**: 기본 테스트는 실 API 호출 없이 동작하고, live 테스트는 각 기관 서비스키가 있을 때만 분리 실행합니다.
@@ -239,6 +240,7 @@ class PassengerForecast(KrairportModel):
 | 공항코드 `GMP`, `ICN` | `str` 또는 `Airport` | 항상 대문자 IATA 코드 보존 |
 | 공급자/방향 | `Provider`, `Direction` | `StrEnum`이라 문자열 비교/JSON 직렬화 가능 |
 | 위경도 | `pykrtour.PlaceCoordinate` | WGS84 decimal degrees, 저장/GeoJSON `(lon, lat)`, UI용 `(lat, lon)`은 `as_lat_lon()` |
+| 주소 | `pykrtour.Address` | provider 주소 필드는 자유주소/지번/도로명 DTO로 보존, 내부 위치는 `location` |
 | 편명 `KE123`, `7C1101` | `str` | leading zero 가능성을 고려해 숫자형 변환 금지 |
 | 빈 문자열, 공백 | `None` | 공통 정규화 |
 

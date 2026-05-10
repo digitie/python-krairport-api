@@ -4,6 +4,7 @@
 
 - 좌표 public surface를 `pykrtour.PlaceCoordinate` 직접 사용 방식으로 변경
 - `pykrairport.geo` 좌표 wrapper/helper 제거
+- 시설 주소 public surface를 `pykrtour.Address` 직접 사용 방식으로 추가
 
 ## 0.1.0 - 2026-04-30
 

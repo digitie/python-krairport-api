@@ -6,6 +6,7 @@ from pykrairport.enums import Airport, Direction, Provider
 
 def test_public_exports() -> None:
     assert pykrairport.__version__ == "0.1.0"
+    assert hasattr(pykrairport, "Address")
     assert hasattr(pykrairport, "KrairportClient")
     assert hasattr(pykrairport, "Flight")
     assert hasattr(pykrairport, "PlaceCoordinate")

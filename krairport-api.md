@@ -29,7 +29,7 @@
 | 승객예고 | IIAC | `getfPassengerNoticeIKR` | 조회일과 다음날 |
 | 공항코드 | KAC | `getAirportCodeList` | 전국공항 코드 |
 | 정기운항 스케줄 | KAC/IIAC | KAC `FlightScheduleList`, IIAC `PaxFltSched` | 국내/국제, 도착/출발 |
-| 공항시설/상업시설 | KAC/IIAC | KAC `AirportFacilities`, IIAC `StatusOfFacility` | 시설명/층/위치 |
+| 공항시설/상업시설 | KAC/IIAC | KAC `AirportFacilities`, IIAC `StatusOfFacility` | 시설명/층/위치/주소 |
 | 버스 | KAC/IIAC | KAC `AirportBusInfo`, IIAC `BusInformation` | 노선/요금/승차장 |
 | 택시 | KAC/IIAC | KAC `taxiWaitInfo`, IIAC `StatusOfTaxi` | 제주 택시대기, 인천 택시출차 |
 | 세계날씨 | IIAC | `StatusOfPassengerWorldWeatherInfo` | 상대 공항 기상 |
@@ -228,6 +228,7 @@ client.iiac_raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1})
 - 디버깅용 `raw: RawRecord`는 유지하되 기본값은 빈 mapping
 - provider/direction은 public 표면에서 `Provider`, `Direction` enum 사용
 - 좌표는 `pykrtour.PlaceCoordinate | None`으로 표준화
+- 주소는 `pykrtour.Address | None`으로 표준화하고 `Address.from_mapping()`을 직접 사용
 - JSON 직렬화는 `model_dump(mode="json")`, `model_dump_json()`, `to_dict()`, `to_json()` 사용
 
 필수 모델:
@@ -241,6 +242,7 @@ ArrivalCongestion
 PassengerForecast
 AirportCode
 AirportMetadata
+Address
 PlaceCoordinate
 KrairportModel
 ```
@@ -283,7 +285,14 @@ KrairportModel
 - DMS 문자열과 `N/E/S/W` hemisphere는 decimal degrees로 변환
 - 범위 밖 위도/경도는 `ValueError`
 
-### 5.5 문자열 유지 규칙
+### 5.5 주소
+
+- public 주소 타입: `pykrtour.Address`
+- provider row 주소 필드는 `Address.from_mapping()`으로 직접 변환
+- 공항 내부 위치 문자열은 주소로 추정하지 않고 `AirportFacility.location`에 유지
+- 자유 주소 문자열만으로 법정동코드를 임의 추정하지 않음
+
+### 5.6 문자열 유지 규칙
 
 다음 값은 절대 `int`로 바꾸지 않습니다.
 

@@ -84,7 +84,13 @@
 - 원인: 일반 `Enum`을 반환하거나 모델 필드를 enum-only로 급격히 바꿈
 - 가드레일: public enum은 모두 `StrEnum`으로 두고 기존 문자열 비교 테스트를 유지
 
-## 15. Pydantic 전환 후 dataclass 직렬화를 계속 쓰는 실수
+## 15. 공항 내부 위치를 주소로 오인하는 실수
+
+- 증상: `T1 1F`, `국내선`, `면세구역` 같은 값이 주소 DTO로 직렬화됨
+- 원인: provider의 `loc`/`location` 필드를 실제 도로명/지번주소처럼 처리
+- 가드레일: 내부 위치는 `AirportFacility.location`에 두고, 주소 필드가 있을 때만 `pykrtour.Address.from_mapping()`을 직접 사용
+
+## 16. Pydantic 전환 후 dataclass 직렬화를 계속 쓰는 실수
 
 - 증상: CLI나 외부 앱에서 `asdict()`가 더 이상 응답 모델을 dict로 바꾸지 못함
 - 원인: public 응답 모델이 Pydantic `BaseModel`로 바뀌었는데 직렬화 경로를 갱신하지 않음

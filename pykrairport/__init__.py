@@ -1,6 +1,6 @@
 """한국 공항 공공 API Python 클라이언트."""
 
-from pykrtour import PlaceCoordinate
+from pykrtour import Address, PlaceCoordinate
 
 from pykrairport.airports import (
     AIRPORTS,
@@ -65,6 +65,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "AIRPORTS",
+    "Address",
     "AircraftAssignment",
     "Airport",
     "AirportCode",

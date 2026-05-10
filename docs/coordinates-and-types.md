@@ -2,7 +2,7 @@
 
 확인 기준일: 2026-05-06
 
-`pykrairport`는 외부 프로그램에서 안정적으로 사용할 수 있도록 문자열 API를 유지하면서 `StrEnum`, 타입 alias, `pykrtour.PlaceCoordinate` 기반 WGS84 좌표 모델을 함께 제공합니다.
+`pykrairport`는 외부 프로그램에서 안정적으로 사용할 수 있도록 문자열 API를 유지하면서 `StrEnum`, 타입 alias, `pykrtour.PlaceCoordinate`와 `pykrtour.Address` 기반 장소 타입을 함께 제공합니다.
 
 ## Pydantic Models
 
@@ -146,3 +146,20 @@ nearest = nearest_airport(PlaceCoordinate.from_values("37.56 N", "126.79 E"))
 
 - 번들 좌표는 사용자 앱의 지도/검색 편의용입니다. 항공 운항, 관제, 항법 목적의 공식 원천으로 사용하지 마세요.
 - provider API가 좌표 필드를 직접 반환하는 경우 `PlaceCoordinate.from_mapping()`을 모델 생성 경계에서 바로 사용합니다.
+
+## Address
+
+주소 public surface는 `pykrtour.Address`를 직접 사용합니다. `pykrairport` 안에 주소 wrapper나 helper를 두지 않습니다.
+
+```python
+from pykrairport import Address
+
+address = Address.from_mapping({"address": "서울특별시 강서구 하늘길 112"})
+address.display_address
+```
+
+규칙:
+
+- provider row에 주소 계열 필드가 있으면 모델 생성 경계에서 `Address.from_mapping()`을 바로 호출합니다.
+- 공항 내부 층/구역/게이트 같은 위치 설명은 주소로 추정하지 않고 기존 `location` 문자열에 둡니다.
+- 자유 주소 문자열만으로 법정동코드를 임의 추정하지 않습니다.
