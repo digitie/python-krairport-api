@@ -6,8 +6,8 @@ from collections.abc import Mapping
 from typing import Any
 from xml.etree import ElementTree
 
-from pykrairport._convert import as_list
-from pykrairport.exceptions import KrairportParseError
+from krairport._convert import as_list
+from krairport.exceptions import KrairportParseError
 
 
 def parse_xml(text: str) -> dict[str, Any]:

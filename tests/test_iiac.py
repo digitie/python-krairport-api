@@ -4,8 +4,8 @@ from datetime import datetime
 
 import pytest
 
-from pykrairport.exceptions import UnsupportedAirportError
-from pykrairport.providers.iiac import IiacClient
+from krairport.exceptions import UnsupportedAirportError
+from krairport.providers.iiac import IiacClient
 from tests.conftest import FakeResponse, FakeSession
 
 

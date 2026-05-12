@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pykrairport._convert import strip_or_none
+from krairport._convert import strip_or_none
 
 KST: tzinfo
 try:

@@ -4,7 +4,7 @@ from datetime import date
 
 from pykrtour import PlaceCoordinate
 
-from pykrairport.client import KrairportClient
+from krairport.client import KrairportClient
 from tests.conftest import FakeResponse, FakeSession
 
 

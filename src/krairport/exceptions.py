@@ -1,10 +1,10 @@
-"""pykrairport 예외 계층."""
+"""krairport 예외 계층."""
 
 from __future__ import annotations
 
 
 class KrairportError(Exception):
-    """모든 pykrairport 오류의 기본 예외."""
+    """모든 krairport 오류의 기본 예외."""
 
 
 class KrairportAuthError(KrairportError):

@@ -4,8 +4,8 @@ from datetime import datetime
 
 import pytest
 
-from pykrairport.exceptions import KrairportParseError, UnsupportedAirportError
-from pykrairport.providers.kac import KacClient
+from krairport.exceptions import KrairportParseError, UnsupportedAirportError
+from krairport.providers.kac import KacClient
 from tests.conftest import FakeResponse, FakeSession
 
 

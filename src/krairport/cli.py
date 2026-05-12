@@ -1,4 +1,4 @@
-"""pykrairport 명령줄 진입점."""
+"""krairport 명령줄 진입점."""
 
 from __future__ import annotations
 
@@ -9,11 +9,11 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from pykrairport.client import KrairportClient
+from krairport.client import KrairportClient
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="pykrairport")
+    parser = argparse.ArgumentParser(prog="krairport")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     departures = subparsers.add_parser("departures")

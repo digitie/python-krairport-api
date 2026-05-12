@@ -2,7 +2,7 @@
 
 ## 역할
 
-이 문서는 `pykrairport`에서 작업하는 Codex/agent를 위한 운영 가이드입니다. `pykma`, `pyopinet`, `pykex`의 작업 방식처럼 빠르게 방향을 잡기 위한 문서이며, 세부 API 명세와 구현 규칙은 작업 주제에 맞춰 `krairport-api.md`, `SKILL.md`, `docs/` 아래 문서를 함께 확인합니다.
+이 문서는 `krairport`에서 작업하는 Codex/agent를 위한 운영 가이드입니다. `pykma`, `pyopinet`, `pykex`의 작업 방식처럼 빠르게 방향을 잡기 위한 문서이며, 세부 API 명세와 구현 규칙은 작업 주제에 맞춰 `krairport-api.md`, `SKILL.md`, `docs/` 아래 문서를 함께 확인합니다.
 
 ## 지시 우선순위
 
@@ -18,7 +18,7 @@
 
 ## 프로젝트 기준
 
-- `pykrairport`는 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공항 OpenAPI를 통합하는 비공식 Python 클라이언트입니다.
+- `krairport`는 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공항 OpenAPI를 통합하는 비공식 Python 클라이언트입니다.
 - `ICN`은 IIAC, 그 외 지원 공항은 KAC로 라우팅합니다.
 - public 응답은 Pydantic v2 기반 immutable 모델과 `StrEnum`으로 제공합니다.
 - 공항 좌표는 `pykrtour.PlaceCoordinate`, 시설 주소는 `pykrtour.Address`를 파라미터와 반환 모델에 직접 사용합니다.
@@ -28,14 +28,14 @@
 
 ## 구현 방향
 
-- 불필요한 wrapper나 호환층을 새로 만들지 않습니다. 좌표와 주소는 `pykrairport` wrapper 없이 `pykrtour.PlaceCoordinate`, `pykrtour.Address`를 직접 import해 씁니다.
-- `pykma`, `pyopinet`, `pykex` 또는 가까운 유지보수 라이브러리에 이미 검증된 구현 패턴이 있으면, 작은 local patch로 우회하지 말고 그 구현 방향을 `pykrairport` 코드에 직접 적용합니다.
+- 불필요한 wrapper나 호환층을 새로 만들지 않습니다. 좌표와 주소는 `krairport` wrapper 없이 `pykrtour.PlaceCoordinate`, `pykrtour.Address`를 직접 import해 씁니다.
+- `pykma`, `pyopinet`, `pykex` 또는 가까운 유지보수 라이브러리에 이미 검증된 구현 패턴이 있으면, 작은 local patch로 우회하지 말고 그 구현 방향을 `krairport` 코드에 직접 적용합니다.
 - 최소 수정은 기본 작업 습관이지만, 검증된 구현을 따르는 것이 장기 유지보수와 일관성을 높이면 더 큰 변경도 허용합니다. 이때 변경 범위, 문서, 테스트를 함께 맞춥니다.
-- 다른 라이브러리 구현을 참고할 때도 provider-native 이름, 인증키, 응답 스키마를 그대로 public surface로 흘리지 않고 `pykrairport`의 모델/예외/라우팅 규칙에 맞춰 흡수합니다.
+- 다른 라이브러리 구현을 참고할 때도 provider-native 이름, 인증키, 응답 스키마를 그대로 public surface로 흘리지 않고 `krairport`의 모델/예외/라우팅 규칙에 맞춰 흡수합니다.
 
 ## 문서/경로 규칙
 
-- 문서의 파일 위치 정보는 항상 프로젝트 기준 상대 경로로 씁니다. 예: `pykrairport/client.py`, `docs/testing.md`.
+- 문서의 파일 위치 정보는 항상 프로젝트 기준 상대 경로로 씁니다. 예: `src/krairport/client.py`, `docs/testing.md`.
 - 로컬 절대 경로, 사용자 홈 경로, 드라이브 경로는 문서에 쓰지 않습니다.
 - 프로젝트 문서는 한글로 작성합니다.
 - Python 내부 문서도 한글로 작성합니다. 모듈 docstring, class/function docstring, 설명용 주석은 한글을 기본으로 하고, provider 원문/코드 식별자/URL만 원문을 유지합니다.
@@ -63,21 +63,21 @@
 
 ## 모듈 지도
 
-- `pykrairport/client.py`: 통합 `KrairportClient`, provider 라우팅, 사용자용 메서드.
-- `pykrairport/providers/kac.py`: 한국공항공사 REST/XML provider adapter.
-- `pykrairport/providers/iiac.py`: 인천국제공항공사 B551177 JSON provider adapter.
-- `pykrairport/models.py`: public Pydantic 응답 모델과 `KrairportModel`.
-- `pykrairport/enums.py`: provider, direction, airport, language, schedule enum.
-- `pykrairport/types.py`: 외부 wrapper용 type alias.
-- `pykrairport/airports.py`: 번들 공항 메타데이터와 근접 공항 helper.
+- `src/krairport/client.py`: 통합 `KrairportClient`, provider 라우팅, 사용자용 메서드.
+- `src/krairport/providers/kac.py`: 한국공항공사 REST/XML provider adapter.
+- `src/krairport/providers/iiac.py`: 인천국제공항공사 B551177 JSON provider adapter.
+- `src/krairport/models.py`: public Pydantic 응답 모델과 `KrairportModel`.
+- `src/krairport/enums.py`: provider, direction, airport, language, schedule enum.
+- `src/krairport/types.py`: 외부 wrapper용 type alias.
+- `src/krairport/airports.py`: 번들 공항 메타데이터와 근접 공항 helper.
 - 좌표 정규화, DMS 파싱, 거리 계산은 `pykrtour.PlaceCoordinate`와 `pykrtour.coordinates`를 직접 사용합니다.
 - 주소 정규화는 `pykrtour.Address`를 직접 사용합니다.
-- `pykrairport/_http.py`: session, retry, HTTP/body-level error mapping.
-- `pykrairport/_xml.py`: KAC-style XML parsing과 item normalization.
-- `pykrairport/_time.py`: KST-aware datetime 파싱.
-- `pykrairport/_convert.py`: 응답 경계의 작은 타입 변환 helper.
-- `pykrairport/_routing.py`: 공항코드별 provider 결정과 조합 검증.
-- `pykrairport/cli.py`: JSON CLI 출력.
+- `src/krairport/_http.py`: session, retry, HTTP/body-level error mapping.
+- `src/krairport/_xml.py`: KAC-style XML parsing과 item normalization.
+- `src/krairport/_time.py`: KST-aware datetime 파싱.
+- `src/krairport/_convert.py`: 응답 경계의 작은 타입 변환 helper.
+- `src/krairport/_routing.py`: 공항코드별 provider 결정과 조합 검증.
+- `src/krairport/cli.py`: JSON CLI 출력.
 - `tests/`: 네트워크 없는 단위 테스트와 fixture.
 
 ## 반드시 지킬 것
@@ -100,8 +100,8 @@
 
 담당 파일:
 
-- `pykrairport/client.py`
-- `pykrairport/_routing.py`
+- `src/krairport/client.py`
+- `src/krairport/_routing.py`
 - `tests/test_client.py`
 - `tests/test_routing.py`
 
@@ -116,8 +116,8 @@
 
 담당 파일:
 
-- `pykrairport/providers/kac.py`
-- `pykrairport/_xml.py`
+- `src/krairport/providers/kac.py`
+- `src/krairport/_xml.py`
 - `tests/test_kac.py`
 
 확인할 것:
@@ -131,7 +131,7 @@
 
 담당 파일:
 
-- `pykrairport/providers/iiac.py`
+- `src/krairport/providers/iiac.py`
 - `tests/test_iiac.py`
 
 확인할 것:
@@ -145,10 +145,10 @@
 
 담당 파일:
 
-- `pykrairport/models.py`
-- `pykrairport/enums.py`
-- `pykrairport/types.py`
-- `pykrairport/airports.py`
+- `src/krairport/models.py`
+- `src/krairport/enums.py`
+- `src/krairport/types.py`
+- `src/krairport/airports.py`
 - `docs/coordinates-and-types.md`
 - `tests/test_pydantic_models.py`
 - `tests/test_geo.py`
@@ -159,17 +159,17 @@
 - Pydantic 모델은 frozen이고 unknown field를 거부합니다.
 - `Provider`, `Direction`은 문자열 비교가 유지됩니다.
 - 좌표는 WGS84 decimal degrees이며 범위 검증을 통과해야 합니다.
-- `pykrairport` 안에 좌표/주소 wrapper/helper를 만들지 않고 `PlaceCoordinate.from_mapping()`, `Address.from_mapping()` 같은 pykrtour API를 직접 호출합니다.
+- `krairport` 안에 좌표/주소 wrapper/helper를 만들지 않고 `PlaceCoordinate.from_mapping()`, `Address.from_mapping()` 같은 pykrtour API를 직접 호출합니다.
 - 공항 메타데이터는 앱 지도/검색 편의용이며 항법용 공식 원천으로 안내하지 않습니다.
 
 ### HTTP, 에러, 변환
 
 담당 파일:
 
-- `pykrairport/_http.py`
-- `pykrairport/_convert.py`
-- `pykrairport/_time.py`
-- `pykrairport/exceptions.py`
+- `src/krairport/_http.py`
+- `src/krairport/_convert.py`
+- `src/krairport/_time.py`
+- `src/krairport/exceptions.py`
 - `tests/test_http.py`
 - `tests/test_convert.py`
 - `tests/test_time.py`
@@ -201,16 +201,16 @@
 기본 검증:
 
 ```bash
-python -m compileall pykrairport tests
+python -m compileall src/krairport tests
 python -m pytest
-python -m pytest --cov=pykrairport --cov-fail-under=85
+python -m pytest --cov=krairport --cov-fail-under=85
 ```
 
 정적 검증:
 
 ```bash
 python -m ruff check .
-python -m mypy pykrairport
+python -m mypy src/krairport
 ```
 
 Skill 문서를 변경했으면 다음도 실행합니다.

@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-import pykrairport
-from pykrairport.enums import Airport, Direction, Provider
+import krairport
+from krairport.enums import Airport, Direction, Provider
 
 
 def test_public_exports() -> None:
-    assert pykrairport.__version__ == "0.1.0"
-    assert hasattr(pykrairport, "Address")
-    assert hasattr(pykrairport, "KrairportClient")
-    assert hasattr(pykrairport, "Flight")
-    assert hasattr(pykrairport, "PlaceCoordinate")
-    assert hasattr(pykrairport, "AirportMetadata")
-    assert hasattr(pykrairport, "get_airport")
+    assert krairport.__version__ == "0.1.0"
+    assert hasattr(krairport, "Address")
+    assert hasattr(krairport, "KrairportClient")
+    assert hasattr(krairport, "Flight")
+    assert hasattr(krairport, "PlaceCoordinate")
+    assert hasattr(krairport, "AirportMetadata")
+    assert hasattr(krairport, "get_airport")
 
 
 def test_enum_values() -> None:

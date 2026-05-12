@@ -7,8 +7,8 @@ from typing import Any, Protocol, cast
 
 import requests
 
-from pykrairport._xml import parse_xml, response_header
-from pykrairport.exceptions import (
+from krairport._xml import parse_xml, response_header
+from krairport.exceptions import (
     KrairportAuthError,
     KrairportNetworkError,
     KrairportParseError,

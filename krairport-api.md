@@ -1,6 +1,6 @@
 # krairport API 명세
 
-`pykrairport`는 한국공항공사(KAC)와 인천국제공항공사(IIAC) OpenAPI를 통합하는 Python 라이브러리입니다. 이 문서는 `0.1.0` 구현과 이후 확장의 public API, 공급자 라우팅, 타입 변환, 테스트 기준을 고정하기 위한 명세입니다.
+`krairport`는 한국공항공사(KAC)와 인천국제공항공사(IIAC) OpenAPI를 통합하는 Python 라이브러리입니다. 이 문서는 `0.1.0` 구현과 이후 확장의 public API, 공급자 라우팅, 타입 변환, 테스트 기준을 고정하기 위한 명세입니다.
 
 ## 1. 범위
 
@@ -205,7 +205,7 @@ def nearest_airport(
 - `PlaceCoordinate.as_tuple()`과 `PlaceCoordinate.as_geojson_position()`은 GeoJSON 표준인 `(longitude, latitude)`입니다.
 - UI나 사람이 읽는 순서는 `PlaceCoordinate.as_lat_lon()`으로 `(latitude, longitude)`를 명시합니다.
 - `Airport`, `Provider`, `Direction`은 모두 `StrEnum`이므로 문자열 비교와 JSON 직렬화가 가능합니다.
-- 타입 alias는 `pykrairport.types`에서 public API로 제공합니다.
+- 타입 alias는 `krairport.types`에서 public API로 제공합니다.
 
 ### 3.7 누락/확장 API raw access
 
@@ -434,7 +434,7 @@ KrairportError
 - IIAC `arrival_congestion`의 인원수 타입 변환
 - `passenger_forecast`의 구역별 합계 필드 변환
 - CLI JSON 직렬화와 public export
-- coverage gate: `--cov=pykrairport --cov-fail-under=85`
+- coverage gate: `--cov=krairport --cov-fail-under=85`
 - API 커버리지 문서: `docs/api-coverage.md`
 - enum/type/좌표 표준화: `docs/coordinates-and-types.md`
 - 좌표 DMS/decimal 변환, GeoJSON 순서, 근접 공항 계산
@@ -472,7 +472,7 @@ Live 테스트:
 
 문서 작성 규칙:
 
-- 파일 위치 정보는 프로젝트 기준 상대 경로로 작성합니다. 예: `pykrairport/client.py`, `docs/testing.md`
+- 파일 위치 정보는 프로젝트 기준 상대 경로로 작성합니다. 예: `src/krairport/client.py`, `docs/testing.md`
 - Python 내부 문서(module/class/function docstring과 설명용 주석)는 한글로 작성합니다.
 - provider 원문, 코드 식별자, 명령어, URL은 원문을 유지합니다.
 

@@ -6,11 +6,11 @@ from types import MappingProxyType
 
 from pykrtour import PlaceCoordinate
 
-from pykrairport._convert import normalize_airport_code
-from pykrairport.enums import Airport, AirportType, Provider, normalize_provider
-from pykrairport.exceptions import UnsupportedAirportError
-from pykrairport.models import AirportMetadata
-from pykrairport.types import ProviderLike
+from krairport._convert import normalize_airport_code
+from krairport.enums import Airport, AirportType, Provider, normalize_provider
+from krairport.exceptions import UnsupportedAirportError
+from krairport.models import AirportMetadata
+from krairport.types import ProviderLike
 
 _OURAIRPORTS_SOURCE = "OurAirports airports.csv, last checked 2026-05-06"
 _HISTORIC_SOURCE = "Historic airport coordinate reference, last checked 2026-05-06"

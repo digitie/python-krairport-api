@@ -2,7 +2,7 @@
 
 확인 기준일: 2026-04-30
 
-이 문서는 KAC/IIAC 공식 목록과 `pykrairport` 구현 범위를 대조한 기록입니다. 목적은 "빠진 API"를 다시 손으로 훑는 일을 줄이고, typed 모델로 안정화된 API와 raw fallback으로 접근 가능한 API를 구분하는 것입니다.
+이 문서는 KAC/IIAC 공식 목록과 `krairport` 구현 범위를 대조한 기록입니다. 목적은 "빠진 API"를 다시 손으로 훑는 일을 줄이고, typed 모델로 안정화된 API와 raw fallback으로 접근 가능한 API를 구분하는 것입니다.
 
 공식 확인 출처:
 

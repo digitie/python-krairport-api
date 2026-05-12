@@ -3,15 +3,15 @@ from __future__ import annotations
 import pytest
 from pykrtour import PlaceCoordinate
 
-from pykrairport.airports import (
+from krairport.airports import (
     KAC_AIRPORTS,
     get_airport,
     get_airport_or_none,
     list_airports,
     nearest_airport,
 )
-from pykrairport.enums import Airport, AirportType, Provider
-from pykrairport.exceptions import UnsupportedAirportError
+from krairport.enums import Airport, AirportType, Provider
+from krairport.exceptions import UnsupportedAirportError
 
 
 def test_get_airport_returns_standard_metadata() -> None:

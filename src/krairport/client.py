@@ -9,11 +9,11 @@ from typing import Any
 
 from pykrtour import PlaceCoordinate
 
-from pykrairport._http import SessionLike
-from pykrairport._routing import provider_for_airport
-from pykrairport.airports import get_airport, list_airports, nearest_airport
-from pykrairport.enums import Provider
-from pykrairport.models import (
+from krairport._http import SessionLike
+from krairport._routing import provider_for_airport
+from krairport.airports import get_airport, list_airports, nearest_airport
+from krairport.enums import Provider
+from krairport.models import (
     AircraftAssignment,
     AirportCode,
     AirportFacility,
@@ -29,8 +29,8 @@ from pykrairport.models import (
     TaxiStatus,
     WorldWeather,
 )
-from pykrairport.providers import IiacClient, KacClient
-from pykrairport.types import DirectionLike, ProviderLike
+from krairport.providers import IiacClient, KacClient
+from krairport.types import DirectionLike, ProviderLike
 
 
 class KrairportClient:

@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pykrairport"
+name = "python-krairport-api"
 version = "0.1.0"
 description = "Typed Python client for Korean airport APIs across KAC and IIAC."
 readme = "README.md"
@@ -39,13 +39,14 @@ dev = [
 ]
 
 [project.scripts]
-pykrairport = "pykrairport.cli:main"
+krairport = "krairport.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["pykrairport*"]
+where = ["src"]
+include = ["krairport*"]
 
 [tool.setuptools.package-data]
-pykrairport = ["py.typed"]
+krairport = ["py.typed"]
 
 [tool.ruff]
 line-length = 100
@@ -61,6 +62,7 @@ warn_unused_ignores = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 markers = [
   "live_kac: tests that call the real KAC APIs and require KAC_SERVICE_KEY",
   "live_iiac: tests that call the real IIAC APIs and require IIAC_SERVICE_KEY",

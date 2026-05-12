@@ -1,6 +1,6 @@
 # 테스트 정책
 
-`pykrairport` 테스트는 기본적으로 **네트워크 없이** 돌아가야 합니다. KAC와 IIAC 모두 일별 트래픽 제한이 있고, 운항/혼잡도 데이터는 시점에 따라 쉽게 달라지므로 fixture 기반 테스트가 기본입니다.
+`krairport` 테스트는 기본적으로 **네트워크 없이** 돌아가야 합니다. KAC와 IIAC 모두 일별 트래픽 제한이 있고, 운항/혼잡도 데이터는 시점에 따라 쉽게 달라지므로 fixture 기반 테스트가 기본입니다.
 
 ## 원칙
 
@@ -45,7 +45,7 @@
 ```bash
 pytest -m live_kac
 pytest -m live_iiac
-pytest --cov=pykrairport --cov-fail-under=85
+pytest --cov=krairport --cov-fail-under=85
 ```
 
 환경변수:

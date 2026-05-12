@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from pykrairport._routing import ensure_iiac_airport, ensure_kac_airport, provider_for_airport
-from pykrairport.exceptions import UnsupportedAirportError
+from krairport._routing import ensure_iiac_airport, ensure_kac_airport, provider_for_airport
+from krairport.exceptions import UnsupportedAirportError
 
 
 def test_icn_routes_to_iiac() -> None:

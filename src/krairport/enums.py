@@ -1,4 +1,4 @@
-"""pykrairport 공용 enum."""
+"""krairport 공용 enum."""
 
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ class ScheduleType(StrEnum):
 
 
 class CoordinateDatum(StrEnum):
-    """pykrairport가 노출하는 좌표 기준계."""
+    """krairport가 노출하는 좌표 기준계."""
 
     WGS84 = "WGS84"
 

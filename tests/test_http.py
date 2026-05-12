@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from pykrairport._http import HttpClient
-from pykrairport.exceptions import (
+from krairport._http import HttpClient
+from krairport.exceptions import (
     KrairportAuthError,
     KrairportNetworkError,
     KrairportParseError,

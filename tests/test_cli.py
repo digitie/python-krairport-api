@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pykrairport.cli import main
-from pykrairport.models import Flight, ParkingAreaStatus
+from krairport.cli import main
+from krairport.models import Flight, ParkingAreaStatus
 
 
 class FakeClient:
@@ -30,7 +30,7 @@ class FakeClient:
 
 
 def test_cli_departures(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
-    monkeypatch.setattr("pykrairport.cli.KrairportClient", FakeClient)
+    monkeypatch.setattr("krairport.cli.KrairportClient", FakeClient)
 
     assert main(["departures", "--airport-code", "GMP"]) == 0
 
@@ -38,7 +38,7 @@ def test_cli_departures(monkeypatch, capsys) -> None:  # type: ignore[no-untyped
 
 
 def test_cli_arrivals(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
-    monkeypatch.setattr("pykrairport.cli.KrairportClient", FakeClient)
+    monkeypatch.setattr("krairport.cli.KrairportClient", FakeClient)
 
     assert main(["arrivals", "--airport-code", "ICN"]) == 0
 
@@ -46,7 +46,7 @@ def test_cli_arrivals(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-d
 
 
 def test_cli_parking_status(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
-    monkeypatch.setattr("pykrairport.cli.KrairportClient", FakeClient)
+    monkeypatch.setattr("krairport.cli.KrairportClient", FakeClient)
 
     assert main(["parking-status", "--airport-code", "ICN"]) == 0
 

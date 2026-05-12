@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from pykrairport._xml import extract_items, parse_xml, response_header
-from pykrairport.exceptions import KrairportParseError
+from krairport._xml import extract_items, parse_xml, response_header
+from krairport.exceptions import KrairportParseError
 
 
 def test_extracts_repeated_xml_items(load_fixture) -> None:  # type: ignore[no-untyped-def]

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from pykrairport._convert import (
+from krairport._convert import (
     as_list,
     first_value,
     normalize_airport_code,

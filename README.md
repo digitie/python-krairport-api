@@ -1,8 +1,8 @@
-# pykrairport
+# python-krairport-api
 
 한국공항공사(KAC)와 인천국제공항공사(IIAC) OpenAPI를 하나의 Python 인터페이스로 묶기 위한 공항 데이터 라이브러리 설계 문서입니다.
 
-`pykrairport`는 "인천공항은 인천국제공항공사, 그 외 전국공항은 한국공항공사"라는 공급자 경계를 내부에서 흡수하고, 운항/주차/혼잡도/공항 메타데이터를 Pydantic 기반 Python 타입 모델로 일관되게 제공하는 것을 목표로 합니다.
+`python-krairport-api`는 "인천공항은 인천국제공항공사, 그 외 전국공항은 한국공항공사"라는 공급자 경계를 내부에서 흡수하고, 운항/주차/혼잡도/공항 메타데이터를 Pydantic 기반 Python 타입 모델로 일관되게 제공하는 것을 목표로 합니다. Python 코드에서는 `krairport`로 import합니다.
 
 > 현재 저장소는 `0.1.0` 초기 구현을 포함합니다. KAC/IIAC provider adapter, 통합 `KrairportClient`, KST 시간 파서, XML/JSON 정규화, CLI, fixture 기반 테스트가 들어 있으며, live API 테스트는 서비스키가 있을 때 별도 marker로 확장합니다.
 
@@ -52,8 +52,8 @@ $env:IIAC_SERVICE_KEY="발급받은_인천국제공항공사_디코딩_인증키
 현재는 문서/스캐폴딩 단계이므로 개발 설치를 기준으로 안내합니다.
 
 ```bash
-git clone https://github.com/digitie/pykrairport.git
-cd pykrairport
+git clone https://github.com/digitie/python-krairport-api.git
+cd python-krairport-api
 python -m venv .venv
 pip install -e ".[dev]"
 ```
@@ -61,7 +61,7 @@ pip install -e ".[dev]"
 ### 3단계: 사용 예시
 
 ```python
-from pykrairport import Airport, Direction, KrairportClient, PlaceCoordinate
+from krairport import Airport, Direction, KrairportClient, PlaceCoordinate
 
 airport = KrairportClient.from_env()
 
@@ -140,7 +140,7 @@ airport.flight_schedules(airport_code=Airport.ICN, direction=Direction.ARRIVAL)
 
 ```python
 from datetime import datetime
-from pykrairport import Direction, KrairportModel, Provider
+from krairport import Direction, KrairportModel, Provider
 
 class Flight(KrairportModel):
     provider: Provider
@@ -227,7 +227,7 @@ class PassengerForecast(KrairportModel):
 
 ## Python 타입 정책
 
-공항 OpenAPI는 기관마다 응답형식과 필드명이 크게 다르지만, `pykrairport`는 모델 경계에서 타입을 정규화하는 것을 기본 원칙으로 둡니다.
+공항 OpenAPI는 기관마다 응답형식과 필드명이 크게 다르지만, `krairport`는 모델 경계에서 타입을 정규화하는 것을 기본 원칙으로 둡니다.
 
 | 원본 값 | Python 표면 타입 | 규칙 |
 |---|---|---|
@@ -286,11 +286,11 @@ KrairportError
 ## 개발
 
 ```bash
-python -m compileall pykrairport tests
+python -m compileall src/krairport tests
 python -m pytest
-python -m pytest --cov=pykrairport --cov-fail-under=85
+python -m pytest --cov=krairport --cov-fail-under=85
 ruff check .
-mypy pykrairport
+mypy src/krairport
 ```
 
 기본 테스트는 실 API를 호출하지 않는 fixture 기반이어야 합니다. 실제 키를 사용하는 테스트는 아래처럼 분리합니다.
@@ -319,25 +319,25 @@ pytest -m live_iiac
 │   ├── coordinates-and-types.md
 │   ├── testing.md
 │   └── troubleshooting.md
-└── pykrairport/
-    ├── __init__.py
-    ├── airports.py
-    ├── client.py
-    ├── providers/
-    │   ├── kac.py
-    │   └── iiac.py
-    ├── models.py
-    ├── enums.py
-    ├── geo.py
-    ├── types.py
-    ├── exceptions.py
-    ├── _http.py
-    ├── _xml.py
-    ├── _time.py
-    ├── _convert.py
-    ├── _routing.py
-    ├── cli.py
-    └── py.typed
+├── src/
+│   └── krairport/
+│       ├── __init__.py
+│       ├── airports.py
+│       ├── client.py
+│       ├── providers/
+│       │   ├── kac.py
+│       │   └── iiac.py
+│       ├── models.py
+│       ├── enums.py
+│       ├── types.py
+│       ├── exceptions.py
+│       ├── _http.py
+│       ├── _xml.py
+│       ├── _time.py
+│       ├── _convert.py
+│       ├── _routing.py
+│       ├── cli.py
+│       └── py.typed
 ```
 
 테스트 구조:
@@ -370,7 +370,7 @@ tests/
 - 상세 운항 API는 KAC/IIAC 모두 `D-3 ~ D+6` 범위 문서가 많지만, 당일 운항 API는 `당일` 또는 `H-2 ~ H+2` 같은 더 좁은 범위를 사용합니다.
 - 일부 IIAC 응답 예시에는 `estimatedtime`, `scheduletime`이 일반 문자열이 아니라 과학적 표기처럼 보이는 예시가 있어 파서가 느슨해야 합니다.
 - 좌표는 `pykrtour.PlaceCoordinate`를 직접 사용합니다. `as_tuple()`과 `as_geojson_position()`은 `(longitude, latitude)`이고, 사람/UI용 순서가 필요하면 `as_lat_lon()`을 사용합니다.
-- 문서의 파일 위치 정보는 `pykrairport/client.py`처럼 프로젝트 기준 상대 경로로 작성합니다.
+- 문서의 파일 위치 정보는 `src/krairport/client.py`처럼 프로젝트 기준 상대 경로로 작성합니다.
 - Python 내부 문서(module/class/function docstring과 설명용 주석)는 한글로 작성합니다. provider 원문, 코드 식별자, URL은 원문을 유지합니다.
 - Windows 작업 환경에서 `rg`가 권한 문제로 막히면 PowerShell `Get-ChildItem` / `Select-String`으로 우회합니다.
 - PowerShell에서 한글 문서를 읽거나 검색할 때는 `Get-Content -Encoding UTF8`, `Select-String -Encoding UTF8`처럼 인코딩을 명시합니다.

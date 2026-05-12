@@ -1,11 +1,11 @@
-"""pykrairport 외부 연동용 공개 타입 alias."""
+"""krairport 외부 연동용 공개 타입 alias."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any, Literal, TypeAlias
 
-from pykrairport.enums import Airport, Direction, Provider
+from krairport.enums import Airport, Direction, Provider
 
 ProviderCode: TypeAlias = Literal["kac", "iiac"]
 DirectionCode: TypeAlias = Literal["arrival", "departure"]

@@ -52,7 +52,7 @@
 
 - 증상: happy path 테스트는 많지만 CLI, 예외 경로, 변환 helper가 방치됨
 - 원인: 테스트 개수만 보고 위험한 분기 coverage를 확인하지 않음
-- 가드레일: `pytest --cov=pykrairport --cov-fail-under=85`를 기본 검증에 포함
+- 가드레일: `pytest --cov=krairport --cov-fail-under=85`를 기본 검증에 포함
 
 ## 10. 공식 API 목록 확인 없이 "지원 완료"라고 쓰는 실수
 
@@ -100,7 +100,7 @@
 
 - 증상: 다른 환경의 에이전트나 사용자가 문서의 파일 위치를 따라갈 수 없음
 - 원인: 드라이브 문자나 사용자 홈으로 시작하는 개인 개발환경 경로를 문서에 기록
-- 가드레일: 모든 문서의 파일 위치 정보는 `pykrairport/client.py`, `docs/testing.md`처럼 프로젝트 기준 상대 경로만 사용
+- 가드레일: 모든 문서의 파일 위치 정보는 `src/krairport/client.py`, `docs/testing.md`처럼 프로젝트 기준 상대 경로만 사용
 
 ## 17. Python 내부 문서를 영어로 되돌리는 실수
 
@@ -122,6 +122,12 @@
 
 ## 20. 검증된 구현 위에 불필요한 wrapper를 덧대는 실수
 
-- 증상: `pykma`, `pyopinet`, `pykex` 등에서 이미 정리된 구현 패턴이 있는데도 `pykrairport`에 얇은 wrapper나 우회 레이어만 추가되어 코드 경로가 늘어남
+- 증상: `pykma`, `pyopinet`, `pykex` 등에서 이미 정리된 구현 패턴이 있는데도 `krairport`에 얇은 wrapper나 우회 레이어만 추가되어 코드 경로가 늘어남
 - 원인: "최소 수정"을 작은 diff로만 해석해 장기적으로 필요한 구조 정리를 미룸
-- 가드레일: 가까운 유지보수 라이브러리의 검증된 구현 방향이 있으면 불필요한 wrapper를 만들지 말고 `pykrairport`의 모델/예외/라우팅 규칙에 맞춰 직접 적용
+- 가드레일: 가까운 유지보수 라이브러리의 검증된 구현 방향이 있으면 불필요한 wrapper를 만들지 말고 `krairport`의 모델/예외/라우팅 규칙에 맞춰 직접 적용
+
+## 21. src layout 전환 후 패키지 검색 설정을 빼먹는 실수
+
+- 증상: 로컬 테스트나 editable install에서 `ModuleNotFoundError: No module named 'krairport'`가 발생
+- 원인: 코드가 `src/krairport`로 이동했는데 `pyproject.toml`의 setuptools `where`나 pytest `pythonpath`가 이전 루트 패키지 기준으로 남아 있음
+- 가드레일: `pyproject.toml`에서 `where = ["src"]`, `pythonpath = ["src"]`를 유지하고 검증 명령은 `python -m compileall src/krairport tests`, `python -m mypy src/krairport`를 사용

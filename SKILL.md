@@ -1,11 +1,11 @@
 ---
 name: krairport-python-builder
-description: Use this skill when building, extending, debugging, or documenting a Python client for Korean airport public APIs that combine 한국공항공사(KAC) and 인천국제공항공사(IIAC). Trigger on pykrairport, 한국공항공사, 인천국제공항공사, ICN/GMP/CJU airport API integration, flight status, aircraft registration, parking fee, parking status, arrival congestion, passenger forecast, KAC XML parsing, IIAC JSON/XML parsing, provider routing, or files like krairport-api.md and pykrairport/client.py.
+description: Use this skill when building, extending, debugging, or documenting a Python client for Korean airport public APIs that combine 한국공항공사(KAC) and 인천국제공항공사(IIAC). Trigger on krairport, 한국공항공사, 인천국제공항공사, ICN/GMP/CJU airport API integration, flight status, aircraft registration, parking fee, parking status, arrival congestion, passenger forecast, KAC XML parsing, IIAC JSON/XML parsing, provider routing, or files like krairport-api.md and src/krairport/client.py.
 ---
 
 # Krairport Python Library Builder
 
-You are helping build and maintain `pykrairport`, a Python client that unifies Korean airport public APIs across **KAC** and **IIAC**. Read `README.md` and `krairport-api.md` before changing public behavior.
+You are helping build and maintain `krairport`, a Python client that unifies Korean airport public APIs across **KAC** and **IIAC**. Read `README.md` and `krairport-api.md` before changing public behavior.
 
 ## Project invariants
 
@@ -33,18 +33,18 @@ You are helping build and maintain `pykrairport`, a Python client that unifies K
    - use `StrEnum` so existing string comparisons and JSON serialization keep working
 10. **Coordinates are WGS84 decimal degrees**:
    - use `pykrtour.PlaceCoordinate` directly in parameters and response models
-   - do not add a `pykrairport` coordinate wrapper/helper
+   - do not add a `krairport` coordinate wrapper/helper
    - `as_tuple()` and `as_geojson_position()` are `(longitude, latitude)`; use `as_lat_lon()` for UI order
 11. **Addresses use pykrtour directly**:
    - use `pykrtour.Address` directly in response models
-   - do not add a `pykrairport` address wrapper/helper
+   - do not add a `krairport` address wrapper/helper
    - keep airport-internal location text separate from address DTOs
 12. **Public response models use Pydantic v2**:
    - inherit from `KrairportModel`
    - keep `ConfigDict(frozen=True, extra="forbid")`
    - serialize with `model_dump(mode="json")` / `model_dump_json()` or `to_dict()` / `to_json()`
 13. **문서 경로는 프로젝트 기준 상대 경로**:
-   - use `pykrairport/client.py`, not local absolute paths
+   - use `src/krairport/client.py`, not local absolute paths
 14. **Python 내부 문서는 한글**:
    - write module/class/function docstrings and explanatory comments in Korean
    - preserve provider text, code identifiers, commands, and URLs as-is
@@ -53,7 +53,7 @@ You are helping build and maintain `pykrairport`, a Python client that unifies K
    - read/search Korean Markdown and Python docs with `-Encoding UTF8`
 16. **불필요한 wrapper보다 직접 적용 우선**:
    - do not add a wrapper or compatibility layer unless it has a clear boundary responsibility
-   - when `pykma`, `pyopinet`, `pykex`, or another maintained library already has a proven implementation pattern, port that pattern directly into `pykrairport`
+   - when `pykma`, `pyopinet`, `pykex`, or another maintained library already has a proven implementation pattern, port that pattern directly into `krairport`
    - minimal edits are preferred for ordinary fixes, but a larger direct adoption is acceptable when it improves long-term consistency and removes needless indirection
 
 ## Initial supported endpoints
@@ -91,7 +91,7 @@ For coverage decisions, read `docs/api-coverage.md`. Prefer typed models for hig
 ## Required deliverables when implementing from scratch
 
 ```text
-pykrairport/
+src/krairport/
 ├── __init__.py
 ├── client.py              # KrairportClient
 ├── providers/
@@ -183,7 +183,7 @@ KAC and IIAC use different field names. Normalize them at the model boundary.
 - Keep models immutable and reject unknown fields.
 - Do not use dataclass `asdict()` for public responses; use `model_dump(mode="json")`.
 - Keep `Provider`, `Direction`, `Airport`, `AirportType`, `ApiLanguage`, `ScheduleType` as `StrEnum`.
-- Keep public type aliases in `pykrairport.types`; wrappers should be able to import `AirportCodeLike`, `DirectionLike`, and `ProviderLike`.
+- Keep public type aliases in `krairport.types`; wrappers should be able to import `AirportCodeLike`, `DirectionLike`, and `ProviderLike`.
 - Use `pykrtour.PlaceCoordinate` directly for WGS84 decimal degree coordinates.
 - `PlaceCoordinate.as_tuple()` returns `(longitude, latitude)`.
 - `PlaceCoordinate.as_lat_lon()` returns `(latitude, longitude)`.
@@ -369,7 +369,7 @@ Required offline tests:
 - GeoJSON coordinate order
 - bundled airport metadata provider/active filtering
 - nearest airport lookup
-- coverage gate: `pytest --cov=pykrairport --cov-fail-under=85`
+- coverage gate: `pytest --cov=krairport --cov-fail-under=85`
 
 Optional live tests:
 
@@ -402,6 +402,7 @@ Optional live tests:
 20. Retrying blocked `rg` instead of using PowerShell file enumeration.
 21. Reading UTF-8 Korean docs through PowerShell without `-Encoding UTF8`.
 22. Adding a thin wrapper around an already proven implementation instead of adopting the implementation shape directly.
+23. Moving to `src/krairport` without updating setuptools package discovery, pytest `pythonpath`, and validation commands.
 
 When one of these is fixed, update `docs/repeated-mistakes.md`.
 

@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from pykrairport._time import KST, combine_date_time, parse_kst_datetime
+from krairport._time import KST, combine_date_time, parse_kst_datetime
 
 
 def test_parse_yyyymmddhhmm_as_kst() -> None:

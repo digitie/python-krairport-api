@@ -8,8 +8,8 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 from pykrtour import Address, PlaceCoordinate
 
-from pykrairport.enums import AirportType, Direction, Provider
-from pykrairport.types import RawRecord
+from krairport.enums import AirportType, Direction, Provider
+from krairport.types import RawRecord
 
 
 class KrairportModel(BaseModel):

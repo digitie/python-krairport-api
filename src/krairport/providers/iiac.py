@@ -8,7 +8,7 @@ from typing import Any
 
 from pykrtour import Address, PlaceCoordinate
 
-from pykrairport._convert import (
+from krairport._convert import (
     as_list,
     first_value,
     strip_or_none,
@@ -16,12 +16,12 @@ from pykrairport._convert import (
     to_float_or_none,
     to_int_or_none,
 )
-from pykrairport._http import HttpClient, SessionLike
-from pykrairport._routing import ensure_iiac_airport
-from pykrairport._time import parse_kst_datetime
-from pykrairport.enums import Direction, Provider, normalize_direction
-from pykrairport.exceptions import KrairportParseError
-from pykrairport.models import (
+from krairport._http import HttpClient, SessionLike
+from krairport._routing import ensure_iiac_airport
+from krairport._time import parse_kst_datetime
+from krairport.enums import Direction, Provider, normalize_direction
+from krairport.exceptions import KrairportParseError
+from krairport.models import (
     AirportFacility,
     ArrivalCongestion,
     BusRoute,

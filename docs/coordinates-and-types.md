@@ -2,14 +2,14 @@
 
 확인 기준일: 2026-05-06
 
-`pykrairport`는 외부 프로그램에서 안정적으로 사용할 수 있도록 문자열 API를 유지하면서 `StrEnum`, 타입 alias, `pykrtour.PlaceCoordinate`와 `pykrtour.Address` 기반 장소 타입을 함께 제공합니다.
+`krairport`는 외부 프로그램에서 안정적으로 사용할 수 있도록 문자열 API를 유지하면서 `StrEnum`, 타입 alias, `pykrtour.PlaceCoordinate`와 `pykrtour.Address` 기반 장소 타입을 함께 제공합니다.
 
 ## Pydantic Models
 
 Public 응답 모델은 Pydantic v2 `BaseModel` 기반의 immutable 모델입니다. 문자열 입력은 `Provider`, `Direction`, `AirportType` 같은 `StrEnum`으로 검증되고, 출력은 Pydantic 표준 직렬화 API를 사용할 수 있습니다.
 
 ```python
-from pykrairport import Flight
+from krairport import Flight
 
 flight = Flight(
     provider="kac",
@@ -47,7 +47,7 @@ flight.to_dict()
 모든 enum은 `StrEnum`입니다. 기존처럼 문자열 비교와 JSON 직렬화가 가능하면서, IDE 자동완성과 타입 힌트를 얻을 수 있습니다.
 
 ```python
-from pykrairport import Airport, Direction, Provider
+from krairport import Airport, Direction, Provider
 
 Airport.ICN == "ICN"
 Direction.ARRIVAL == "arrival"
@@ -67,10 +67,10 @@ Provider.KAC == "kac"
 
 ## Type Alias
 
-`pykrairport.types`는 외부 패키지의 wrapper나 adapter에서 재사용할 수 있는 alias를 제공합니다.
+`krairport.types`는 외부 패키지의 wrapper나 adapter에서 재사용할 수 있는 alias를 제공합니다.
 
 ```python
-from pykrairport.types import AirportCodeLike, DirectionLike, ProviderLike
+from krairport.types import AirportCodeLike, DirectionLike, ProviderLike
 
 def load_airport(code: AirportCodeLike) -> None:
     ...
@@ -89,10 +89,10 @@ def load_airport(code: AirportCodeLike) -> None:
 
 ## PlaceCoordinate
 
-좌표 public surface는 `pykrtour.PlaceCoordinate`를 직접 사용합니다. `pykrairport` 안에 별도 좌표 wrapper나 helper를 두지 않습니다.
+좌표 public surface는 `pykrtour.PlaceCoordinate`를 직접 사용합니다. `krairport` 안에 별도 좌표 wrapper나 helper를 두지 않습니다.
 
 ```python
-from pykrairport import PlaceCoordinate
+from krairport import PlaceCoordinate
 
 coord = PlaceCoordinate.from_values("37° 33' 29.88\" N", "126° 47' 27.6\" E")
 coord.as_tuple()             # (longitude, latitude)
@@ -113,7 +113,7 @@ coord.as_lat_lon()           # (latitude, longitude)
 번들 공항 레지스트리는 외부 앱의 지도, 검색, 근접 공항 계산에 사용할 수 있습니다.
 
 ```python
-from pykrairport import PlaceCoordinate, get_airport, list_airports, nearest_airport
+from krairport import PlaceCoordinate, get_airport, list_airports, nearest_airport
 
 icn = get_airport("ICN")
 icn.coordinate.as_geojson_position()
@@ -149,10 +149,10 @@ nearest = nearest_airport(PlaceCoordinate.from_values("37.56 N", "126.79 E"))
 
 ## Address
 
-주소 public surface는 `pykrtour.Address`를 직접 사용합니다. `pykrairport` 안에 주소 wrapper나 helper를 두지 않습니다.
+주소 public surface는 `pykrtour.Address`를 직접 사용합니다. `krairport` 안에 주소 wrapper나 helper를 두지 않습니다.
 
 ```python
-from pykrairport import Address
+from krairport import Address
 
 address = Address.from_mapping({"address": "서울특별시 강서구 하늘길 112"})
 address.display_address

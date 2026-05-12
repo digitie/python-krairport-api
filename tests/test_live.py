@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from pykrairport.client import KrairportClient
+from krairport.client import KrairportClient
 
 
 def _require_live_key(request: pytest.FixtureRequest, marker: str, env_name: str) -> str:

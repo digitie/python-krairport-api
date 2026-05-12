@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from pykrairport._convert import normalize_airport_code
-from pykrairport.airports import KAC_AIRPORTS
-from pykrairport.enums import Provider
-from pykrairport.exceptions import UnsupportedAirportError
+from krairport._convert import normalize_airport_code
+from krairport.airports import KAC_AIRPORTS
+from krairport.enums import Provider
+from krairport.exceptions import UnsupportedAirportError
 
 
 def provider_for_airport(airport_code: str) -> Provider:

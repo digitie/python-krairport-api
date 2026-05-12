@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from pykrairport import Flight, KrairportModel, PlaceCoordinate
+from krairport import Flight, KrairportModel, PlaceCoordinate
 
 
 def test_response_models_are_pydantic_models() -> None:

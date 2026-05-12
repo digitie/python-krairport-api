@@ -2,7 +2,7 @@
 
 from pykrtour import Address, PlaceCoordinate
 
-from pykrairport.airports import (
+from krairport.airports import (
     AIRPORTS,
     IIAC_AIRPORTS,
     KAC_AIRPORTS,
@@ -12,8 +12,8 @@ from pykrairport.airports import (
     list_airports,
     nearest_airport,
 )
-from pykrairport.client import KrairportClient
-from pykrairport.enums import (
+from krairport.client import KrairportClient
+from krairport.enums import (
     Airport,
     AirportType,
     ApiLanguage,
@@ -22,7 +22,7 @@ from pykrairport.enums import (
     Provider,
     ScheduleType,
 )
-from pykrairport.exceptions import (
+from krairport.exceptions import (
     KrairportAuthError,
     KrairportError,
     KrairportNetworkError,
@@ -32,7 +32,7 @@ from pykrairport.exceptions import (
     KrairportServerError,
     UnsupportedAirportError,
 )
-from pykrairport.models import (
+from krairport.models import (
     AircraftAssignment,
     AirportCode,
     AirportFacility,
@@ -49,7 +49,7 @@ from pykrairport.models import (
     TaxiStatus,
     WorldWeather,
 )
-from pykrairport.types import (
+from krairport.types import (
     AirportCodeLike,
     AirportCodeText,
     CoordinateTuple,
