@@ -1,5 +1,32 @@
 # krairport API 명세
 
+## DebugRun / fixture 생성 API
+
+디버그 UI와 fixture replay를 위해 `src/krairport/debug.py`를 public 보조 API로 둡니다.
+
+```python
+from krairport import DebugRun, KrairportClient
+
+client = KrairportClient.from_env()
+run: DebugRun = client.debug("departures", airport_code="GMP", searchday="20260430")
+```
+
+지원 함수 이름은 `departures`, `arrivals`, `aircraft_assignments`, `parking_fees`,
+`parking_status`, `arrival_congestion`, `passenger_forecast`, `airport_codes`,
+`flight_schedules`, `airport_facilities`, `bus_routes`, `taxi_status`,
+`world_weather`, `service_destinations`, `kac_raw_items`, `iiac_raw_items`입니다.
+
+`DebugRun`은 `input`, `request`, `response`, `parsed`, `processed`, `trace`, `error`를
+분리합니다. fixture 저장 시 `serviceKey`, `Authorization`, `api_key`,
+access/refresh token 계열 값은 `<REDACTED>`로 마스킹합니다.
+
+`tests/test_generated_fixtures.py`는 `tests/fixtures/*/*.json`을 읽어 외부 API 호출 없이
+replay 테스트를 수행합니다. 자세한 포맷은 `docs/debug-fixtures.md`를 기준으로 합니다.
+
+`api_catalog(function_name=None, provider=None)`는 지원 API 카탈로그를 반환합니다.
+카탈로그 항목에는 `dataset_name`과 `service_key_url`이 포함되어 UI에서 데이터셋명을
+사람이 읽기 쉬운 이름으로 표시하고 공공데이터포털 활용신청 페이지를 연결할 수 있습니다.
+
 `krairport`는 한국공항공사(KAC)와 인천국제공항공사(IIAC) OpenAPI를 통합하는 Python 라이브러리입니다. 이 문서는 `0.1.0` 구현과 이후 확장의 public API, 공급자 라우팅, 타입 변환, 테스트 기준을 고정하기 위한 명세입니다.
 
 ## 1. 범위

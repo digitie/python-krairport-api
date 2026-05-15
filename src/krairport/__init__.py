@@ -12,7 +12,9 @@ from krairport.airports import (
     list_airports,
     nearest_airport,
 )
+from krairport.catalog import API_CATALOG, ApiCatalogItem, api_catalog
 from krairport.client import KrairportClient
+from krairport.debug import DebugRun, debug_call, jsonable, redact_sensitive
 from krairport.enums import (
     Airport,
     AirportType,
@@ -65,6 +67,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "AIRPORTS",
+    "API_CATALOG",
     "Address",
     "AircraftAssignment",
     "Airport",
@@ -74,6 +77,7 @@ __all__ = [
     "AirportFacility",
     "AirportMetadata",
     "AirportType",
+    "ApiCatalogItem",
     "ApiLanguage",
     "ArrivalCongestion",
     "BusRoute",
@@ -82,6 +86,7 @@ __all__ = [
     "Direction",
     "DirectionCode",
     "DirectionLike",
+    "DebugRun",
     "FlightSchedule",
     "Flight",
     "GeoJsonPosition",
@@ -111,8 +116,12 @@ __all__ = [
     "UnsupportedAirportError",
     "WorldWeather",
     "__version__",
+    "api_catalog",
+    "debug_call",
     "get_airport",
     "get_airport_or_none",
+    "jsonable",
     "list_airports",
     "nearest_airport",
+    "redact_sensitive",
 ]

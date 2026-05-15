@@ -403,6 +403,8 @@ Optional live tests:
 21. Reading UTF-8 Korean docs through PowerShell without `-Encoding UTF8`.
 22. Adding a thin wrapper around an already proven implementation instead of adopting the implementation shape directly.
 23. Moving to `src/krairport` without updating setuptools package discovery, pytest `pythonpath`, and validation commands.
+24. Saving debug UI fixtures without passing request/response/input through sensitive-value redaction.
+25. Adding a fixture-generating public function without adding the matching replay parser to `tests/runners.py`.
 
 When one of these is fixed, update `docs/repeated-mistakes.md`.
 
@@ -417,3 +419,11 @@ When one of these is fixed, update `docs/repeated-mistakes.md`.
 - Write file locations in docs as project-root-relative paths.
 - Write Python docstrings and explanatory comments in Korean unless preserving provider text, code identifiers, commands, or URLs.
 - In this Windows workspace, use PowerShell fallback commands such as `Get-ChildItem -Recurse -File` and `Select-String -Encoding UTF8` when `rg` is blocked.
+
+## Debug UI fixture rules
+
+- Keep Streamlit and UI-only dependencies outside the `krairport` library package.
+- Use `KrairportClient.debug()` or a `debug_*` convenience method to build `DebugRun`.
+- Store generated cases in `tests/fixtures/{function}/{case}.json`.
+- Default pytest replay must call no external API; replay uses `tests/runners.py`.
+- Add or update `docs/debug-fixtures.md` whenever the fixture schema, assertion mode, or runner contract changes.

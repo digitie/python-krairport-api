@@ -11,6 +11,8 @@ def test_public_exports() -> None:
     assert hasattr(krairport, "Flight")
     assert hasattr(krairport, "PlaceCoordinate")
     assert hasattr(krairport, "AirportMetadata")
+    assert hasattr(krairport, "api_catalog")
+    assert hasattr(krairport, "ApiCatalogItem")
     assert hasattr(krairport, "get_airport")
 
 

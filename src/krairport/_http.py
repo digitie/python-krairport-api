@@ -41,7 +41,7 @@ class HttpClient:
         timeout: float = 10.0,
         retries: int = 3,
     ) -> None:
-        self._service_key = service_key
+        self._service_key = _clean_service_key(service_key)
         self._session = cast(SessionLike, session or requests.Session())
         self._timeout = timeout
         self._retries = retries
@@ -91,6 +91,13 @@ class HttpClient:
             return response
 
         raise KrairportNetworkError(str(last_error) if last_error else "request failed")
+
+
+def _clean_service_key(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
 
 
 def _raise_for_status(response: ResponseLike) -> None:

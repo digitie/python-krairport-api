@@ -1,5 +1,28 @@
 # 테스트 정책
 
+## Debug UI fixture replay
+
+디버그 UI에서 저장한 JSON fixture는 `tests/fixtures/{function}/{case}.json`에 둡니다.
+`tests/test_generated_fixtures.py`는 이 파일들을 자동으로 읽고, 저장된
+`response.body`를 `tests/runners.py`의 parser에 다시 넣어 `processed`와 비교합니다.
+
+기본 실행:
+
+```powershell
+python -m pytest tests/test_generated_fixtures.py
+```
+
+지원 assertion mode:
+
+- `snapshot`: `processed` 전체 비교, `exclude_fields` 적용
+- `schema_only`: parser/processor 성공 여부만 확인
+- `required_fields`: 지정 필드 존재 여부 확인
+- `count`: 결과 개수 비교
+
+새 fixture 대상 public 함수가 늘어나면 `tests/runners.py`의 `RUNNERS`에 parser와
+processor를 추가하고, 민감정보는 fixture 저장 전에 `<REDACTED>`로 마스킹합니다.
+상세 포맷은 `docs/debug-fixtures.md`에 정리합니다.
+
 `krairport` 테스트는 기본적으로 **네트워크 없이** 돌아가야 합니다. KAC와 IIAC 모두 일별 트래픽 제한이 있고, 운항/혼잡도 데이터는 시점에 따라 쉽게 달라지므로 fixture 기반 테스트가 기본입니다.
 
 ## 원칙

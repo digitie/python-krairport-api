@@ -12,6 +12,7 @@ from kraddr.base import PlaceCoordinate
 from krairport._http import SessionLike
 from krairport._routing import provider_for_airport
 from krairport.airports import get_airport, list_airports, nearest_airport
+from krairport.debug import DebugRun, debug_call
 from krairport.enums import Provider
 from krairport.models import (
     AircraftAssignment,
@@ -485,6 +486,92 @@ class KrairportClient:
         """`PlaceCoordinate` 기준 가장 가까운 번들 공항 메타데이터를 반환합니다."""
 
         return nearest_airport(coordinate, provider=provider, active=active)
+
+
+    def debug(self, function_name: str, **input_data: Any) -> DebugRun:
+        """디버그 UI가 저장 가능한 실행 결과를 만들도록 public 함수를 실행합니다."""
+
+        return debug_call(self, function_name, **input_data)
+
+    def debug_departures(self, **input_data: Any) -> DebugRun:
+        """`departures()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("departures", **input_data)
+
+    def debug_arrivals(self, **input_data: Any) -> DebugRun:
+        """`arrivals()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("arrivals", **input_data)
+
+    def debug_aircraft_assignments(self, **input_data: Any) -> DebugRun:
+        """`aircraft_assignments()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("aircraft_assignments", **input_data)
+
+    def debug_parking_fees(self, **input_data: Any) -> DebugRun:
+        """`parking_fees()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("parking_fees", **input_data)
+
+    def debug_parking_status(self, **input_data: Any) -> DebugRun:
+        """`parking_status()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("parking_status", **input_data)
+
+    def debug_arrival_congestion(self, **input_data: Any) -> DebugRun:
+        """`arrival_congestion()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("arrival_congestion", **input_data)
+
+    def debug_passenger_forecast(self, **input_data: Any) -> DebugRun:
+        """`passenger_forecast()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("passenger_forecast", **input_data)
+
+    def debug_airport_codes(self, **input_data: Any) -> DebugRun:
+        """`airport_codes()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("airport_codes", **input_data)
+
+    def debug_flight_schedules(self, **input_data: Any) -> DebugRun:
+        """`flight_schedules()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("flight_schedules", **input_data)
+
+    def debug_airport_facilities(self, **input_data: Any) -> DebugRun:
+        """`airport_facilities()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("airport_facilities", **input_data)
+
+    def debug_bus_routes(self, **input_data: Any) -> DebugRun:
+        """`bus_routes()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("bus_routes", **input_data)
+
+    def debug_taxi_status(self, **input_data: Any) -> DebugRun:
+        """`taxi_status()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("taxi_status", **input_data)
+
+    def debug_world_weather(self, **input_data: Any) -> DebugRun:
+        """`world_weather()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("world_weather", **input_data)
+
+    def debug_service_destinations(self, **input_data: Any) -> DebugRun:
+        """`service_destinations()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("service_destinations", **input_data)
+
+    def debug_kac_raw_items(self, **input_data: Any) -> DebugRun:
+        """`kac_raw_items()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("kac_raw_items", **input_data)
+
+    def debug_iiac_raw_items(self, **input_data: Any) -> DebugRun:
+        """`iiac_raw_items()` 실행 결과를 fixture 후보로 반환합니다."""
+
+        return self.debug("iiac_raw_items", **input_data)
 
 
 def _date_to_yyyymmdd(value: str | date | None) -> str | None:

@@ -28,6 +28,22 @@ def test_missing_service_key_raises_auth_error() -> None:
         client.get_json("https://example.test", {})
 
 
+def test_service_key_is_stripped_before_request() -> None:
+    session = FakeSession([FakeResponse(json_data={"response": {"header": {"resultCode": "00"}}})])
+    client = HttpClient("  KEY\n", session=session, retries=0)
+
+    client.get_json("https://example.test", {})
+
+    assert session.calls[0].params["serviceKey"] == "KEY"
+
+
+def test_blank_service_key_raises_auth_error() -> None:
+    client = HttpClient(" \n\t ", session=FakeSession([]))
+
+    with pytest.raises(KrairportAuthError):
+        client.get_json("https://example.test", {})
+
+
 def test_http_status_mapping() -> None:
     session = FakeSession([FakeResponse(status_code=429, text="too many")])
     client = HttpClient("KEY", session=session, retries=0)

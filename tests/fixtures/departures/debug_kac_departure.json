@@ -1,0 +1,73 @@
+{
+  "name": "debug_kac_departure",
+  "function": "departures",
+  "description": "KAC departure fixture replay sample",
+  "input": {
+    "airport_code": "GMP"
+  },
+  "request": {
+    "function": "departures",
+    "params": {
+      "airport_code": "GMP"
+    }
+  },
+  "response": {
+    "status_code": 200,
+    "headers": {},
+    "body": [
+      {
+        "flightId": "KE1201",
+        "scheduleDateTime": "202604300600",
+        "estimatedDateTime": "202604300610",
+        "codeshare": "N",
+        "airlineKorean": "Korean Air",
+        "arrAirportCode": "CJU"
+      }
+    ]
+  },
+  "parsed": [
+    {
+      "provider": "kac",
+      "airport_code": "GMP",
+      "flight_id": "KE1201"
+    }
+  ],
+  "processed": [
+    {
+      "provider": "kac",
+      "airport_code": "GMP",
+      "flight_id": "KE1201",
+      "flight_unique_id": null,
+      "direction": "departure",
+      "airline_name": "Korean Air",
+      "airline_code": null,
+      "departure_airport_code": null,
+      "arrival_airport_code": "CJU",
+      "scheduled_at": "2026-04-30T06:00:00+09:00",
+      "estimated_at": "2026-04-30T06:10:00+09:00",
+      "status_korean": null,
+      "status_english": null,
+      "terminal": null,
+      "gate": null,
+      "codeshare": false,
+      "raw": {
+        "flightId": "KE1201",
+        "scheduleDateTime": "202604300600",
+        "estimatedDateTime": "202604300610",
+        "codeshare": "N",
+        "airlineKorean": "Korean Air",
+        "arrAirportCode": "CJU"
+      }
+    }
+  ],
+  "assertion": {
+    "mode": "snapshot",
+    "exclude_fields": [],
+    "required_fields": []
+  },
+  "meta": {
+    "created_at": "2026-05-15T20:30:00+09:00",
+    "library_version": "0.1.0",
+    "source": "debug_ui"
+  }
+}
