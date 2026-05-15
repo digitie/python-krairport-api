@@ -1,5 +1,34 @@
 # python-krairport-api
 
+## Debug UI와 fixture replay
+
+`krairport`는 디버그 UI가 테스트 fixture를 만들 수 있도록 `DebugRun`과
+`KrairportClient.debug()`를 제공합니다. 라이브러리 자체는 Streamlit에 의존하지 않고,
+`tools/streamlit_debug_ui`의 별도 UI 패키지가 설치된 `krairport`를 import해서 실행합니다.
+
+```python
+from krairport import KrairportClient
+
+client = KrairportClient.from_env()
+run = client.debug_departures(airport_code="GMP", searchday="20260430")
+print(run.response["body"])
+print(run.processed)
+```
+
+저장된 fixture는 `tests/fixtures/{function}/{case}.json`에 두며,
+`python -m pytest tests/test_generated_fixtures.py`가 외부 API 호출 없이 replay합니다.
+자세한 설계와 assertion mode는 [docs/debug-fixtures.md](docs/debug-fixtures.md)를 참고하세요.
+
+지원 endpoint 카탈로그는 `api_catalog()`로 확인할 수 있습니다. 각 항목에는 사람이 읽는
+데이터셋명과 공공데이터포털 서비스키 신청 링크가 포함됩니다.
+
+```python
+from krairport import api_catalog
+
+for item in api_catalog("departures"):
+    print(item.provider, item.dataset_name, item.service_key_url)
+```
+
 한국공항공사(KAC)와 인천국제공항공사(IIAC) OpenAPI를 하나의 Python 인터페이스로 묶기 위한 공항 데이터 라이브러리 설계 문서입니다.
 
 `python-krairport-api`는 "인천공항은 인천국제공항공사, 그 외 전국공항은 한국공항공사"라는 공급자 경계를 내부에서 흡수하고, 운항/주차/혼잡도/공항 메타데이터를 Pydantic 기반 Python 타입 모델로 일관되게 제공하는 것을 목표로 합니다. Python 코드에서는 `krairport`로 import합니다.
@@ -88,7 +117,7 @@ for plane in airport.aircraft_assignments(airport_code="CJU", sch_st_time="20260
 # 6) enum/type/좌표 메타데이터 활용
 icn = airport.airport_metadata(Airport.ICN)
 print(icn.coordinate.as_geojson_position())
-print(airport.nearest_airport(PlaceCoordinate.from_values("37.56 N", "126.79 E")).code)
+print(airport.nearest_airport(PlaceCoordinate.from_values("126.79 E", "37.56 N")).code)
 
 # direction도 문자열과 enum을 모두 받습니다.
 airport.flight_schedules(airport_code=Airport.ICN, direction=Direction.ARRIVAL)

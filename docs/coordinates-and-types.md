@@ -94,7 +94,7 @@ def load_airport(code: AirportCodeLike) -> None:
 ```python
 from krairport import PlaceCoordinate
 
-coord = PlaceCoordinate.from_values("37° 33' 29.88\" N", "126° 47' 27.6\" E")
+coord = PlaceCoordinate.from_values("126° 47' 27.6\" E", "37° 33' 29.88\" N")
 coord.as_tuple()             # (longitude, latitude)
 coord.as_geojson_position()  # (longitude, latitude)
 coord.as_lat_lon()           # (latitude, longitude)
@@ -119,7 +119,7 @@ icn = get_airport("ICN")
 icn.coordinate.as_geojson_position()
 
 kac_active = list_airports(provider="kac", active=True)
-nearest = nearest_airport(PlaceCoordinate.from_values("37.56 N", "126.79 E"))
+nearest = nearest_airport(PlaceCoordinate.from_values("126.79 E", "37.56 N"))
 ```
 
 `AirportMetadata` 필드:

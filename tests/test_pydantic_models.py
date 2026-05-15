@@ -91,4 +91,4 @@ def test_place_coordinate_is_a_frozen_pydantic_model() -> None:
     with pytest.raises(ValidationError):
         coordinate.lat = 1
     with pytest.raises(ValidationError):
-        PlaceCoordinate(lat=91, lon=126)
+        PlaceCoordinate(lon=126, lat=91)

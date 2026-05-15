@@ -183,5 +183,5 @@ def test_unified_client_exposes_airport_metadata_helpers() -> None:
 
     assert client.airport_metadata("icn").provider == "iiac"
     assert client.airports(provider="kac", active=False)[0].code == "MPK"
-    coordinate = PlaceCoordinate.from_values("37.56", "126.79")
+    coordinate = PlaceCoordinate.from_values("126.79", "37.56")
     assert client.nearest_airport(coordinate).code == "GMP"
