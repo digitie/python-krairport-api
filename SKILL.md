@@ -34,7 +34,7 @@ You are helping build and maintain `krairport`, a Python client that unifies Kor
 10. **Coordinates are WGS84 decimal degrees**:
    - use `kraddr.base.PlaceCoordinate` directly in parameters and response models
    - do not add a `krairport` coordinate wrapper/helper
-   - `as_tuple()` and `as_geojson_position()` are `(longitude, latitude)`; use `as_lat_lon()` for UI order
+   - `as_tuple()` and `as_lat_lon()` are `(latitude, longitude)`; use `as_geojson_position()` for GeoJSON order
 11. **Addresses use kraddr.base directly**:
    - use `kraddr.base.Address` directly in response models
    - do not add a `krairport` address wrapper/helper
@@ -185,7 +185,7 @@ KAC and IIAC use different field names. Normalize them at the model boundary.
 - Keep `Provider`, `Direction`, `Airport`, `AirportType`, `ApiLanguage`, `ScheduleType` as `StrEnum`.
 - Keep public type aliases in `krairport.types`; wrappers should be able to import `AirportCodeLike`, `DirectionLike`, and `ProviderLike`.
 - Use `kraddr.base.PlaceCoordinate` directly for WGS84 decimal degree coordinates.
-- `PlaceCoordinate.as_tuple()` returns `(longitude, latitude)`.
+- `PlaceCoordinate.as_tuple()` returns `(latitude, longitude)`.
 - `PlaceCoordinate.as_lat_lon()` returns `(latitude, longitude)`.
 - Use `kraddr.base.Address` directly for provider address fields.
 - Keep interior terminal/floor/area text as `location`; do not guess it as an address.

@@ -26,6 +26,14 @@
 - 런타임 의존성은 `requests`, `pydantic`, `kraddr.base`, Windows용 `tzdata`입니다.
 - 기본 테스트는 실제 KAC/IIAC 네트워크 호출 없이 동작해야 합니다.
 
+## Provider API 사용 원칙
+
+- 외부 API 관련 작업은 다른 구현보다 먼저 wrapper/adapter/gateway 지양 원칙을 확인하고 문서/코드에 반영한 뒤 진행합니다.
+- downstream이 직접 사용할 안정된 public client, typed model, enum, helper를 제공합니다.
+- 단순 전달용 wrapper, 장기 호환 alias, 임시 facade를 만들지 않습니다.
+- TripMate나 `python-krtour-map`에서 필요한 endpoint, pagination, cursor, exception, raw payload 계약이 부족하면 이 저장소의 public API를 먼저 안정화합니다.
+- 다른 라이브러리에 검증된 구현이 있으면 wrapper로 감싸지 말고 라이선스와 출처를 확인한 뒤 현재 구조에 직접 반영합니다.
+
 ## 구현 방향
 
 - 불필요한 wrapper나 호환층을 새로 만들지 않습니다. 좌표와 주소는 `krairport` wrapper 없이 `kraddr.base.PlaceCoordinate`, `kraddr.base.Address`를 직접 import해 씁니다.
@@ -89,7 +97,7 @@
 - IIAC-only API에 비-`ICN` 공항을 조용히 허용하지 않습니다.
 - `airport_code`, `airport`, `schAirCode`, `apcd` 같은 provider-native 이름을 public 모델에 그대로 흘리지 않습니다.
 - 편명, 공항코드, 내부 flight unique id처럼 선행 0이나 문자열 의미가 있는 값은 `int`로 변환하지 않습니다.
-- 좌표 순서를 섞지 않습니다. `PlaceCoordinate.as_tuple()`과 `as_geojson_position()`은 `(longitude, latitude)`, `as_lat_lon()`은 `(latitude, longitude)`입니다.
+- 좌표 순서를 섞지 않습니다. `PlaceCoordinate.as_tuple()`과 `as_lat_lon()`은 `(latitude, longitude)`, `as_geojson_position()`은 `(longitude, latitude)`입니다.
 - 공항 내부 위치 문자열을 주소로 추정하지 않습니다. provider row에 주소 필드가 있을 때만 `Address.from_mapping()`을 직접 사용합니다.
 - public enum은 `StrEnum`으로 유지해 문자열 비교와 JSON 직렬화 호환성을 깨지 않습니다.
 - public 응답 모델은 `KrairportModel` 기반 Pydantic 모델로 유지하고, 직렬화는 `model_dump(mode="json")`, `model_dump_json()`, `to_dict()`, `to_json()`을 사용합니다.

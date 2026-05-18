@@ -229,7 +229,7 @@ def nearest_airport(
 
 - 번들 좌표는 WGS84 decimal degrees를 표준으로 둡니다.
 - 좌표 public surface는 `kraddr.base.PlaceCoordinate`를 직접 사용합니다.
-- `PlaceCoordinate.as_tuple()`과 `PlaceCoordinate.as_geojson_position()`은 GeoJSON 표준인 `(longitude, latitude)`입니다.
+- `PlaceCoordinate.as_tuple()`은 public DTO 순서인 `(latitude, longitude)`이고, `PlaceCoordinate.as_geojson_position()`은 GeoJSON 표준인 `(longitude, latitude)`입니다.
 - UI나 사람이 읽는 순서는 `PlaceCoordinate.as_lat_lon()`으로 `(latitude, longitude)`를 명시합니다.
 - `Airport`, `Provider`, `Direction`은 모두 `StrEnum`이므로 문자열 비교와 JSON 직렬화가 가능합니다.
 - 타입 alias는 `krairport.types`에서 public API로 제공합니다.
@@ -483,7 +483,7 @@ Live 테스트:
 6. `f_id`와 `flight_id`를 혼동하지 않습니다.
 7. 승객예고는 "예상치", 입국장 혼잡도는 "실시간성 현황"이라는 의미 차이를 유지합니다.
 8. 주차요금과 주차현황은 서로 다른 도메인 모델로 유지합니다.
-9. `PlaceCoordinate`의 `(lon, lat)` 순서를 UI용 `(lat, lon)` 순서와 섞지 않습니다.
+9. `PlaceCoordinate` public DTO의 `(lat, lon)` 순서를 GeoJSON용 `(lon, lat)` 순서와 섞지 않습니다.
 10. enum을 추가해도 기존 문자열 비교/직렬화 호환성을 깨지 않습니다.
 
 ## 11. 문서 업데이트 규칙
