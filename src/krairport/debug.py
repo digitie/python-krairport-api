@@ -18,7 +18,6 @@ DEBUGGABLE_FUNCTIONS = frozenset(
         "parking_status",
         "arrival_congestion",
         "passenger_forecast",
-        "airport_codes",
         "flight_schedules",
         "airport_facilities",
         "bus_routes",

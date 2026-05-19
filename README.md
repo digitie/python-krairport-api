@@ -170,7 +170,6 @@ airport.flight_schedules(airport_code=Airport.ICN, direction=Direction.ARRIVAL)
 | `KrairportClient.parking_status(...)` | KAC 또는 IIAC | KAC `airportParkingCongestionRT`, IIAC `getTrackingParking` | `list[ParkingAreaStatus]` |
 | `KrairportClient.arrival_congestion(...)` | IIAC | `getArrivalsCongestion` | `list[ArrivalCongestion]` |
 | `KrairportClient.passenger_forecast(...)` | IIAC | `getfPassengerNoticeIKR` | `list[PassengerForecast]` |
-| `KrairportClient.airport_codes(...)` | KAC | `getAirportCodeList` | `list[AirportCode]` |
 | `KrairportClient.flight_schedules(...)` | KAC 또는 IIAC | KAC `getDflightScheduleList`/`getIflightScheduleList`, IIAC `getPaxFltSchedArrivals`/`getPaxFltSchedDepartures` | `list[FlightSchedule]` |
 | `KrairportClient.airport_facilities(...)` | KAC 또는 IIAC | KAC `getAirportFacilities`, IIAC `getFacilityKR` | `list[AirportFacility]` |
 | `KrairportClient.bus_routes(...)` | KAC 또는 IIAC | KAC `businfo`, IIAC `getBusInfo` | `list[BusRoute]` |

@@ -50,6 +50,12 @@ Windows 환경에서 `tzdata`가 설치되지 않았을 때 발생할 수 있습
 - IIAC 당일 API에 과거/미래 날짜를 넣고 있지 않은지
 - 상세 API가 필요한데 당일 API를 사용하고 있지 않은지
 
+## KAC live 테스트가 `NO OPENAPI SERVICE ERROR.`로 skip됨
+
+KAC 활용신청 키가 특정 서비스에 승인되지 않았거나 해당 서비스가 현재 접근 불가일 수 있습니다.
+공항 목록이 필요하면 삭제된 KAC 공항코드 목록 API 대신 번들 메타데이터 `airports()`와
+`airport_metadata()`를 사용합니다.
+
 ## 주차 데이터가 예상과 다름
 
 - KAC `parking_fees()`는 요금표 성격

@@ -12,8 +12,8 @@ run: DebugRun = client.debug("departures", airport_code="GMP", searchday="202604
 ```
 
 지원 함수 이름은 `departures`, `arrivals`, `aircraft_assignments`, `parking_fees`,
-`parking_status`, `arrival_congestion`, `passenger_forecast`, `airport_codes`,
-`flight_schedules`, `airport_facilities`, `bus_routes`, `taxi_status`,
+`parking_status`, `arrival_congestion`, `passenger_forecast`, `flight_schedules`,
+`airport_facilities`, `bus_routes`, `taxi_status`,
 `world_weather`, `service_destinations`, `kac_raw_items`, `iiac_raw_items`입니다.
 
 `DebugRun`은 `input`, `request`, `response`, `parsed`, `processed`, `trace`, `error`를
@@ -54,7 +54,6 @@ replay 테스트를 수행합니다. 자세한 포맷은 `docs/debug-fixtures.md
 | 주차현황 | IIAC | `getTrackingParking` | T1/T2 주차장별 |
 | 입국장 혼잡도 | IIAC | `getArrivalsCongestion` | 현재시간 기준 -2h ~ +2h |
 | 승객예고 | IIAC | `getfPassengerNoticeIKR` | 조회일과 다음날 |
-| 공항코드 | KAC | `getAirportCodeList` | 전국공항 코드 |
 | 정기운항 스케줄 | KAC/IIAC | KAC `FlightScheduleList`, IIAC `PaxFltSched` | 국내/국제, 도착/출발 |
 | 공항시설/상업시설 | KAC/IIAC | KAC `AirportFacilities`, IIAC `StatusOfFacility` | 시설명/층/위치/주소 |
 | 버스 | KAC/IIAC | KAC `AirportBusInfo`, IIAC `BusInformation` | 노선/요금/승차장 |
@@ -296,7 +295,6 @@ ParkingFee
 ParkingAreaStatus
 ArrivalCongestion
 PassengerForecast
-AirportCode
 AirportMetadata
 Address
 PlaceCoordinate

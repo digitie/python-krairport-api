@@ -129,19 +129,6 @@ class PassengerForecast(KrairportModel):
     raw: RawRecord = Field(default_factory=dict, repr=False)
 
 
-class AirportCode(KrairportModel):
-    code: str
-    korean_name: str | None
-    english_name: str | None
-    japanese_name: str | None
-    chinese_name: str | None
-    icao_code: str | None = None
-    provider: Provider | None = None
-    municipality: str | None = None
-    coordinate: PlaceCoordinate | None = None
-    raw: RawRecord = Field(default_factory=dict, repr=False)
-
-
 class FlightSchedule(KrairportModel):
     provider: Provider
     direction: Direction

@@ -263,11 +263,6 @@ async def test_async_unified_client_routes_many_methods(load_fixture) -> None:  
             FakeResponse(text=load_fixture("kac_parking_fee.xml")),
             FakeResponse(
                 text=_xml_response(
-                    "<cityCode>GMP</cityCode><cityEng>Gimpo</cityEng><cityKor>Gimpo</cityKor>"
-                )
-            ),
-            FakeResponse(
-                text=_xml_response(
                     "<parkingAirportCode>GMP</parkingAirportCode><parkingAirportName>GMP</parkingAirportName>"
                     "<parkingOccupiedSpace>10</parkingOccupiedSpace><parkingTotalSpace>100</parkingTotalSpace>"
                 )
@@ -302,7 +297,6 @@ async def test_async_unified_client_routes_many_methods(load_fixture) -> None:  
     assert (await client.departures(airport_code="GMP"))[0].provider == "kac"
     assert (await client.aircraft_assignments(airport_code="CJU"))[0].flight_id
     assert (await client.parking_fees(airport_code="GMP"))[0].small_basic_fee == 1000
-    assert (await client.airport_codes(code="GMP"))[0].code == "GMP"
     assert (await client.parking_status(airport_code="GMP"))[0].occupied == 10
     assert (await client.parking_status())[0].occupied == 1
     assert (await client.arrival_congestion())[0].entry_gate == "A"

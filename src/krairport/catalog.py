@@ -14,7 +14,6 @@ _SERVICE_KEY_URLS = {
     "kac_flight_status_apl_list": "https://www.data.go.kr/data/15144867/openapi.do",
     "kac_airport_parking_fee": "https://www.data.go.kr/data/15038474/openapi.do",
     "kac_airport_parking_congestion": "https://www.data.go.kr/data/15063437/openapi.do",
-    "kac_airport_code_list": "https://www.data.go.kr/data/15000126/openapi.do",
     "kac_flight_schedule_list": "https://www.data.go.kr/data/15000126/openapi.do",
     "kac_airport_facilities": (
         _DATA_GO_KR_SEARCH + "%ED%95%9C%EA%B5%AD%EA%B3%B5%ED%95%AD%EA%B3%B5%EC%82%AC"
@@ -218,16 +217,6 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         operation="getfPassengerNoticeIKR",
         endpoint="https://apis.data.go.kr/B551177/PassengerNoticeKR/getfPassengerNoticeIKR",
         response_format="json",
-    ),
-    ApiCatalogItem(
-        function="airport_codes",
-        provider=Provider.KAC,
-        dataset="kac_airport_code_list",
-        dataset_name="한국공항공사 전국공항 코드 정보",
-        service="AirportCodeList",
-        operation="getAirportCodeList",
-        endpoint="https://openapi.airport.co.kr/service/rest/AirportCodeList/getAirportCodeList",
-        response_format="xml",
     ),
     ApiCatalogItem(
         function="flight_schedules",

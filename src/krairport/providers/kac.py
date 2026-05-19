@@ -13,12 +13,10 @@ from krairport._http import AsyncHttpClient, AsyncSessionLike, HttpClient, Sessi
 from krairport._routing import ensure_kac_airport
 from krairport._time import parse_kst_datetime
 from krairport._xml import extract_items
-from krairport.airports import get_airport_or_none
 from krairport.enums import Direction, Provider, normalize_direction
 from krairport.exceptions import KrairportParseError
 from krairport.models import (
     AircraftAssignment,
-    AirportCode,
     AirportFacility,
     BusRoute,
     Flight,
@@ -31,7 +29,6 @@ from krairport.models import (
 STATUS_BASE = "https://openapi.airport.co.kr/service/rest/StatusOfFlights"
 AIRCRAFT_BASE = "https://openapi.airport.co.kr/service/rest/FlightStatusAPLList"
 PARKING_FEE_BASE = "https://openapi.airport.co.kr/service/rest/AirportParkingFee"
-AIRPORT_CODE_BASE = "https://openapi.airport.co.kr/service/rest/AirportCodeList"
 FLIGHT_SCHEDULE_BASE = "https://openapi.airport.co.kr/service/rest/FlightScheduleList"
 PARKING_CONGESTION_BASE = (
     "https://openapi.airport.co.kr/service/rest/AirportParkingCongestion"
@@ -174,25 +171,6 @@ class KacClient:
         params = {"schAirportCode": code}
         data = self._http.get_xml(f"{PARKING_FEE_BASE}/parkingfee", params)
         return [_build_parking_fee(row, requested_airport_code=code) for row in extract_items(data)]
-
-    def airport_codes(
-        self,
-        *,
-        code: str | None = None,
-        korean_name: str | None = None,
-        english_name: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-    ) -> list[AirportCode]:
-        params = {
-            "cityCode": code,
-            "cityKor": korean_name,
-            "cityEng": english_name,
-            "pageNo": page_no,
-            "numOfRows": num_of_rows,
-        }
-        data = self._http.get_xml(f"{AIRPORT_CODE_BASE}/getAirportCodeList", params)
-        return [_build_airport_code(row) for row in extract_items(data)]
 
     def flight_schedules(
         self,
@@ -445,25 +423,6 @@ class AsyncKacClient:
         data = await self._http.get_xml(f"{PARKING_FEE_BASE}/parkingfee", params)
         return [_build_parking_fee(row, requested_airport_code=code) for row in extract_items(data)]
 
-    async def airport_codes(
-        self,
-        *,
-        code: str | None = None,
-        korean_name: str | None = None,
-        english_name: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-    ) -> list[AirportCode]:
-        params = {
-            "cityCode": code,
-            "cityKor": korean_name,
-            "cityEng": english_name,
-            "pageNo": page_no,
-            "numOfRows": num_of_rows,
-        }
-        data = await self._http.get_xml(f"{AIRPORT_CODE_BASE}/getAirportCodeList", params)
-        return [_build_airport_code(row) for row in extract_items(data)]
-
     async def flight_schedules(
         self,
         *,
@@ -688,23 +647,6 @@ def _build_parking_fee(row: Mapping[str, Any], *, requested_airport_code: str | 
         )
     except (TypeError, ValueError) as exc:
         raise KrairportParseError(f"failed to parse KAC parking fee record: {exc}") from exc
-
-
-def _build_airport_code(row: Mapping[str, Any]) -> AirportCode:
-    code = str(first_value(row, "cityCode", "airportCode", "code") or "")
-    metadata = get_airport_or_none(code)
-    return AirportCode(
-        code=code,
-        korean_name=strip_or_none(first_value(row, "cityKor", "airportKor", "koreanName")),
-        english_name=strip_or_none(first_value(row, "cityEng", "airportEng", "englishName")),
-        japanese_name=strip_or_none(first_value(row, "cityJpn", "japaneseName")),
-        chinese_name=strip_or_none(first_value(row, "cityChn", "chineseName")),
-        icao_code=metadata.icao_code if metadata else None,
-        provider=metadata.provider if metadata else None,
-        municipality=metadata.municipality if metadata else None,
-        coordinate=metadata.coordinate if metadata else PlaceCoordinate.from_mapping(row),
-        raw=dict(row),
-    )
 
 
 def _build_flight_schedule(

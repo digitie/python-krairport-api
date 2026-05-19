@@ -33,18 +33,18 @@ def _skip_unapproved_live_service(exc: Exception) -> None:
 
 
 @pytest.mark.live_kac
-def test_live_kac_airport_codes_smoke(request: pytest.FixtureRequest) -> None:
+def test_live_kac_departures_smoke(request: pytest.FixtureRequest) -> None:
     service_key = _require_live_key(request, "live_kac", "KAC_SERVICE_KEY")
     client = KrairportClient(kac_service_key=service_key, iiac_service_key=None, retries=0)
 
     try:
-        rows = client.airport_codes(code="GMP", num_of_rows=1)
+        rows = client.departures(airport_code="GMP", num_of_rows=1)
     except (KrairportAuthError, KrairportServerError) as exc:
         _skip_unapproved_live_service(exc)
 
     assert isinstance(rows, list)
     if rows:
-        assert rows[0].code
+        assert rows[0].flight_id
         assert rows[0].raw
 
 

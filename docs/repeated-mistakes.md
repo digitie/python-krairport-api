@@ -131,3 +131,9 @@
 - 증상: 로컬 테스트나 editable install에서 `ModuleNotFoundError: No module named 'krairport'`가 발생
 - 원인: 코드가 `src/krairport`로 이동했는데 `pyproject.toml`의 setuptools `where`나 pytest `pythonpath`가 이전 루트 패키지 기준으로 남아 있음
 - 가드레일: `pyproject.toml`에서 `where = ["src"]`, `pythonpath = ["src"]`를 유지하고 검증 명령은 `python -m compileall src/krairport tests`, `python -m mypy src/krairport`를 사용
+
+## 22. KAC 공항코드 목록 API를 smoke test나 public API로 되살리는 실수
+
+- 증상: live 검증에서 `NO OPENAPI SERVICE ERROR.`가 발생하거나 사용하지 않는 `airport_codes()` surface가 다시 생김
+- 원인: `AirportCodeList/getAirportCodeList`는 현재 `krairport`에서 사용할 일이 없고, 번들 공항 메타데이터가 같은 목적을 더 안정적으로 처리함
+- 가드레일: 공항 목록/메타데이터는 `airports()`, `airport_metadata()`, `nearest_airport()`를 사용하고 KAC 공항코드 목록 typed API와 live smoke를 추가하지 않음

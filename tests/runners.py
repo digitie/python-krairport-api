@@ -71,10 +71,6 @@ def parse_passenger_forecast(case: FixtureCase) -> Any:
     return [iiac_provider._build_passenger_forecast(row) for row in _rows(case)]
 
 
-def parse_airport_codes(case: FixtureCase) -> Any:
-    return [kac_provider._build_airport_code(row) for row in _rows(case)]
-
-
 def parse_flight_schedules(case: FixtureCase) -> Any:
     input_data = _input_data(case)
     airport_code = str(input_data.get("airport_code") or "ICN").upper()
@@ -159,7 +155,6 @@ RUNNERS: dict[str, dict[str, ParseFunc | ProcessFunc]] = {
     "parking_status": {"parse": parse_parking_status, "process": process_models},
     "arrival_congestion": {"parse": parse_arrival_congestion, "process": process_models},
     "passenger_forecast": {"parse": parse_passenger_forecast, "process": process_models},
-    "airport_codes": {"parse": parse_airport_codes, "process": process_models},
     "flight_schedules": {"parse": parse_flight_schedules, "process": process_models},
     "airport_facilities": {"parse": parse_airport_facilities, "process": process_models},
     "bus_routes": {"parse": parse_bus_routes, "process": process_models},

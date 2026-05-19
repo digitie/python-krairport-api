@@ -14,7 +14,7 @@
 
 `0.1.0` 초기 구현 이후 추가로 확인한 누락 API:
 
-- KAC: 공항코드, 정기 운항스케줄, 주차 혼잡도/실시간 주차, 공항시설, 공항버스, 제주 택시대기
+- KAC: 정기 운항스케줄, 주차 혼잡도/실시간 주차, 공항시설, 공항버스, 제주 택시대기
 - IIAC: 정기 운항스케줄, 취항도시, 기상, 택시출차, 버스정보, 상업시설
 - IIAC 변경/미모델링 API: 주차요금, 취항 항공사, 화물기 운항, 옥외 대기질, Flight Closing, ACDM 계열은 raw 접근으로 먼저 열어 둠
 - 기타 KAC/IIAC 공식 엔드포인트: typed 모델이 아직 없는 경우에도 `kac_raw_items()` / `iiac_raw_items()`로 접근 가능
@@ -33,7 +33,6 @@
 | `parking_status()` | IIAC | `StatusOfParking/getTrackingParking` |
 | `arrival_congestion()` | IIAC | `StatusOfArrivals/getArrivalsCongestion` |
 | `passenger_forecast()` | IIAC | `PassengerNoticeKR/getfPassengerNoticeIKR` |
-| `airport_codes()` | KAC | `AirportCodeList/getAirportCodeList` |
 | `flight_schedules()` | KAC | `FlightScheduleList/getDflightScheduleList`, `getIflightScheduleList` |
 | `flight_schedules()` | IIAC | `PaxFltSched/getPaxFltSchedArrivals`, `getPaxFltSchedDepartures` |
 | `airport_facilities()` | KAC | `AirportFacilities/getAirportFacilities` |
@@ -63,7 +62,6 @@ client.kac_raw_items("noise", "getNoise", {"pageNo": 1})
 |---|---|
 | `FlightStatusList` | raw |
 | `FlightScheduleList` | typed |
-| `AirportCodeList` | typed |
 | `AirportParkingCongestion` | typed |
 | `AirportParking` | typed via `KacClient.parking_status(realtime=True)` |
 | `AirportParkingFee` | typed |

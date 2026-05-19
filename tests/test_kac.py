@@ -99,24 +99,6 @@ def test_bad_kac_numeric_value_becomes_parse_error() -> None:
         client.parking_fees(airport_code="GMP")
 
 
-def test_airport_codes() -> None:
-    xml = """<response><header><resultCode>00</resultCode></header><body><items><item>
-        <cityCode>GMP</cityCode><cityKor>김포</cityKor><cityEng>Gimpo</cityEng>
-    </item></items></body></response>"""
-    session = FakeSession([FakeResponse(text=xml)])
-    client = KacClient("KAC_KEY", session=session, retries=0)
-
-    rows = client.airport_codes(code="GMP")
-
-    assert session.calls[0].url.endswith("/getAirportCodeList")
-    assert session.calls[0].params["cityCode"] == "GMP"
-    assert rows[0].code == "GMP"
-    assert rows[0].english_name == "Gimpo"
-    assert rows[0].icao_code == "RKSS"
-    assert rows[0].coordinate is not None
-    assert rows[0].coordinate.latitude == 37.5583
-
-
 def test_flight_schedules() -> None:
     xml = """<response><header><resultCode>00</resultCode></header><body><items><item>
         <domesticNum>KE1201</domesticNum><airlineKorean>대한항공</airlineKorean>

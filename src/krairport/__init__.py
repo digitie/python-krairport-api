@@ -37,7 +37,6 @@ from krairport.exceptions import (
 )
 from krairport.models import (
     AircraftAssignment,
-    AirportCode,
     AirportFacility,
     AirportMetadata,
     ArrivalCongestion,
@@ -75,7 +74,6 @@ __all__ = [
     "AircraftAssignment",
     "AsyncKrairportClient",
     "Airport",
-    "AirportCode",
     "AirportCodeLike",
     "AirportCodeText",
     "AirportFacility",

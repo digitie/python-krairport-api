@@ -71,7 +71,6 @@ Start with these.
 | `KrairportClient.parking_status()` | IIAC | `getTrackingParking` |
 | `KrairportClient.arrival_congestion()` | IIAC | `getArrivalsCongestion` |
 | `KrairportClient.passenger_forecast()` | IIAC | `getfPassengerNoticeIKR` |
-| `KrairportClient.airport_codes()` | KAC | `getAirportCodeList` |
 | `KrairportClient.flight_schedules()` | KAC/IIAC | KAC `FlightScheduleList`, IIAC `PaxFltSched` |
 | `KrairportClient.airport_facilities()` | KAC/IIAC | KAC `AirportFacilities`, IIAC `StatusOfFacility` |
 | `KrairportClient.bus_routes()` | KAC/IIAC | KAC `AirportBusInfo`, IIAC `BusInformation` |
@@ -87,6 +86,7 @@ Start with these.
 Do not widen scope until the routing, parsing, and model layer are stable.
 
 For coverage decisions, read `docs/api-coverage.md`. Prefer typed models for high-use APIs and `raw_items` for broad official API access until a fixture-backed parser exists.
+Do not reintroduce KAC `AirportCodeList/getAirportCodeList` as a typed public API or live smoke target; use bundled airport metadata for airport lists and code lookup.
 
 ## Required deliverables when implementing from scratch
 

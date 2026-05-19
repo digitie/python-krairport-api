@@ -16,7 +16,6 @@ from krairport.debug import DebugRun, debug_call
 from krairport.enums import Provider
 from krairport.models import (
     AircraftAssignment,
-    AirportCode,
     AirportFacility,
     AirportMetadata,
     ArrivalCongestion,
@@ -318,25 +317,6 @@ class KrairportClient:
             num_of_rows=num_of_rows,
         )
 
-    def airport_codes(
-        self,
-        *,
-        code: str | None = None,
-        korean_name: str | None = None,
-        english_name: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-    ) -> list[AirportCode]:
-        """KAC 공항코드 목록을 조회합니다."""
-
-        return self.kac.airport_codes(
-            code=code,
-            korean_name=korean_name,
-            english_name=english_name,
-            page_no=page_no,
-            num_of_rows=num_of_rows,
-        )
-
     def flight_schedules(
         self,
         *,
@@ -606,11 +586,6 @@ class KrairportClient:
         """`passenger_forecast()` 실행 결과를 fixture 후보로 반환합니다."""
 
         return self.debug("passenger_forecast", **input_data)
-
-    def debug_airport_codes(self, **input_data: Any) -> DebugRun:
-        """`airport_codes()` 실행 결과를 fixture 후보로 반환합니다."""
-
-        return self.debug("airport_codes", **input_data)
 
     def debug_flight_schedules(self, **input_data: Any) -> DebugRun:
         """`flight_schedules()` 실행 결과를 fixture 후보로 반환합니다."""
@@ -895,23 +870,6 @@ class AsyncKrairportClient:
         return await self.iiac.passenger_forecast(
             airport_code=airport_code,
             selectdate=selectdate,
-            page_no=page_no,
-            num_of_rows=num_of_rows,
-        )
-
-    async def airport_codes(
-        self,
-        *,
-        code: str | None = None,
-        korean_name: str | None = None,
-        english_name: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-    ) -> list[AirportCode]:
-        return await self.kac.airport_codes(
-            code=code,
-            korean_name=korean_name,
-            english_name=english_name,
             page_no=page_no,
             num_of_rows=num_of_rows,
         )
