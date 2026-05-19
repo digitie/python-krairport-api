@@ -47,6 +47,21 @@ class FakeSession:
         return self._responses.pop(0)
 
 
+class AsyncFakeSession:
+    def __init__(self, responses: list[FakeResponse]) -> None:
+        self._responses = list(responses)
+        self.calls: list[RecordedCall] = []
+
+    async def get(self, url: str, *, params: Mapping[str, Any], timeout: float) -> FakeResponse:
+        self.calls.append(RecordedCall(url=url, params=dict(params), timeout=timeout))
+        if not self._responses:
+            raise AssertionError("AsyncFakeSession has no response left")
+        return self._responses.pop(0)
+
+    async def aclose(self) -> None:
+        return None
+
+
 @pytest.fixture
 def load_fixture() -> Any:
     def _load(name: str) -> str:

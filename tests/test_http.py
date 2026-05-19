@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import httpx
 import pytest
 
-from krairport._http import HttpClient
+from krairport._http import AsyncHttpClient, HttpClient
 from krairport.exceptions import (
     KrairportAuthError,
     KrairportNetworkError,
@@ -11,14 +12,17 @@ from krairport.exceptions import (
     KrairportRequestError,
     KrairportServerError,
 )
-from tests.conftest import FakeResponse, FakeSession
+from tests.conftest import AsyncFakeSession, FakeResponse, FakeSession
 
 
 class TimeoutSession:
     def get(self, url, *, params, timeout):  # type: ignore[no-untyped-def]
-        import requests
+        raise httpx.TimeoutException("timed out")
 
-        raise requests.Timeout("timed out")
+
+class AsyncTimeoutSession:
+    async def get(self, url, *, params, timeout):  # type: ignore[no-untyped-def]
+        raise httpx.TimeoutException("timed out")
 
 
 def test_missing_service_key_raises_auth_error() -> None:
@@ -116,3 +120,23 @@ def test_xml_response_success(load_fixture) -> None:  # type: ignore[no-untyped-
     data = client.get_xml("https://example.test", {})
 
     assert data["response"]["header"]["resultCode"] == "00"
+
+
+@pytest.mark.asyncio
+async def test_async_http_client_json_success() -> None:
+    payload = {"response": {"header": {"resultCode": "00"}, "body": {"items": []}}}
+    session = AsyncFakeSession([FakeResponse(json_data=payload)])
+    client = AsyncHttpClient(" KEY ", session=session, retries=0)
+
+    data = await client.get_json("https://example.test", {"foo": None})
+
+    assert data == payload
+    assert session.calls[0].params == {"serviceKey": "KEY"}
+
+
+@pytest.mark.asyncio
+async def test_async_http_timeout_maps_to_network_error() -> None:
+    client = AsyncHttpClient("KEY", session=AsyncTimeoutSession(), retries=0)
+
+    with pytest.raises(KrairportNetworkError):
+        await client.get_json("https://example.test", {})

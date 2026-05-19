@@ -103,7 +103,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         service="StatusOfPassengerFlightsDeOdp",
         operation="getPassengerDeparturesDeOdp",
         endpoint=(
-            "http://apis.data.go.kr/B551177/StatusOfPassengerFlightsDeOdp/"
+            "https://apis.data.go.kr/B551177/StatusOfPassengerFlightsDeOdp/"
             "getPassengerDeparturesDeOdp"
         ),
         response_format="json",
@@ -117,7 +117,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         service="StatusOfPassengerFlightsDeOdp",
         operation="getPassengerArrivalsDeOdp",
         endpoint=(
-            "http://apis.data.go.kr/B551177/StatusOfPassengerFlightsDeOdp/"
+            "https://apis.data.go.kr/B551177/StatusOfPassengerFlightsDeOdp/"
             "getPassengerArrivalsDeOdp"
         ),
         response_format="json",
@@ -131,7 +131,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         service="StatusOfPassengerFlightsOdp",
         operation="getPassengerDeparturesOdp",
         endpoint=(
-            "http://apis.data.go.kr/B551177/StatusOfPassengerFlightsOdp/"
+            "https://apis.data.go.kr/B551177/StatusOfPassengerFlightsOdp/"
             "getPassengerDeparturesOdp"
         ),
         response_format="json",
@@ -145,7 +145,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         service="StatusOfPassengerFlightsOdp",
         operation="getPassengerArrivalsOdp",
         endpoint=(
-            "http://apis.data.go.kr/B551177/StatusOfPassengerFlightsOdp/"
+            "https://apis.data.go.kr/B551177/StatusOfPassengerFlightsOdp/"
             "getPassengerArrivalsOdp"
         ),
         response_format="json",
@@ -195,7 +195,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="인천국제공항공사 주차 정보",
         service="StatusOfParking",
         operation="getTrackingParking",
-        endpoint="http://apis.data.go.kr/B551177/StatusOfParking/getTrackingParking",
+        endpoint="https://apis.data.go.kr/B551177/StatusOfParking/getTrackingParking",
         response_format="json",
         notes="ICN 주차 현황",
     ),
@@ -206,7 +206,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="인천국제공항공사 입국장 현황 정보 서비스",
         service="StatusOfArrivals",
         operation="getArrivalsCongestion",
-        endpoint="http://apis.data.go.kr/B551177/StatusOfArrivals/getArrivalsCongestion",
+        endpoint="https://apis.data.go.kr/B551177/StatusOfArrivals/getArrivalsCongestion",
         response_format="json",
     ),
     ApiCatalogItem(
@@ -216,7 +216,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="인천국제공항공사 혼잡도 예고-출입국장별",
         service="PassengerNoticeKR",
         operation="getfPassengerNoticeIKR",
-        endpoint="http://apis.data.go.kr/B551177/PassengerNoticeKR/getfPassengerNoticeIKR",
+        endpoint="https://apis.data.go.kr/B551177/PassengerNoticeKR/getfPassengerNoticeIKR",
         response_format="json",
     ),
     ApiCatalogItem(
@@ -247,7 +247,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="인천국제공항공사 여객기 정기 운항 스케줄",
         service="PaxFltSched",
         operation="getPaxFltSchedArrivals / getPaxFltSchedDepartures",
-        endpoint="http://apis.data.go.kr/B551177/PaxFltSched/{operation}",
+        endpoint="https://apis.data.go.kr/B551177/PaxFltSched/{operation}",
         response_format="json",
         notes="direction 값에 따라 arrivals/departures operation 선택",
     ),
@@ -271,7 +271,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="인천국제공항공사 편의시설 정보",
         service="StatusOfFacility",
         operation="getFacilityKR",
-        endpoint="http://apis.data.go.kr/B551177/StatusOfFacility/getFacilityKR",
+        endpoint="https://apis.data.go.kr/B551177/StatusOfFacility/getFacilityKR",
         response_format="json",
     ),
     ApiCatalogItem(
@@ -291,7 +291,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="인천국제공항공사 버스 정보",
         service="BusInformation",
         operation="getBusInfo",
-        endpoint="http://apis.data.go.kr/B551177/BusInformation/getBusInfo",
+        endpoint="https://apis.data.go.kr/B551177/BusInformation/getBusInfo",
         response_format="json",
     ),
     ApiCatalogItem(
@@ -312,7 +312,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="인천국제공항공사 택시 출차 현황",
         service="StatusOfTaxi",
         operation="getTaxiStatus",
-        endpoint="http://apis.data.go.kr/B551177/StatusOfTaxi/getTaxiStatus",
+        endpoint="https://apis.data.go.kr/B551177/StatusOfTaxi/getTaxiStatus",
         response_format="json",
     ),
     ApiCatalogItem(
@@ -322,7 +322,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="인천국제공항공사 여객기 운항 세계공항 날씨 정보",
         service="StatusOfPassengerWorldWeatherInfo",
         operation="getPassengerArrivalsWorldWeather / getPassengerDeparturesWorldWeather",
-        endpoint="http://apis.data.go.kr/B551177/StatusOfPassengerWorldWeatherInfo/{operation}",
+        endpoint="https://apis.data.go.kr/B551177/StatusOfPassengerWorldWeatherInfo/{operation}",
         response_format="json",
     ),
     ApiCatalogItem(
@@ -333,7 +333,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         service="StatusOfSrvDestinations",
         operation="getServiceDestinationInfo",
         endpoint=(
-            "http://apis.data.go.kr/B551177/StatusOfSrvDestinations/"
+            "https://apis.data.go.kr/B551177/StatusOfSrvDestinations/"
             "getServiceDestinationInfo"
         ),
         response_format="json",

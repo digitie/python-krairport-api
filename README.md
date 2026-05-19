@@ -29,6 +29,38 @@ for item in api_catalog("departures"):
     print(item.provider, item.dataset_name, item.service_key_url)
 ```
 
+## Async/httpx client shape
+
+The runtime transport is httpx-based. The synchronous facade remains compatible
+with existing callers, and the async facade follows the `python-krheritage-api`
+style:
+
+```python
+from krairport import AsyncKrairportClient, KrairportClient
+
+with KrairportClient.from_env() as client:
+    rows = client.departures(airport_code="GMP", num_of_rows=10)
+
+async with AsyncKrairportClient.from_env() as client:
+    rows = await client.world_weather(direction="arrival", airport_code="ICN")
+```
+
+For `python-krtour-map` integration, public provider models keep `raw`, expose
+Pydantic `model_dump(mode="json")`, and the client exposes `iter_pages(...)`
+with the common `page_no` / `num_of_rows` contract:
+
+```python
+client = KrairportClient.from_env()
+for page in client.iter_pages(
+    client.world_weather,
+    direction="arrival",
+    airport_code="ICN",
+    num_of_rows=100,
+    max_pages=2,
+):
+    print(page.page, len(page.items))
+```
+
 한국공항공사(KAC)와 인천국제공항공사(IIAC) OpenAPI를 하나의 Python 인터페이스로 묶기 위한 공항 데이터 라이브러리 설계 문서입니다.
 
 `python-krairport-api`는 "인천공항은 인천국제공항공사, 그 외 전국공항은 한국공항공사"라는 공급자 경계를 내부에서 흡수하고, 운항/주차/혼잡도/공항 메타데이터를 Pydantic 기반 Python 타입 모델로 일관되게 제공하는 것을 목표로 합니다. Python 코드에서는 `krairport`로 import합니다.
@@ -302,7 +334,7 @@ KrairportError
 ├── KrairportAuthError         # 인증키 오류, 활용승인 미완료
 ├── KrairportRequestError      # 잘못된 파라미터, 지원하지 않는 공항/조합
 ├── KrairportRateLimitError    # 일 트래픽 초과
-├── KrairportNetworkError      # requests timeout / connection error
+├── KrairportNetworkError      # httpx timeout / connection error
 ├── KrairportServerError       # 5xx, 공급자 응답 이상
 ├── KrairportParseError        # XML/JSON 구조 또는 타입 변환 오류
 └── UnsupportedAirportError    # 해당 기능을 지원하지 않는 공항

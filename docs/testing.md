@@ -31,7 +31,7 @@ processor를 추가하고, 민감정보는 fixture 저장 전에 `<REDACTED>`로
 - 모든 provider 테스트는 고정 fixture 또는 mock response를 사용합니다.
 - live 테스트는 별도 marker로만 실행합니다.
 - 타입 assertion을 반드시 포함합니다.
-- 현재 기준선은 `74 passed`, `2 skipped`, coverage `91%+`, fail-under `85`입니다.
+- 현재 기준선은 `90 passed`, `2 skipped`, coverage fail-under `85`입니다.
 
 ## 필수 오프라인 테스트
 
@@ -75,11 +75,14 @@ pytest --cov=krairport --cov-fail-under=85
 
 - `KAC_SERVICE_KEY`
 - `IIAC_SERVICE_KEY`
+- `.env` / `.env.local`의 `KAC_SERVICE_KEY`, `IIAC_SERVICE_KEY`
+- 공통 fallback: `DATA_GO_KR_SERVICE_KEY`, `DATA_GOKR_SERVICE_KEY`, `PUBLIC_DATA_SERVICE_KEY`
 
 규칙:
 
 - 키가 없으면 skip
 - `-m live_kac` 또는 `-m live_iiac`로 명시 실행했을 때만 실제 API 호출
+- 라이브 테스트와 `KrairportClient.from_env()`는 process env를 먼저 보고, 없으면 로컬 `.env` 값을 사용합니다.
 - 응답 shape와 타입만 검증
 - 특정 편명, 주차대수, 혼잡도 수치를 고정값으로 단정하지 않음
 

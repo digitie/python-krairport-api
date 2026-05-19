@@ -80,7 +80,7 @@ replay 테스트를 수행합니다. 자세한 포맷은 `docs/debug-fixtures.md
 
 ### 2.2 인천국제공항공사 (IIAC)
 
-- Base service family: `http://apis.data.go.kr/B551177/...`
+- Base service family: `https://apis.data.go.kr/B551177/...`
 - 인증 파라미터: `serviceKey`
 - 응답 형식: JSON + XML
 - 공항 범위: **인천공항 전용**
@@ -105,14 +105,43 @@ KrairportClient(
     *,
     timeout: float = 10.0,
     retries: int = 3,
-    session: requests.Session | None = None,
+    session: httpx.Client-compatible object | None = None,
 )
 
 KrairportClient.from_env(
     kac_name: str = "KAC_SERVICE_KEY",
     iiac_name: str = "IIAC_SERVICE_KEY",
+    env_file: str | None = None,
 )
+
+AsyncKrairportClient.from_env(...)
+KrairportClient.aio(...)
 ```
+
+상위 클라이언트는 `python-krheritage-api`와 같은 형태로 context manager와 async facade를 제공합니다.
+동기 facade는 기존 호출을 유지하고, 비동기 facade는 `httpx.AsyncClient` 기반 provider client를 사용합니다.
+
+```python
+from krairport import AsyncKrairportClient, KrairportClient
+
+with KrairportClient.from_env() as client:
+    rows = client.departures(airport_code="GMP")
+
+async with AsyncKrairportClient.from_env() as client:
+    rows = await client.world_weather(direction="arrival", airport_code="ICN")
+```
+
+`from_env()`는 process env를 먼저 보고, 없으면 현재 작업 디렉터리와 상위 디렉터리의
+`.env` / `.env.local`에서 `KAC_SERVICE_KEY`, `IIAC_SERVICE_KEY`, `DATA_GO_KR_SERVICE_KEY`,
+`DATA_GOKR_SERVICE_KEY`, `PUBLIC_DATA_SERVICE_KEY`를 찾습니다. 복사/붙여넣기 과정에서 들어간
+앞뒤 공백과 따옴표는 서비스키로 사용하기 전에 제거합니다.
+
+`python-krtour-map` 호환성 기준:
+
+- provider public client를 직접 호출할 수 있어야 하며 별도 wrapper/adapter를 요구하지 않습니다.
+- 모든 typed response model은 `raw`를 보존하거나 `model_dump(mode="json")`으로 원문 추적이 가능해야 합니다.
+- page 기반 수집은 `iter_pages(fetch_page, page_no=..., num_of_rows=..., max_pages=...)`를 사용합니다.
+- `PROVIDER_NAME == "python-krairport-api"`를 canonical provider name으로 노출합니다.
 
 ### 3.2 운항
 
@@ -417,6 +446,7 @@ KAC `StatusOfFlights` WADL 기준:
 
 ## 7. HTTP 계층 규칙
 
+- HTTP transport는 `httpx.Client` / `httpx.AsyncClient` 기반입니다.
 - KAC/IIAC를 분리한 provider adapter를 둡니다.
 - 재시도는 `429`, `500`, `502`, `503`, `504`만 허용합니다.
 - 인증 오류는 재시도하지 않습니다.

@@ -16,7 +16,7 @@ from krairport._convert import (
     to_float_or_none,
     to_int_or_none,
 )
-from krairport._http import HttpClient, SessionLike
+from krairport._http import AsyncHttpClient, AsyncSessionLike, HttpClient, SessionLike
 from krairport._routing import ensure_iiac_airport
 from krairport._time import parse_kst_datetime
 from krairport.enums import Direction, Provider, normalize_direction
@@ -34,17 +34,17 @@ from krairport.models import (
     WorldWeather,
 )
 
-DETAILED_FLIGHTS_BASE = "http://apis.data.go.kr/B551177/StatusOfPassengerFlightsDeOdp"
-TODAY_FLIGHTS_BASE = "http://apis.data.go.kr/B551177/StatusOfPassengerFlightsOdp"
-PARKING_BASE = "http://apis.data.go.kr/B551177/StatusOfParking"
-ARRIVAL_CONGESTION_BASE = "http://apis.data.go.kr/B551177/StatusOfArrivals"
-PASSENGER_FORECAST_BASE = "http://apis.data.go.kr/B551177/PassengerNoticeKR"
-TAXI_BASE = "http://apis.data.go.kr/B551177/StatusOfTaxi"
-BUS_BASE = "http://apis.data.go.kr/B551177/BusInformation"
-WEATHER_BASE = "http://apis.data.go.kr/B551177/StatusOfPassengerWorldWeatherInfo"
-PAX_SCHEDULE_BASE = "http://apis.data.go.kr/B551177/PaxFltSched"
-DESTINATION_BASE = "http://apis.data.go.kr/B551177/StatusOfSrvDestinations"
-FACILITY_BASE = "http://apis.data.go.kr/B551177/StatusOfFacility"
+DETAILED_FLIGHTS_BASE = "https://apis.data.go.kr/B551177/StatusOfPassengerFlightsDeOdp"
+TODAY_FLIGHTS_BASE = "https://apis.data.go.kr/B551177/StatusOfPassengerFlightsOdp"
+PARKING_BASE = "https://apis.data.go.kr/B551177/StatusOfParking"
+ARRIVAL_CONGESTION_BASE = "https://apis.data.go.kr/B551177/StatusOfArrivals"
+PASSENGER_FORECAST_BASE = "https://apis.data.go.kr/B551177/PassengerNoticeKR"
+TAXI_BASE = "https://apis.data.go.kr/B551177/StatusOfTaxi"
+BUS_BASE = "https://apis.data.go.kr/B551177/BusInformation"
+WEATHER_BASE = "https://apis.data.go.kr/B551177/StatusOfPassengerWorldWeatherInfo"
+PAX_SCHEDULE_BASE = "https://apis.data.go.kr/B551177/PaxFltSched"
+DESTINATION_BASE = "https://apis.data.go.kr/B551177/StatusOfSrvDestinations"
+FACILITY_BASE = "https://apis.data.go.kr/B551177/StatusOfFacility"
 _SAFE_PATH_PART = re.compile(r"^[A-Za-z0-9_]+$")
 
 
@@ -65,6 +65,15 @@ class IiacClient:
             timeout=timeout,
             retries=retries,
         )
+
+    def __enter__(self) -> IiacClient:
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+    def close(self) -> None:
+        self._http.close()
 
     def departures(
         self,
@@ -342,7 +351,319 @@ class IiacClient:
         _validate_path_part(operation)
         request_params = {"type": "json"} | dict(params or {})
         data = self._http.get_json(
-            f"http://apis.data.go.kr/B551177/{service}/{operation}",
+            f"https://apis.data.go.kr/B551177/{service}/{operation}",
+            request_params,
+        )
+        return _extract_items(data)
+
+
+class AsyncIiacClient:
+    """Async IIAC API adapter backed by httpx.AsyncClient."""
+
+    def __init__(
+        self,
+        service_key: str | None,
+        *,
+        session: AsyncSessionLike | None = None,
+        timeout: float = 10.0,
+        retries: int = 3,
+    ) -> None:
+        self._http = AsyncHttpClient(
+            service_key,
+            session=session,
+            timeout=timeout,
+            retries=retries,
+        )
+
+    async def __aenter__(self) -> AsyncIiacClient:
+        return self
+
+    async def __aexit__(self, *_: object) -> None:
+        await self.aclose()
+
+    async def aclose(self) -> None:
+        await self._http.aclose()
+
+    async def departures(
+        self,
+        *,
+        airport_code: str = "ICN",
+        searchday: str | None = None,
+        from_time: str | None = None,
+        to_time: str | None = None,
+        flight_id: str | None = None,
+        flight_unique_id: str | None = None,
+        airline_code: str | None = None,
+        counterpart_airport_code: str | None = None,
+        lang: str = "K",
+        inqtimechcd: str = "E",
+        detailed: bool = True,
+        page_no: int = 1,
+        num_of_rows: int = 10,
+    ) -> list[Flight]:
+        ensure_iiac_airport(airport_code)
+        base = DETAILED_FLIGHTS_BASE if detailed else TODAY_FLIGHTS_BASE
+        operation = "getPassengerDeparturesDeOdp" if detailed else "getPassengerDeparturesOdp"
+        params = {
+            "type": "json",
+            "searchday": searchday if detailed else None,
+            "from_time": from_time,
+            "to_time": to_time,
+            "airport_code": counterpart_airport_code,
+            "f_id": flight_unique_id,
+            "flight_id": flight_id,
+            "airline": airline_code,
+            "lang": lang,
+            "inqtimechcd": inqtimechcd,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(f"{base}/{operation}", params)
+        return [_build_flight(row, direction=Direction.DEPARTURE) for row in _extract_items(data)]
+
+    async def arrivals(
+        self,
+        *,
+        airport_code: str = "ICN",
+        searchday: str | None = None,
+        from_time: str | None = None,
+        to_time: str | None = None,
+        flight_id: str | None = None,
+        flight_unique_id: str | None = None,
+        airline_code: str | None = None,
+        counterpart_airport_code: str | None = None,
+        lang: str = "K",
+        inqtimechcd: str = "E",
+        detailed: bool = True,
+        page_no: int = 1,
+        num_of_rows: int = 10,
+    ) -> list[Flight]:
+        ensure_iiac_airport(airport_code)
+        base = DETAILED_FLIGHTS_BASE if detailed else TODAY_FLIGHTS_BASE
+        operation = "getPassengerArrivalsDeOdp" if detailed else "getPassengerArrivalsOdp"
+        params = {
+            "type": "json",
+            "searchday": searchday if detailed else None,
+            "from_time": from_time,
+            "to_time": to_time,
+            "airport_code": counterpart_airport_code,
+            "f_id": flight_unique_id,
+            "flight_id": flight_id,
+            "airline": airline_code,
+            "lang": lang,
+            "inqtimechcd": inqtimechcd,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(f"{base}/{operation}", params)
+        return [_build_flight(row, direction=Direction.ARRIVAL) for row in _extract_items(data)]
+
+    async def parking_status(
+        self,
+        *,
+        airport_code: str = "ICN",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[ParkingAreaStatus]:
+        ensure_iiac_airport(airport_code)
+        params = {"type": "json", "pageNo": page_no, "numOfRows": num_of_rows}
+        data = await self._http.get_json(f"{PARKING_BASE}/getTrackingParking", params)
+        return [_build_parking_status(row) for row in _extract_items(data)]
+
+    async def arrival_congestion(
+        self,
+        *,
+        airport_code: str = "ICN",
+        terminal: str | None = None,
+        airport: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[ArrivalCongestion]:
+        ensure_iiac_airport(airport_code)
+        params = {
+            "type": "json",
+            "terno": terminal,
+            "airport": airport,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(f"{ARRIVAL_CONGESTION_BASE}/getArrivalsCongestion", params)
+        return [
+            _build_arrival_congestion(row, terminal_hint=terminal)
+            for row in _extract_items(data)
+        ]
+
+    async def passenger_forecast(
+        self,
+        *,
+        airport_code: str = "ICN",
+        selectdate: int = 0,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[PassengerForecast]:
+        ensure_iiac_airport(airport_code)
+        params = {
+            "type": "json",
+            "selectdate": str(selectdate),
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(
+            f"{PASSENGER_FORECAST_BASE}/getfPassengerNoticeIKR",
+            params,
+        )
+        return [_build_passenger_forecast(row) for row in _extract_items(data)]
+
+    async def taxi_status(
+        self,
+        *,
+        airport_code: str = "ICN",
+        terminal: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[TaxiStatus]:
+        ensure_iiac_airport(airport_code)
+        params = {
+            "type": "json",
+            "terno": terminal,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(f"{TAXI_BASE}/getTaxiStatus", params)
+        return [_build_taxi_status(row, terminal_hint=terminal) for row in _extract_items(data)]
+
+    async def bus_routes(
+        self,
+        *,
+        airport_code: str = "ICN",
+        area: str = "1",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[BusRoute]:
+        ensure_iiac_airport(airport_code)
+        params = {"type": "json", "area": area, "pageNo": page_no, "numOfRows": num_of_rows}
+        data = await self._http.get_json(f"{BUS_BASE}/getBusInfo", params)
+        return [_build_bus_route(row) for row in _extract_items(data)]
+
+    async def world_weather(
+        self,
+        *,
+        direction: str | Direction,
+        airport_code: str = "ICN",
+        from_time: str | None = None,
+        to_time: str | None = None,
+        airport: str | None = None,
+        flight_id: str | None = None,
+        airline_code: str | None = None,
+        lang: str = "K",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[WorldWeather]:
+        ensure_iiac_airport(airport_code)
+        direction_value = normalize_direction(direction)
+        if direction_value is Direction.ARRIVAL:
+            operation = "getPassengerArrivalsWorldWeather"
+        elif direction_value is Direction.DEPARTURE:
+            operation = "getPassengerDeparturesWorldWeather"
+        params = {
+            "type": "json",
+            "from_time": from_time,
+            "to_time": to_time,
+            "airport": airport,
+            "flight_id": flight_id,
+            "airline": airline_code,
+            "lang": lang,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(f"{WEATHER_BASE}/{operation}", params)
+        return [
+            _build_world_weather(row, direction=direction_value)
+            for row in _extract_items(data)
+        ]
+
+    async def flight_schedules(
+        self,
+        *,
+        direction: str | Direction,
+        airport_code: str = "ICN",
+        counterpart_airport_code: str | None = None,
+        airline_code: str | None = None,
+        flight_id: str | None = None,
+        lang: str = "K",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[FlightSchedule]:
+        ensure_iiac_airport(airport_code)
+        direction_value = normalize_direction(direction)
+        if direction_value is Direction.ARRIVAL:
+            operation = "getPaxFltSchedArrivals"
+        elif direction_value is Direction.DEPARTURE:
+            operation = "getPaxFltSchedDepartures"
+        params = {
+            "type": "json",
+            "airport_code": counterpart_airport_code,
+            "airline": airline_code,
+            "flight_id": flight_id,
+            "lang": lang,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(f"{PAX_SCHEDULE_BASE}/{operation}", params)
+        return [
+            _build_flight_schedule(row, direction=direction_value)
+            for row in _extract_items(data)
+        ]
+
+    async def service_destinations(
+        self,
+        *,
+        airport_code: str | None = None,
+        lang: str = "K",
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[ServiceDestination]:
+        params = {
+            "type": "json",
+            "airport_code": airport_code,
+            "lang": lang,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(f"{DESTINATION_BASE}/getServiceDestinationInfo", params)
+        return [_build_service_destination(row) for row in _extract_items(data)]
+
+    async def facilities(
+        self,
+        *,
+        airport_code: str = "ICN",
+        facility_name: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[AirportFacility]:
+        ensure_iiac_airport(airport_code)
+        params = {
+            "type": "json",
+            "facility_nm": facility_name,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_json(f"{FACILITY_BASE}/getFacilityKR", params)
+        return [_build_facility(row) for row in _extract_items(data)]
+
+    async def raw_items(
+        self,
+        service: str,
+        operation: str,
+        params: Mapping[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return normalized raw JSON items from a B551177 IIAC service operation."""
+
+        _validate_path_part(service)
+        _validate_path_part(operation)
+        request_params = {"type": "json"} | dict(params or {})
+        data = await self._http.get_json(
+            f"https://apis.data.go.kr/B551177/{service}/{operation}",
             request_params,
         )
         return _extract_items(data)

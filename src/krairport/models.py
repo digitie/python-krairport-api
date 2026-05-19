@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from kraddr.base import Address, PlaceCoordinate
 from pydantic import BaseModel, ConfigDict, Field
@@ -26,6 +27,27 @@ class KrairportModel(BaseModel):
         """Pydantic v2 직렬화로 JSON 문자열을 반환합니다."""
 
         return self.model_dump_json()
+
+
+T = TypeVar("T")
+
+
+class PaginatedResult(KrairportModel, Generic[T]):
+    """Uniform page container for provider list/search responses."""
+
+    total: int = 0
+    page: int = 1
+    size: int = 10
+    items: list[T] = Field(default_factory=list)
+
+    def __iter__(self) -> Iterator[T]:  # type: ignore[override]
+        return iter(self.items)
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def extend(self, items: Sequence[T]) -> None:
+        self.items.extend(items)
 
 
 class Flight(KrairportModel):

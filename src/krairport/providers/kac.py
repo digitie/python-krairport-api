@@ -9,7 +9,7 @@ from typing import Any
 from kraddr.base import Address, PlaceCoordinate
 
 from krairport._convert import first_value, strip_or_none, to_bool_or_none, to_int_or_none
-from krairport._http import HttpClient, SessionLike
+from krairport._http import AsyncHttpClient, AsyncSessionLike, HttpClient, SessionLike
 from krairport._routing import ensure_kac_airport
 from krairport._time import parse_kst_datetime
 from krairport._xml import extract_items
@@ -60,6 +60,15 @@ class KacClient:
             timeout=timeout,
             retries=retries,
         )
+
+    def __enter__(self) -> KacClient:
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+    def close(self) -> None:
+        self._http.close()
 
     def departures(
         self,
@@ -298,6 +307,276 @@ class KacClient:
         _validate_path_part(service)
         _validate_path_part(operation)
         data = self._http.get_xml(
+            f"https://openapi.airport.co.kr/service/rest/{service}/{operation}",
+            dict(params or {}),
+        )
+        return extract_items(data)
+
+
+class AsyncKacClient:
+    """Async KAC API adapter backed by httpx.AsyncClient."""
+
+    def __init__(
+        self,
+        service_key: str | None,
+        *,
+        session: AsyncSessionLike | None = None,
+        timeout: float = 10.0,
+        retries: int = 3,
+    ) -> None:
+        self._http = AsyncHttpClient(
+            service_key,
+            session=session,
+            timeout=timeout,
+            retries=retries,
+        )
+
+    async def __aenter__(self) -> AsyncKacClient:
+        return self
+
+    async def __aexit__(self, *_: object) -> None:
+        await self.aclose()
+
+    async def aclose(self) -> None:
+        await self._http.aclose()
+
+    async def departures(
+        self,
+        *,
+        airport_code: str,
+        searchday: str | None = None,
+        from_time: str | None = None,
+        to_time: str | None = None,
+        flight_id: str | None = None,
+        flight_unique_id: str | None = None,
+        line: str | None = None,
+        arr_airport_code: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 10,
+    ) -> list[Flight]:
+        code = ensure_kac_airport(airport_code)
+        params = {
+            "searchday": searchday,
+            "from_time": from_time,
+            "to_time": to_time,
+            "airport_code": code,
+            "f_id": flight_unique_id,
+            "flight_id": flight_id,
+            "line": line,
+            "arr_airport_code": arr_airport_code,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_xml(f"{STATUS_BASE}/getDepFlightStatusList", params)
+        return [
+            _build_flight(row, airport_code=code, direction=Direction.DEPARTURE)
+            for row in extract_items(data)
+        ]
+
+    async def arrivals(
+        self,
+        *,
+        airport_code: str,
+        searchday: str | None = None,
+        from_time: str | None = None,
+        to_time: str | None = None,
+        flight_id: str | None = None,
+        flight_unique_id: str | None = None,
+        line: str | None = None,
+        dep_airport_code: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 10,
+    ) -> list[Flight]:
+        code = ensure_kac_airport(airport_code)
+        params = {
+            "searchday": searchday,
+            "from_time": from_time,
+            "to_time": to_time,
+            "airport_code": code,
+            "f_id": flight_unique_id,
+            "flight_id": flight_id,
+            "line": line,
+            "dep_airport_code": dep_airport_code,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_xml(f"{STATUS_BASE}/getArrFlightStatusList", params)
+        return [
+            _build_flight(row, airport_code=code, direction=Direction.ARRIVAL)
+            for row in extract_items(data)
+        ]
+
+    async def aircraft_assignments(
+        self,
+        *,
+        airport_code: str | None = None,
+        sch_st_time: str | None = None,
+        sch_ed_time: str | None = None,
+        flight_id: str | None = None,
+        flight_unique_id: str | None = None,
+        aircraft_registration: str | None = None,
+        aircraft_type: str | None = None,
+        line: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 10,
+    ) -> list[AircraftAssignment]:
+        code = ensure_kac_airport(airport_code) if airport_code else None
+        params = {
+            "schStTime": sch_st_time,
+            "schEdTime": sch_ed_time,
+            "schAirCode": code,
+            "schFID": flight_unique_id,
+            "schFln": flight_id,
+            "Line": line,
+            "schAPLno": aircraft_registration,
+            "schAPM": aircraft_type,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_xml(f"{AIRCRAFT_BASE}/getFlightStatusAPLList", params)
+        return [
+            _build_aircraft_assignment(row, requested_airport_code=code)
+            for row in extract_items(data)
+        ]
+
+    async def parking_fees(self, *, airport_code: str | None = None) -> list[ParkingFee]:
+        code = ensure_kac_airport(airport_code) if airport_code else None
+        params = {"schAirportCode": code}
+        data = await self._http.get_xml(f"{PARKING_FEE_BASE}/parkingfee", params)
+        return [_build_parking_fee(row, requested_airport_code=code) for row in extract_items(data)]
+
+    async def airport_codes(
+        self,
+        *,
+        code: str | None = None,
+        korean_name: str | None = None,
+        english_name: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[AirportCode]:
+        params = {
+            "cityCode": code,
+            "cityKor": korean_name,
+            "cityEng": english_name,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_xml(f"{AIRPORT_CODE_BASE}/getAirportCodeList", params)
+        return [_build_airport_code(row) for row in extract_items(data)]
+
+    async def flight_schedules(
+        self,
+        *,
+        direction: str | Direction,
+        airport_code: str | None = None,
+        counterpart_airport_code: str | None = None,
+        sch_date: str | None = None,
+        airline_code: str | None = None,
+        flight_id: str | None = None,
+        international: bool = False,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[FlightSchedule]:
+        code = ensure_kac_airport(airport_code) if airport_code else None
+        operation = "getIflightScheduleList" if international else "getDflightScheduleList"
+        direction_value = normalize_direction(direction)
+        if direction_value is Direction.DEPARTURE:
+            dept_code = code
+            arrv_code = counterpart_airport_code
+        elif direction_value is Direction.ARRIVAL:
+            dept_code = counterpart_airport_code
+            arrv_code = code
+        params = {
+            "schDate": sch_date,
+            "schDeptCityCode": dept_code,
+            "schArrvCityCode": arrv_code,
+            "schAirLine": airline_code,
+            "schFlightNum": flight_id,
+            "pageNo": page_no,
+            "numOfRows": num_of_rows,
+        }
+        data = await self._http.get_xml(f"{FLIGHT_SCHEDULE_BASE}/{operation}", params)
+        return [
+            _build_flight_schedule(row, direction=direction_value, international=international)
+            for row in extract_items(data)
+        ]
+
+    async def parking_status(
+        self,
+        *,
+        airport_code: str,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+        realtime: bool = False,
+    ) -> list[ParkingAreaStatus]:
+        code = ensure_kac_airport(airport_code)
+        params: dict[str, Any]
+        if realtime:
+            url = f"{AIRPORT_PARKING_BASE}/airportparkingRT"
+            params = {"schAirportCode": code}
+        else:
+            url = f"{PARKING_CONGESTION_BASE}/airportParkingCongestionRT"
+            params = {"schAirportCode": code, "pageNo": page_no, "numOfRows": num_of_rows}
+        data = await self._http.get_xml(url, params)
+        return [
+            _build_parking_status(row, requested_airport_code=code)
+            for row in extract_items(data)
+        ]
+
+    async def airport_facilities(
+        self,
+        *,
+        airport_code: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[AirportFacility]:
+        code = ensure_kac_airport(airport_code) if airport_code else None
+        params = {"apcd": code, "pageNo": page_no, "numOfRows": num_of_rows}
+        data = await self._http.get_xml(f"{AIRPORT_FACILITIES_BASE}/getAirportFacilities", params)
+        return [
+            _build_airport_facility(row, requested_airport_code=code)
+            for row in extract_items(data)
+        ]
+
+    async def airport_buses(
+        self,
+        *,
+        airport_code: str | None = None,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[BusRoute]:
+        code = ensure_kac_airport(airport_code) if airport_code else None
+        params = {"schAirport": code, "pageNo": page_no, "numOfRows": num_of_rows}
+        data = await self._http.get_xml(f"{AIRPORT_BUS_BASE}/businfo", params)
+        return [
+            _build_bus_route(row, provider=Provider.KAC, airport_code=code)
+            for row in extract_items(data)
+        ]
+
+    async def jeju_taxi_wait(
+        self,
+        *,
+        page_no: int = 1,
+        num_of_rows: int = 100,
+    ) -> list[TaxiStatus]:
+        params = {"pageNo": page_no, "numOfRows": num_of_rows}
+        data = await self._http.get_xml(f"{JEJU_TAXI_WAIT_BASE}/getJejuTaxiWaitInfo", params)
+        return [
+            _build_taxi_status(row, provider=Provider.KAC, airport_code="CJU")
+            for row in extract_items(data)
+        ]
+
+    async def raw_items(
+        self,
+        service: str,
+        operation: str,
+        params: Mapping[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return normalized raw XML items from a KAC REST service operation."""
+
+        _validate_path_part(service)
+        _validate_path_part(operation)
+        data = await self._http.get_xml(
             f"https://openapi.airport.co.kr/service/rest/{service}/{operation}",
             dict(params or {}),
         )

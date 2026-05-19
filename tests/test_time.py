@@ -42,6 +42,13 @@ def test_parse_scientific_timestamp() -> None:
     assert dt.isoformat() == "2026-04-30T06:10:00+09:00"
 
 
+def test_parse_fractional_seconds_timestamp() -> None:
+    dt = parse_kst_datetime("20260519222836.000")
+
+    assert dt is not None
+    assert dt.isoformat() == "2026-05-19T22:28:36+09:00"
+
+
 def test_combine_2400_rolls_to_next_day() -> None:
     dt = combine_date_time(date(2026, 4, 30), "2400")
 

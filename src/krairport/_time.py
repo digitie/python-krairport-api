@@ -56,6 +56,10 @@ def _timestamp_digits(text: str) -> str:
             normalized = format(Decimal(normalized), "f")
         except InvalidOperation as exc:
             raise ValueError(f"invalid scientific timestamp: {text!r}") from exc
+    if "." in normalized:
+        whole, fraction = normalized.split(".", 1)
+        if whole.isdigit() and fraction.isdigit() and len(whole) in {8, 12, 14}:
+            normalized = whole
     return "".join(ch for ch in normalized if ch.isdigit())
 
 

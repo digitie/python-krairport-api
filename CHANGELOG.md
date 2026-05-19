@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- HTTP transport를 `requests`에서 `httpx` 기반 sync/async client로 전환.
+- `AsyncKrairportClient`, `KrairportClient.aio()`, context manager, `KrairportConfig` 추가.
+- `from_env()`가 process env와 로컬 `.env` / `.env.local`의 서비스키를 공백 제거 후 로드하도록 보강.
+- `python-krtour-map` 연동을 위해 `PROVIDER_NAME`, `PaginatedResult`, `iter_pages(...)`, provider raw 보존 계약을 문서화.
+
 - `DebugRun`, `KrairportClient.debug()`, fixture replay runner, Streamlit debug UI fixture writer 문서와 테스트 추가
 - `api_catalog()`와 서비스키 신청 링크 포함 API 카탈로그 추가
 

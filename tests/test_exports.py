@@ -7,10 +7,14 @@ from krairport.enums import Airport, Direction, Provider
 def test_public_exports() -> None:
     assert krairport.__version__ == "0.1.0"
     assert hasattr(krairport, "Address")
+    assert hasattr(krairport, "AsyncKrairportClient")
     assert hasattr(krairport, "KrairportClient")
+    assert hasattr(krairport, "KrairportConfig")
     assert hasattr(krairport, "Flight")
     assert hasattr(krairport, "PlaceCoordinate")
     assert hasattr(krairport, "AirportMetadata")
+    assert hasattr(krairport, "PaginatedResult")
+    assert krairport.PROVIDER_NAME == "python-krairport-api"
     assert hasattr(krairport, "api_catalog")
     assert hasattr(krairport, "ApiCatalogItem")
     assert hasattr(krairport, "get_airport")
