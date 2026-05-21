@@ -1,70 +1,43 @@
 ---
 name: krairport-python-builder
-description: Use this skill when building, extending, debugging, or documenting a Python client for Korean airport public APIs that combine 한국공항공사(KAC) and 인천국제공항공사(IIAC). Trigger on krairport, 한국공항공사, 인천국제공항공사, ICN/GMP/CJU airport API integration, flight status, aircraft registration, parking fee, parking status, arrival congestion, passenger forecast, KAC XML parsing, IIAC JSON/XML parsing, provider routing, or files like krairport-api.md and src/krairport/client.py.
+description: 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공개 API를 함께 다루는 `krairport` Python client를 구현, 확장, 디버깅, 문서화할 때 사용한다.
 ---
 
 # Krairport Python Library Builder
 
-You are helping build and maintain `krairport`, a Python client that unifies Korean airport public APIs across **KAC** and **IIAC**. Read `README.md` and `krairport-api.md` before changing public behavior.
+`krairport`는 KAC와 IIAC 공항 공개 API를 하나의 Python client로 묶는 라이브러리다. 공개 동작을 바꾸기 전에는 `README.md`와 `krairport-api.md`를 먼저 읽는다.
 
-## Project invariants
+## 문서 언어 정책
 
-1. **Provider split is real**:
-   - `ICN` belongs to IIAC.
-   - KAC covers nationwide airports except Incheon.
-2. **One public surface, two provider adapters**:
-   - keep `KrairportClient` as the user-facing entrypoint
-   - implement KAC/IIAC-specific HTTP and parsing separately
-3. **KAC is still XML-heavy**:
-   - do not assume JSON availability across all KAC endpoints
-4. **IIAC usually supports `type=json`**:
-   - prefer JSON where documented, but keep XML fallback if needed
-5. **data.go.kr service key is unified**:
-   - use only `DATA_GO_KR_SERVICE_KEY`
-6. **All schedule timestamps are KST**:
-   - naive times are interpreted as `Asia/Seoul`
-   - keep `tzdata` in Windows dependencies and preserve the UTC+9 fallback in `_time.py`
-7. **No silent provider mismatch**:
-   - requests for `ICN` on KAC endpoints must raise `UnsupportedAirportError`
-8. **Default tests are offline**:
-   - fixture/mock based, no live traffic during ordinary test runs
-9. **Public enums remain string-compatible**:
-   - use `StrEnum` so existing string comparisons and JSON serialization keep working
-10. **Coordinates are WGS84 decimal degrees**:
-   - use `kraddr.base.PlaceCoordinate` directly in parameters and response models
-   - do not add a `krairport` coordinate wrapper/helper
-   - `as_tuple()` and `as_lat_lon()` are `(latitude, longitude)`; use `as_geojson_position()` for GeoJSON order
-11. **Addresses use kraddr.base directly**:
-   - use `kraddr.base.Address` directly in response models
-   - do not add a `krairport` address wrapper/helper
-   - keep airport-internal location text separate from address DTOs
-12. **Public response models use Pydantic v2**:
-   - inherit from `KrairportModel`
-   - keep `ConfigDict(frozen=True, extra="forbid")`
-   - serialize with `model_dump(mode="json")` / `model_dump_json()` or `to_dict()` / `to_json()`
-13. **문서 경로는 프로젝트 기준 상대 경로**:
-   - use `src/krairport/client.py`, not local absolute paths
-14. **Python 내부 문서는 한글**:
-   - write module/class/function docstrings and explanatory comments in Korean
-   - preserve provider text, code identifiers, commands, and URLs as-is
-15. **Windows 탐색은 PowerShell fallback 우선**:
-   - if `rg` is blocked by execution permissions, use `Get-ChildItem` and `Select-String`
-   - read/search Korean Markdown and Python docs with `-Encoding UTF8`
-16. **불필요한 wrapper보다 직접 적용 우선**:
-   - do not add a wrapper or compatibility layer unless it has a clear boundary responsibility
-   - when `pykma`, `pyopinet`, `pykex`, or another maintained library already has a proven implementation pattern, port that pattern directly into `krairport`
-   - minimal edits are preferred for ordinary fixes, but a larger direct adoption is acceptable when it improves long-term consistency and removes needless indirection
+이 저장소의 모든 Markdown/RST 문서는 한글로 작성한다. provider field, code identifier, 명령어, URL, protocol literal처럼 보존해야 하는 값만 원문을 유지한다.
 
-## Initial supported endpoints
+## 프로젝트 불변 조건
 
-Start with these.
+1. Provider 경계는 실제로 다르다. `ICN`은 IIAC, 그 외 국내 공항은 KAC가 기본이다.
+2. 사용자에게는 `KrairportClient` 하나를 제공하되 KAC/IIAC HTTP와 parsing은 분리한다.
+3. KAC는 XML endpoint가 많으므로 JSON을 가정하지 않는다.
+4. IIAC는 대체로 `type=json`을 지원하지만 XML fallback을 유지한다.
+5. data.go.kr service key는 `DATA_GO_KR_SERVICE_KEY`만 사용한다.
+6. 모든 schedule timestamp는 KST로 해석한다. Windows 의존성에는 `tzdata`를 유지하고 `_time.py`의 UTC+9 fallback을 보존한다.
+7. Provider mismatch를 조용히 넘기지 않는다. KAC 전용 endpoint에 `ICN`을 요청하면 `UnsupportedAirportError`를 발생시킨다.
+8. 기본 test는 offline이어야 한다. 보통 test run에서 live traffic을 만들지 않는다.
+9. 공개 enum은 string 호환성을 유지하기 위해 `StrEnum`을 사용한다.
+10. 좌표는 WGS84 decimal degree이며 `kraddr.base.PlaceCoordinate`를 직접 쓴다. GeoJSON 순서가 필요하면 `as_geojson_position()`을 사용한다.
+11. 주소는 `kraddr.base.Address`를 직접 쓴다. 공항 내부 위치 문자열은 주소 DTO와 분리한다.
+12. 공개 응답 model은 Pydantic v2 기반 `KrairportModel`을 상속하고 frozen/extra forbid 설정을 유지한다.
+13. 문서의 파일 경로는 `src/krairport/client.py`처럼 프로젝트 기준 상대 경로로 쓴다.
+14. Python docstring과 설명 주석은 한글로 쓴다.
+15. Windows에서 `rg`가 권한 문제로 막히면 PowerShell `Get-ChildItem`/`Select-String -Encoding UTF8`을 fallback으로 쓴다.
+16. 이미 검증된 sibling library 구현이 있으면 불필요한 wrapper를 만들지 말고 해당 pattern을 직접 반영한다.
+
+## 초기 지원 endpoint
 
 | Public method | Provider | Endpoint |
 |---|---|---|
 | `KrairportClient.departures()` | KAC | `getDepFlightStatusList` |
 | `KrairportClient.arrivals()` | KAC | `getArrFlightStatusList` |
-| `KrairportClient.departures()` | IIAC | `getPassengerDeparturesDeOdp` or `getPassengerDeparturesOdp` |
-| `KrairportClient.arrivals()` | IIAC | `getPassengerArrivalsDeOdp` or `getPassengerArrivalsOdp` |
+| `KrairportClient.departures()` | IIAC | `getPassengerDeparturesDeOdp` 또는 `getPassengerDeparturesOdp` |
+| `KrairportClient.arrivals()` | IIAC | `getPassengerArrivalsDeOdp` 또는 `getPassengerArrivalsOdp` |
 | `KrairportClient.aircraft_assignments()` | KAC | `getFlightStatusAPLList` |
 | `KrairportClient.parking_fees()` | KAC | `parkingfee` |
 | `KrairportClient.parking_status()` | IIAC | `getTrackingParking` |
@@ -76,56 +49,15 @@ Start with these.
 | `KrairportClient.taxi_status()` | KAC/IIAC | KAC `taxiWaitInfo`, IIAC `StatusOfTaxi` |
 | `KrairportClient.world_weather()` | IIAC | `StatusOfPassengerWorldWeatherInfo` |
 | `KrairportClient.service_destinations()` | IIAC | `StatusOfSrvDestinations` |
-| `KrairportClient.kac_raw_items()` | KAC | unmodeled KAC REST operations |
-| `KrairportClient.iiac_raw_items()` | IIAC | unmodeled B551177 REST operations |
+| `KrairportClient.kac_raw_items()` | KAC | 아직 model이 없는 KAC REST operation |
+| `KrairportClient.iiac_raw_items()` | IIAC | 아직 model이 없는 B551177 REST operation |
 | `KrairportClient.airport_metadata()` | local | bundled airport metadata |
-| `KrairportClient.airports()` | local | provider/active-filtered airport metadata |
-| `KrairportClient.nearest_airport()` | local | nearest WGS84 airport lookup |
+| `KrairportClient.airports()` | local | provider/active filter가 적용된 airport metadata |
+| `KrairportClient.nearest_airport()` | local | 가장 가까운 WGS84 공항 조회 |
 
-Do not widen scope until the routing, parsing, and model layer are stable.
+Routing, parsing, model layer가 안정되기 전에는 scope를 넓히지 않는다. Coverage 판단은 `docs/api-coverage.md`를 기준으로 한다.
 
-For coverage decisions, read `docs/api-coverage.md`. Prefer typed models for high-use APIs and `raw_items` for broad official API access until a fixture-backed parser exists.
-Do not reintroduce KAC `AirportCodeList/getAirportCodeList` as a typed public API or live smoke target; use bundled airport metadata for airport lists and code lookup.
-
-## Required deliverables when implementing from scratch
-
-```text
-src/krairport/
-├── __init__.py
-├── client.py              # KrairportClient
-├── providers/
-│   ├── __init__.py
-│   ├── kac.py             # KacClient or adapter
-│   └── iiac.py            # IiacClient or adapter
-├── airports.py            # bundled airport metadata and nearest lookup
-├── models.py              # Pydantic response models
-├── enums.py
-├── types.py               # public type aliases
-├── exceptions.py
-├── _http.py
-├── _xml.py
-├── _time.py
-├── _routing.py
-└── cli.py
-tests/
-├── fixtures/
-├── test_client.py
-├── test_kac.py
-├── test_iiac.py
-├── test_parsing.py
-└── test_routing.py
-README.md
-krairport-api.md
-SKILL.md
-docs/testing.md
-docs/coordinates-and-types.md
-docs/repeated-mistakes.md
-docs/troubleshooting.md
-```
-
-## Public API rules
-
-### `KrairportClient`
+## 공개 API 규칙
 
 ```python
 KrairportClient(
@@ -142,192 +74,42 @@ KrairportClient.from_env(
 )
 ```
 
-Every public search method must accept an explicit `airport_code` unless it is an IIAC-only congestion API.
+모든 공개 검색 method는 IIAC 전용 혼잡도 API가 아닌 한 명시적 `airport_code`를 받아야 한다.
 
 ### Routing
 
-- `ICN` -> IIAC
-- anything else supported by KAC -> KAC
-- IIAC-only methods ignore/validate `airport_code`
-- unsupported combinations raise `UnsupportedAirportError`
+- `ICN`은 IIAC로 보낸다.
+- 그 외 지원 공항은 KAC로 보낸다.
+- IIAC 전용 method는 `airport_code`를 무시하지 말고 필요 시 검증한다.
+- 지원하지 않는 조합은 `UnsupportedAirportError`를 발생시킨다.
 
-### Flights
+### Flight model 핵심 필드
 
-Support these fields across providers:
+Provider별 필드명이 달라도 공개 model에는 `provider`, `airport_code`, `flight_id`, `flight_unique_id`, `direction`, `airline_name`, `airline_code`, `departure_airport_code`, `arrival_airport_code`, `scheduled_at`, `estimated_at`, `status_korean`, `status_english`, `terminal`, `gate`, `codeshare`, `raw`를 정규화해 담는다.
 
-- `provider`
-- `airport_code`
-- `flight_id`
-- `flight_unique_id`
-- `direction`
-- `airline_name`
-- `airline_code`
-- `departure_airport_code`
-- `arrival_airport_code`
-- `scheduled_at`
-- `estimated_at`
-- `status_korean`
-- `status_english`
-- `terminal`
-- `gate`
-- `codeshare`
-- `raw`
+### 변환 정책
 
-KAC and IIAC use different field names. Normalize them at the model boundary.
+- 공항 코드, 항공편 번호, 고유 ID, gate/terminal 값은 문자열로 보존한다.
+- schedule/estimated/changed timestamp는 KST `datetime`으로 변환한다.
+- 주차 대수, 승객 수, 주차 요금, total count는 `int`로 변환한다.
+- `Y`/`N` 계열 flag는 `bool | None`으로 변환한다.
+- 온도, 풍속, 좌표, 비율은 `float`로 변환한다.
+- 빈 문자열, 공백, `-`는 `None`으로 정규화한다.
 
-### Enums, types, coordinates
+## Provider별 요청 규칙
 
-- Keep public response models as Pydantic v2 `BaseModel` subclasses through `KrairportModel`.
-- Keep models immutable and reject unknown fields.
-- Do not use dataclass `asdict()` for public responses; use `model_dump(mode="json")`.
-- Keep `Provider`, `Direction`, `Airport`, `AirportType`, `ApiLanguage`, `ScheduleType` as `StrEnum`.
-- Keep public type aliases in `krairport.types`; wrappers should be able to import `AirportCodeLike`, `DirectionLike`, and `ProviderLike`.
-- Use `kraddr.base.PlaceCoordinate` directly for WGS84 decimal degree coordinates.
-- `PlaceCoordinate.as_tuple()` returns `(latitude, longitude)`.
-- `PlaceCoordinate.as_lat_lon()` returns `(latitude, longitude)`.
-- Use `kraddr.base.Address` directly for provider address fields.
-- Keep interior terminal/floor/area text as `location`; do not guess it as an address.
-- Bundled airport metadata is convenience data for app maps/search, not aviation navigation data.
+KAC `StatusOfFlights`, KAC `FlightStatusAPLList`, IIAC 상세 여객 항공편, IIAC 도착 혼잡도, IIAC 여객 예측 endpoint는 provider 문서의 parameter 이름을 그대로 사용한다. `airport_code`, `airport`, `schAirCode`, `f_id`, `flight_id`처럼 비슷한 이름을 임의로 합치지 않는다.
 
-## Type conversion policy
+## HTTP와 parsing 규칙
 
-### Keep as `str`
+1. Session/retry setup은 한 곳에 둔다.
+2. Service key를 log에 남기지 않는다.
+3. `429`, `500`, `502`, `503`, `504` 같은 transient error만 retry한다.
+4. KAC XML parsing은 parser layer에 모으고 client method에 흩뿌리지 않는다.
+5. `items.item`이 단일 dict이든 list이든 같은 내부 list 형태로 정규화한다.
+6. `raw` payload는 normalization 이후 보존하며 공개 표면 자체로 삼지 않는다.
 
-- airport codes: `ICN`, `GMP`, `CJU`
-- flight numbers: `KE123`, `7C1101`
-- flight unique ids: `f_id`, `schFID`
-- `searchday`, `from_time`, `to_time`
-- `T1`, `T2`, gate letters
-
-### Convert to `datetime`
-
-- scheduled / estimated / changed timestamps
-- interpret as KST
-- support:
-  - `YYYYMMDDHHMM`
-  - `YYYYMMDDHHMMSS`
-  - scientific-looking numeric strings from IIAC examples such as `2.02112E+11`
-
-### Convert to `int`
-
-- parking counts
-- passenger counts
-- parking fees
-- total counts
-
-### Convert to `bool`
-
-- codeshare flags like `Y` / `N`
-
-### Convert to `float`
-
-- temperature
-- wind speed
-- coordinate components
-- ratio or decimal quantities
-
-### Normalize empties
-
-- blank strings
-- single spaces
-- `-`
-
-to `None`.
-
-## Provider-specific request rules
-
-### KAC `StatusOfFlights`
-
-Arrival request params can include:
-
-- `searchday`
-- `from_time`
-- `to_time`
-- `airport_code`
-- `f_id`
-- `flight_id`
-- `line`
-- `airport`
-- `dep_airport_code`
-- `dep_airport`
-- `fgenTime`
-- `serviceKey`
-- `pageNo`
-- `numOfRows`
-
-Departure request params can include:
-
-- `searchday`
-- `from_time`
-- `to_time`
-- `airport_code`
-- `f_id`
-- `flight_id`
-- `line`
-- `airport`
-- `arr_airport_code`
-- `arr_airport`
-- `fgenTime`
-- `serviceKey`
-- `pageNo`
-- `numOfRows`
-
-### KAC `FlightStatusAPLList`
-
-- `schStTime`
-- `schEdTime`
-- `schAirCode`
-- `schFID`
-- `schFln`
-- `Line`
-- `schAPLno`
-- `schAPM`
-- `serviceKey`
-- `pageNo`
-- `numOfRows`
-
-### IIAC detailed passenger flight
-
-- `serviceKey`
-- `pageNo`
-- `numOfRows`
-- `type`
-- `searchday`
-- `from_time`
-- `to_time`
-- `airport_code`
-- `f_id`
-- `flight_id`
-- `lang`
-- `inqtimechcd`
-
-### IIAC arrival congestion
-
-- `serviceKey`
-- `numOfRows`
-- `pageNo`
-- `terno`
-- `airport`
-- `type`
-
-### IIAC passenger forecast
-
-- `selectdate`
-- `type`
-- `serviceKey`
-- `numOfRows`
-- `pageNo`
-
-## HTTP and parsing rules
-
-1. Keep session/retry setup in one place.
-2. Do not log service keys.
-3. Retry only transient errors such as `429`, `500`, `502`, `503`, `504`.
-4. KAC XML parsing belongs in one parser layer, not scattered through client methods.
-5. Normalize `items.item` whether it arrives as one dict or a list.
-6. Preserve `raw` payloads only after normalization, not as the public surface.
-
-## Exception hierarchy
+## Exception 계층
 
 ```text
 KrairportError
@@ -340,88 +122,39 @@ KrairportError
 └── UnsupportedAirportError
 ```
 
-Map provider-specific weirdness into these common exceptions.
+Provider별 특이 동작은 이 공통 exception으로 mapping한다.
 
-## Testing rules
+## Test 규칙
 
-Required offline tests:
+필수 offline test는 provider routing, KAC/IIAC mismatch rejection, XML/JSON 단일·다중 item normalization, timestamp parsing, Windows timezone fallback, 공개 model type assertion, code-share boolean mapping, numeric conversion, result-code/HTTP error mapping, CLI JSON serialization, Pydantic validation/frozen dump, raw endpoint path validation, enum string compatibility, `PlaceCoordinate`/`Address` 직렬화, GeoJSON coordinate order, bundled airport metadata filter, nearest airport lookup을 포함한다.
 
-- provider routing for `ICN` vs non-`ICN`
-- rejection of `ICN` on KAC-only methods
-- rejection of non-`ICN` on IIAC-only methods
-- KAC XML single-item and multi-item normalization
-- IIAC JSON single-item and multi-item normalization
-- timestamp parsing, including scientific notation examples
-- Windows timezone fallback when `ZoneInfo("Asia/Seoul")` is unavailable
-- type assertions for every public model
-- flight code-share boolean mapping
-- parking fee integer conversion
-- passenger forecast integer conversion
-- result-code / HTTP error mapping
-- CLI JSON serialization
-- Pydantic model validation, frozen behavior, and JSON-ready dumps
-- raw endpoint path validation
-- enum string compatibility
-- `kraddr.base.PlaceCoordinate` parsing/range validation
-- `kraddr.base.Address` parsing and serialization in facility models
-- GeoJSON coordinate order
-- bundled airport metadata provider/active filtering
-- nearest airport lookup
-- coverage gate: `pytest --cov=krairport --cov-fail-under=85`
+Optional live test는 `live_kac` 또는 `live_iiac` marker를 사용하고 matching env var가 없으면 skip한다. 실시간 traffic/flight count처럼 변동성이 큰 값은 assert하지 않는다.
 
-Optional live tests:
+## 흔한 실수
 
-- mark with `live_kac` or `live_iiac`
-- require matching env vars
-- assert response shape/types only
-- do not assert volatile traffic or flight counts
+- `ICN`을 일반 KAC 공항처럼 처리하지 않는다.
+- 모든 endpoint가 JSON을 지원한다고 가정하지 않는다.
+- `airport_code`, `airport`, `schAirCode`를 혼동하지 않는다.
+- `flight_id`와 `f_id`를 혼동하지 않는다.
+- `2400`을 day-boundary 없이 일반 시각으로 parsing하지 않는다.
+- 주차 요금과 주차 현황을 같은 schema로 보지 않는다.
+- 사용자에게 `terno`, `schAPLno` 같은 provider-native 이름을 그대로 노출하지 않는다.
+- coverage를 주장할 때 `docs/api-coverage.md`를 함께 갱신한다.
+- local absolute path를 문서에 쓰지 않는다.
+- 영어 Python docstring/설명 주석을 다시 넣지 않는다.
+- blocked `rg`를 반복하지 말고 PowerShell fallback으로 전환한다.
+- debug UI fixture 저장 전 민감값 redaction을 거친다.
 
-## Common pitfalls
+## 문서 갱신 규칙
 
-1. Treating `ICN` as just another KAC airport.
-2. Assuming every endpoint supports JSON.
-3. Mixing up `airport_code`, `airport`, and `schAirCode`.
-4. Confusing `flight_id` with `f_id`.
-5. Parsing `2400` as a normal wall-clock time without day-boundary logic.
-6. Treating passenger forecast as real-time congestion.
-7. Treating parking fee and parking status as the same schema.
-8. Trusting one provider's field names to exist on the other provider.
-9. Returning provider-native names like `terno` or `schAPLno` to users.
-10. Assuming Windows always has IANA timezone data installed.
-11. Raising test count without covering parser and error branches.
-12. Claiming API coverage without updating `docs/api-coverage.md`.
-13. Allowing arbitrary raw endpoint path strings.
-14. Ignoring data.go.kr change notices before adding or documenting IIAC endpoints.
-15. Mixing GeoJSON `(lon, lat)` with human/geodesic `(lat, lon)`.
-16. Breaking string compatibility when adding enum types.
-17. Keeping dataclass serialization after switching public models to Pydantic.
-18. Writing document file locations as local absolute paths.
-19. Reintroducing English Python docstrings or explanatory comments.
-20. Retrying blocked `rg` instead of using PowerShell file enumeration.
-21. Reading UTF-8 Korean docs through PowerShell without `-Encoding UTF8`.
-22. Adding a thin wrapper around an already proven implementation instead of adopting the implementation shape directly.
-23. Moving to `src/krairport` without updating setuptools package discovery, pytest `pythonpath`, and validation commands.
-24. Saving debug UI fixtures without passing request/response/input through sensitive-value redaction.
-25. Adding a fixture-generating public function without adding the matching replay parser to `tests/runners.py`.
+- 사용자 API 변경: `README.md`
+- endpoint scope, parameter 차이, model 규칙: `krairport-api.md`
+- fixture/live marker 정책: `docs/testing.md`
+- enum/type/coordinate 정책: `docs/coordinates-and-types.md`
+- 사용자에게 보이는 failure의 known fix: `docs/troubleshooting.md`
+- release-facing 변경: `CHANGELOG.md`
+- 반복 실수: `docs/repeated-mistakes.md`
 
-When one of these is fixed, update `docs/repeated-mistakes.md`.
+## Debug UI fixture 규칙
 
-## Documentation update rules
-
-- Update `README.md` for user-facing API changes.
-- Update `krairport-api.md` for endpoint scope, parameter differences, and model rules.
-- Update `docs/testing.md` when fixture policy or live markers change.
-- Update `docs/coordinates-and-types.md` when enum/type/coordinate policy changes.
-- Update `docs/troubleshooting.md` when a user-visible failure gains a known fix.
-- Update `CHANGELOG.md` for release-facing changes.
-- Write file locations in docs as project-root-relative paths.
-- Write Python docstrings and explanatory comments in Korean unless preserving provider text, code identifiers, commands, or URLs.
-- In this Windows workspace, use PowerShell fallback commands such as `Get-ChildItem -Recurse -File` and `Select-String -Encoding UTF8` when `rg` is blocked.
-
-## Debug UI fixture rules
-
-- Keep Streamlit and UI-only dependencies outside the `krairport` library package.
-- Use `KrairportClient.debug()` or a `debug_*` convenience method to build `DebugRun`.
-- Store generated cases in `tests/fixtures/{function}/{case}.json`.
-- Default pytest replay must call no external API; replay uses `tests/runners.py`.
-- Add or update `docs/debug-fixtures.md` whenever the fixture schema, assertion mode, or runner contract changes.
+Streamlit과 UI 전용 의존성은 `krairport` package 밖에 둔다. `KrairportClient.debug()` 또는 `debug_*` helper로 `DebugRun`을 만들고, 생성된 case는 `tests/fixtures/{function}/{case}.json`에 저장한다. 기본 pytest replay는 외부 API를 호출하지 않고 `tests/runners.py`를 사용한다.
