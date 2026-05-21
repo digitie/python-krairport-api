@@ -1,4 +1,4 @@
-"""Runtime configuration for krairport clients."""
+"""krairport 클라이언트 런타임 설정."""
 
 from __future__ import annotations
 
@@ -8,25 +8,12 @@ from pathlib import Path
 
 DEFAULT_TIMEOUT = 10.0
 DEFAULT_RETRIES = 3
-DEFAULT_KAC_ENV_NAMES = (
-    "KAC_SERVICE_KEY",
-    "KRAIRPORT_KAC_SERVICE_KEY",
-    "DATA_GO_KR_SERVICE_KEY",
-    "DATA_GOKR_SERVICE_KEY",
-    "PUBLIC_DATA_SERVICE_KEY",
-)
-DEFAULT_IIAC_ENV_NAMES = (
-    "IIAC_SERVICE_KEY",
-    "KRAIRPORT_IIAC_SERVICE_KEY",
-    "DATA_GO_KR_SERVICE_KEY",
-    "DATA_GOKR_SERVICE_KEY",
-    "PUBLIC_DATA_SERVICE_KEY",
-)
+DATA_GO_KR_SERVICE_KEY = "DATA_GO_KR_SERVICE_KEY"
 
 
 @dataclass(frozen=True, slots=True)
 class KrairportConfig:
-    """Runtime configuration loaded from explicit args, env vars, and local .env files."""
+    """명시 인자, 환경변수, 로컬 `.env` 파일에서 읽은 런타임 설정."""
 
     kac_service_key: str | None = None
     iiac_service_key: str | None = None
@@ -39,43 +26,28 @@ class KrairportConfig:
         *,
         kac_service_key: str | None = None,
         iiac_service_key: str | None = None,
-        kac_name: str = "KAC_SERVICE_KEY",
-        iiac_name: str = "IIAC_SERVICE_KEY",
+        service_key_name: str = DATA_GO_KR_SERVICE_KEY,
         env_file: str | Path | None = None,
         timeout: float | None = None,
         retries: int | None = None,
     ) -> KrairportConfig:
         file_values = _load_env_files(env_file)
-        kac_names = _ordered_names(kac_name, DEFAULT_KAC_ENV_NAMES)
-        iiac_names = _ordered_names(iiac_name, DEFAULT_IIAC_ENV_NAMES)
+        env_service_key = _env_value(service_key_name, file_values)
         return cls(
-            kac_service_key=_clean(kac_service_key)
-            or _first_env_value(kac_names, file_values),
-            iiac_service_key=_clean(iiac_service_key)
-            or _first_env_value(iiac_names, file_values),
+            kac_service_key=_clean(kac_service_key) or env_service_key,
+            iiac_service_key=_clean(iiac_service_key) or env_service_key,
             timeout=timeout if timeout is not None else DEFAULT_TIMEOUT,
             retries=retries if retries is not None else DEFAULT_RETRIES,
         )
 
 
-def _ordered_names(primary: str, defaults: tuple[str, ...]) -> tuple[str, ...]:
-    names = [primary, *defaults]
-    deduped: list[str] = []
-    for name in names:
-        if name and name not in deduped:
-            deduped.append(name)
-    return tuple(deduped)
-
-
-def _first_env_value(names: tuple[str, ...], file_values: dict[str, str]) -> str | None:
-    for name in names:
-        value = _clean(os.getenv(name))
-        if value is not None:
-            return value
-    for name in names:
-        value = _clean(file_values.get(name))
-        if value is not None:
-            return value
+def _env_value(name: str, file_values: dict[str, str]) -> str | None:
+    value = _clean(os.getenv(name))
+    if value is not None:
+        return value
+    value = _clean(file_values.get(name))
+    if value is not None:
+        return value
     return None
 
 

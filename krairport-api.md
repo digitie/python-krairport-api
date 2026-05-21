@@ -108,8 +108,7 @@ KrairportClient(
 )
 
 KrairportClient.from_env(
-    kac_name: str = "KAC_SERVICE_KEY",
-    iiac_name: str = "IIAC_SERVICE_KEY",
+    service_key_name: str = "DATA_GO_KR_SERVICE_KEY",
     env_file: str | None = None,
 )
 
@@ -131,8 +130,7 @@ async with AsyncKrairportClient.from_env() as client:
 ```
 
 `from_env()`는 process env를 먼저 보고, 없으면 현재 작업 디렉터리와 상위 디렉터리의
-`.env` / `.env.local`에서 `KAC_SERVICE_KEY`, `IIAC_SERVICE_KEY`, `DATA_GO_KR_SERVICE_KEY`,
-`DATA_GOKR_SERVICE_KEY`, `PUBLIC_DATA_SERVICE_KEY`를 찾습니다. 복사/붙여넣기 과정에서 들어간
+`.env` / `.env.local`에서 `DATA_GO_KR_SERVICE_KEY`를 찾습니다. 복사/붙여넣기 과정에서 들어간
 앞뒤 공백과 따옴표는 서비스키로 사용하기 전에 제거합니다.
 
 `python-krtour-map` 호환성 기준:

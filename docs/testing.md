@@ -73,10 +73,8 @@ pytest --cov=krairport --cov-fail-under=85
 
 환경변수:
 
-- `KAC_SERVICE_KEY`
-- `IIAC_SERVICE_KEY`
-- `.env` / `.env.local`의 `KAC_SERVICE_KEY`, `IIAC_SERVICE_KEY`
-- 공통 fallback: `DATA_GO_KR_SERVICE_KEY`, `DATA_GOKR_SERVICE_KEY`, `PUBLIC_DATA_SERVICE_KEY`
+- `DATA_GO_KR_SERVICE_KEY`
+- `.env` / `.env.local`의 `DATA_GO_KR_SERVICE_KEY`
 
 규칙:
 

@@ -4,7 +4,7 @@
 
 확인할 것:
 
-- `KAC_SERVICE_KEY`, `IIAC_SERVICE_KEY`가 올바른지
+- `DATA_GO_KR_SERVICE_KEY`가 올바른지
 - 활용신청이 승인되었는지
 - URL 인코딩된 키를 다시 인코딩하고 있지 않은지
 

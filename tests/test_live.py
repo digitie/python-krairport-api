@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 import pytest
 
 from krairport.client import KrairportClient
@@ -9,17 +7,14 @@ from krairport.config import KrairportConfig
 from krairport.exceptions import KrairportAuthError, KrairportServerError
 
 
-def _require_live_key(request: pytest.FixtureRequest, marker: str, env_name: str) -> str:
+def _require_live_key(request: pytest.FixtureRequest, marker: str) -> str:
     markexpr = request.config.option.markexpr or ""
     if marker not in markexpr:
         pytest.skip(f"run explicitly with -m {marker}")
     config = KrairportConfig.from_env()
-    value = os.environ.get(env_name) or getattr(
-        config,
-        "kac_service_key" if env_name == "KAC_SERVICE_KEY" else "iiac_service_key",
-    )
+    value = config.kac_service_key
     if not value:
-        pytest.skip(f"{env_name} is not set")
+        pytest.skip("DATA_GO_KR_SERVICE_KEY is not set")
     return value
 
 
@@ -34,7 +29,7 @@ def _skip_unapproved_live_service(exc: Exception) -> None:
 
 @pytest.mark.live_kac
 def test_live_kac_departures_smoke(request: pytest.FixtureRequest) -> None:
-    service_key = _require_live_key(request, "live_kac", "KAC_SERVICE_KEY")
+    service_key = _require_live_key(request, "live_kac")
     client = KrairportClient(kac_service_key=service_key, iiac_service_key=None, retries=0)
 
     try:
@@ -50,7 +45,7 @@ def test_live_kac_departures_smoke(request: pytest.FixtureRequest) -> None:
 
 @pytest.mark.live_iiac
 def test_live_iiac_parking_status_smoke(request: pytest.FixtureRequest) -> None:
-    service_key = _require_live_key(request, "live_iiac", "IIAC_SERVICE_KEY")
+    service_key = _require_live_key(request, "live_iiac")
     client = KrairportClient(kac_service_key=None, iiac_service_key=service_key, retries=0)
 
     try:

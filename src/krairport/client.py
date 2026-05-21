@@ -73,16 +73,14 @@ class KrairportClient:
     def from_env(
         cls,
         *,
-        kac_name: str = "KAC_SERVICE_KEY",
-        iiac_name: str = "IIAC_SERVICE_KEY",
+        service_key_name: str = "DATA_GO_KR_SERVICE_KEY",
         env_file: str | None = None,
         **kwargs: Any,
     ) -> KrairportClient:
         config = KrairportConfig.from_env(
             kac_service_key=kwargs.pop("kac_service_key", None),
             iiac_service_key=kwargs.pop("iiac_service_key", None),
-            kac_name=kac_name,
-            iiac_name=iiac_name,
+            service_key_name=service_key_name,
             env_file=env_file,
             timeout=kwargs.pop("timeout", None),
             retries=kwargs.pop("retries", None),
@@ -665,16 +663,14 @@ class AsyncKrairportClient:
     def from_env(
         cls,
         *,
-        kac_name: str = "KAC_SERVICE_KEY",
-        iiac_name: str = "IIAC_SERVICE_KEY",
+        service_key_name: str = "DATA_GO_KR_SERVICE_KEY",
         env_file: str | None = None,
         **kwargs: Any,
     ) -> AsyncKrairportClient:
         config = KrairportConfig.from_env(
             kac_service_key=kwargs.pop("kac_service_key", None),
             iiac_service_key=kwargs.pop("iiac_service_key", None),
-            kac_name=kac_name,
-            iiac_name=iiac_name,
+            service_key_name=service_key_name,
             env_file=env_file,
             timeout=kwargs.pop("timeout", None),
             retries=kwargs.pop("retries", None),

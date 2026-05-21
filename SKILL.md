@@ -19,9 +19,8 @@ You are helping build and maintain `krairport`, a Python client that unifies Kor
    - do not assume JSON availability across all KAC endpoints
 4. **IIAC usually supports `type=json`**:
    - prefer JSON where documented, but keep XML fallback if needed
-5. **Service keys are separate**:
-- `KAC_SERVICE_KEY`
-- `IIAC_SERVICE_KEY`
+5. **data.go.kr service key is unified**:
+   - use only `DATA_GO_KR_SERVICE_KEY`
 6. **All schedule timestamps are KST**:
    - naive times are interpreted as `Asia/Seoul`
    - keep `tzdata` in Windows dependencies and preserve the UTC+9 fallback in `_time.py`
@@ -139,8 +138,7 @@ KrairportClient(
 )
 
 KrairportClient.from_env(
-    kac_name="KAC_SERVICE_KEY",
-    iiac_name="IIAC_SERVICE_KEY",
+    service_key_name="DATA_GO_KR_SERVICE_KEY",
 )
 ```
 

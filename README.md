@@ -90,22 +90,20 @@ for page in client.iter_pages(
 
 ### 1단계: 인증키 발급
 
-두 기관은 서로 다른 서비스군과 트래픽 정책을 사용하므로 **인증키는 분리해서 관리**하는 편이 안전합니다.
+KAC/IIAC 모두 data.go.kr 계열 서비스이므로 환경변수 이름은 하나로 통일합니다.
 
 1. [공공데이터포털](https://www.data.go.kr)에서 한국공항공사 API 활용신청을 합니다.
 2. 같은 포털에서 인천국제공항공사 API 활용신청을 합니다.
-3. 각 키를 환경변수로 저장합니다.
+3. 발급받은 디코딩 인증키를 환경변수로 저장합니다.
 
 ```bash
-export KAC_SERVICE_KEY="발급받은_한국공항공사_디코딩_인증키"
-export IIAC_SERVICE_KEY="발급받은_인천국제공항공사_디코딩_인증키"
+export DATA_GO_KR_SERVICE_KEY="발급받은_data.go.kr_디코딩_인증키"
 ```
 
 Windows PowerShell:
 
 ```powershell
-$env:KAC_SERVICE_KEY="발급받은_한국공항공사_디코딩_인증키"
-$env:IIAC_SERVICE_KEY="발급받은_인천국제공항공사_디코딩_인증키"
+$env:DATA_GO_KR_SERVICE_KEY="발급받은_data.go.kr_디코딩_인증키"
 ```
 
 ### 2단계: 설치

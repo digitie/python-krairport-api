@@ -197,17 +197,16 @@ def test_unified_client_exposes_airport_metadata_helpers() -> None:
 
 def test_client_from_env_reads_local_dotenv(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("KAC_SERVICE_KEY", raising=False)
-    monkeypatch.delenv("IIAC_SERVICE_KEY", raising=False)
+    monkeypatch.delenv("DATA_GO_KR_SERVICE_KEY", raising=False)
     (tmp_path / ".env").write_text(
-        'KAC_SERVICE_KEY="  KAC_FROM_FILE  "\nIIAC_SERVICE_KEY= IIAC_FROM_FILE \n',
+        'DATA_GO_KR_SERVICE_KEY="  DATA_GO_KR_FROM_FILE  "\n',
         encoding="utf-8",
     )
 
     client = KrairportClient.from_env()
 
-    assert client.config.kac_service_key == "KAC_FROM_FILE"
-    assert client.config.iiac_service_key == "IIAC_FROM_FILE"
+    assert client.config.kac_service_key == "DATA_GO_KR_FROM_FILE"
+    assert client.config.iiac_service_key == "DATA_GO_KR_FROM_FILE"
 
 
 def test_unified_client_iter_pages() -> None:
