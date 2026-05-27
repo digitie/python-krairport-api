@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import pytest
-from kraddr.base import (
-    PlaceCoordinate,
-    to_decimal_degrees,
-    to_decimal_degrees_or_none,
-)
+
+from krairport import Coordinate, to_decimal_degrees, to_decimal_degrees_or_none
 
 
-def test_place_coordinate_normalizes_decimal_and_geojson_order() -> None:
-    coordinate = PlaceCoordinate.from_values("37.469101", "126.450996")
+def test_coordinate_normalizes_decimal_and_geojson_order() -> None:
+    coordinate = Coordinate.from_values("37.469101", "126.450996")
 
     assert coordinate.latitude == 37.469101
     assert coordinate.longitude == 126.450996
@@ -30,25 +27,25 @@ def test_coordinate_parses_dms_and_hemisphere() -> None:
 
 def test_coordinate_rejects_out_of_range_values() -> None:
     with pytest.raises(ValueError):
-        PlaceCoordinate.from_values("91", "126")
+        Coordinate.from_values("91", "126")
     with pytest.raises(ValueError):
-        PlaceCoordinate.from_values("37", "181")
+        Coordinate.from_values("37", "181")
     with pytest.raises(ValueError):
         to_decimal_degrees("-37 N", kind="latitude")
 
 
 def test_coordinate_from_mapping_common_keys() -> None:
-    coordinate = PlaceCoordinate.from_mapping({"lat": "35.1", "lng": "128.1"})
+    coordinate = Coordinate.from_mapping({"lat": "35.1", "lng": "128.1"})
 
     assert coordinate is not None
     assert coordinate.latitude == 35.1
     assert coordinate.longitude == 128.1
-    assert PlaceCoordinate.from_mapping({}) is None
+    assert Coordinate.from_mapping({}) is None
     assert to_decimal_degrees_or_none(" ") is None
 
 
 def test_coordinate_distance() -> None:
-    gimpo = PlaceCoordinate.from_values(37.5583, 126.791)
-    incheon = PlaceCoordinate.from_values(37.469101, 126.450996)
+    gimpo = Coordinate.from_values(37.5583, 126.791)
+    incheon = Coordinate.from_values(37.469101, 126.450996)
 
     assert gimpo.distance_to_km(incheon) == pytest.approx(31.6, abs=1.0)

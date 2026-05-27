@@ -244,7 +244,7 @@ def airports(
 
 def nearest_airport(
     self,
-    coordinate: PlaceCoordinate,
+    coordinate: Coordinate | tuple[float, float],
     *,
     provider: ProviderLike | None = None,
     active: bool | None = True,
@@ -254,9 +254,9 @@ def nearest_airport(
 정책:
 
 - 번들 좌표는 WGS84 decimal degrees를 표준으로 둡니다.
-- 좌표 public surface는 `kraddr.base.PlaceCoordinate`를 직접 사용합니다.
-- `PlaceCoordinate.as_tuple()`은 public DTO 순서인 `(latitude, longitude)`이고, `PlaceCoordinate.as_geojson_position()`은 GeoJSON 표준인 `(longitude, latitude)`입니다.
-- UI나 사람이 읽는 순서는 `PlaceCoordinate.as_lat_lon()`으로 `(latitude, longitude)`를 명시합니다.
+- 좌표 public surface는 `krairport.Coordinate`를 사용합니다.
+- `Coordinate.as_tuple()`은 public DTO 순서인 `(latitude, longitude)`이고, `Coordinate.as_geojson_position()`은 GeoJSON 표준인 `(longitude, latitude)`입니다.
+- UI나 사람이 읽는 순서는 `Coordinate.as_lat_lon()`으로 `(latitude, longitude)`를 명시합니다.
 - `Airport`, `Provider`, `Direction`은 모두 `StrEnum`이므로 문자열 비교와 JSON 직렬화가 가능합니다.
 - 타입 alias는 `krairport.types`에서 public API로 제공합니다.
 
@@ -280,8 +280,8 @@ client.iiac_raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1})
 - 공급자 원본 스키마를 그대로 흘리지 않음
 - 디버깅용 `raw: RawRecord`는 유지하되 기본값은 빈 mapping
 - provider/direction은 public 표면에서 `Provider`, `Direction` enum 사용
-- 좌표는 `kraddr.base.PlaceCoordinate | None`으로 표준화
-- 주소는 `kraddr.base.Address | None`으로 표준화하고 `Address.from_mapping()`을 직접 사용
+- 좌표는 `Coordinate | None`으로 표준화
+- 주소는 `str | None`으로 보존하고 공항 내부 위치 문자열과 분리
 - JSON 직렬화는 `model_dump(mode="json")`, `model_dump_json()`, `to_dict()`, `to_json()` 사용
 
 필수 모델:
@@ -294,8 +294,7 @@ ParkingAreaStatus
 ArrivalCongestion
 PassengerForecast
 AirportMetadata
-Address
-PlaceCoordinate
+Coordinate
 KrairportModel
 ```
 
@@ -331,7 +330,7 @@ KrairportModel
 ### 5.4 좌표
 
 - 내부 표준: WGS84 decimal degrees
-- public 좌표 타입: `kraddr.base.PlaceCoordinate`
+- public 좌표 타입: `krairport.Coordinate`
 - 저장/거리계산/GeoJSON 순서: `(longitude, latitude)`
 - UI용 위도 우선 순서: `as_lat_lon()`의 `(latitude, longitude)`
 - DMS 문자열과 `N/E/S/W` hemisphere는 decimal degrees로 변환
@@ -339,8 +338,8 @@ KrairportModel
 
 ### 5.5 주소
 
-- public 주소 타입: `kraddr.base.Address`
-- provider row 주소 필드는 `Address.from_mapping()`으로 직접 변환
+- public 주소 타입: `str | None`
+- provider row 주소 필드는 문자열로 보존
 - 공항 내부 위치 문자열은 주소로 추정하지 않고 `AirportFacility.location`에 유지
 - 자유 주소 문자열만으로 법정동코드를 임의 추정하지 않음
 
@@ -509,7 +508,7 @@ Live 테스트:
 6. `f_id`와 `flight_id`를 혼동하지 않습니다.
 7. 승객예고는 "예상치", 입국장 혼잡도는 "실시간성 현황"이라는 의미 차이를 유지합니다.
 8. 주차요금과 주차현황은 서로 다른 도메인 모델로 유지합니다.
-9. `PlaceCoordinate` public DTO의 `(lat, lon)` 순서를 GeoJSON용 `(lon, lat)` 순서와 섞지 않습니다.
+9. `Coordinate` public DTO의 `(lat, lon)` 순서를 GeoJSON용 `(lon, lat)` 순서와 섞지 않습니다.
 10. enum을 추가해도 기존 문자열 비교/직렬화 호환성을 깨지 않습니다.
 
 ## 11. 문서 업데이트 규칙

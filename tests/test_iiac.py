@@ -249,8 +249,7 @@ def test_taxi_bus_weather_schedule_destination_and_facility() -> None:
     assert client.service_destinations()[0].city_code == "TYO"
     facility = client.facilities()[0]
     assert facility.name == "편의점"
-    assert facility.address is not None
-    assert facility.address.display_address == "인천광역시 중구 공항로 272"
+    assert facility.address == "인천광역시 중구 공항로 272"
 
     assert session.calls[0].url.endswith("/getTaxiStatus")
     assert session.calls[1].url.endswith("/getBusInfo")

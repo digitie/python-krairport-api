@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from kraddr.base import PlaceCoordinate
 
+from krairport import Coordinate
 from krairport.airports import (
     KAC_AIRPORTS,
     get_airport,
@@ -36,7 +36,7 @@ def test_airport_registry_filters_provider_and_active_status() -> None:
 
 
 def test_nearest_airport_uses_standardized_coordinates() -> None:
-    coordinate = PlaceCoordinate.from_values("37.56 N", "126.79 E")
+    coordinate = Coordinate.from_values("37.56 N", "126.79 E")
     airport = nearest_airport(coordinate)
 
     assert airport is not None

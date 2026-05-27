@@ -6,8 +6,6 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from kraddr.base import Address, PlaceCoordinate
-
 from krairport._convert import (
     as_list,
     first_value,
@@ -21,6 +19,7 @@ from krairport._routing import ensure_iiac_airport
 from krairport._time import parse_kst_datetime
 from krairport.enums import Direction, Provider, normalize_direction
 from krairport.exceptions import KrairportParseError
+from krairport.geo import Coordinate, address_from_mapping
 from krairport.models import (
     AirportFacility,
     ArrivalCongestion,
@@ -884,7 +883,7 @@ def _build_service_destination(row: Mapping[str, Any]) -> ServiceDestination:
         city_code=strip_or_none(first_value(row, "cityCode", "city_code")),
         city_name=strip_or_none(first_value(row, "city", "cityName", "cityNm")),
         country_name=strip_or_none(first_value(row, "country", "countryName", "countryNm")),
-        coordinate=PlaceCoordinate.from_mapping(row),
+        coordinate=Coordinate.from_mapping(row),
         raw=dict(row),
     )
 
@@ -898,10 +897,10 @@ def _build_facility(row: Mapping[str, Any]) -> AirportFacility:
         category=strip_or_none(first_value(row, "category", "lclas", "facilityType")),
         floor=strip_or_none(first_value(row, "floor", "floorInfo")),
         location=strip_or_none(first_value(row, "location", "loc", "area")),
-        address=Address.from_mapping(row),
+        address=address_from_mapping(row),
         business_hours=strip_or_none(first_value(row, "operTime", "businessHours", "hours")),
         telephone=strip_or_none(first_value(row, "tel", "telephone", "phone")),
-        coordinate=PlaceCoordinate.from_mapping(row),
+        coordinate=Coordinate.from_mapping(row),
         raw=dict(row),
     )
 
