@@ -6,8 +6,6 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from kraddr.base import Address, PlaceCoordinate
-
 from krairport._convert import first_value, strip_or_none, to_bool_or_none, to_int_or_none
 from krairport._http import AsyncHttpClient, AsyncSessionLike, HttpClient, SessionLike
 from krairport._routing import ensure_kac_airport
@@ -15,6 +13,7 @@ from krairport._time import parse_kst_datetime
 from krairport._xml import extract_items
 from krairport.enums import Direction, Provider, normalize_direction
 from krairport.exceptions import KrairportParseError
+from krairport.geo import Coordinate, address_from_mapping
 from krairport.models import (
     AircraftAssignment,
     AirportFacility,
@@ -711,10 +710,10 @@ def _build_airport_facility(
         category=strip_or_none(first_value(row, "lclas", "category", "facilityType")),
         floor=strip_or_none(first_value(row, "floor", "floorInfo")),
         location=strip_or_none(first_value(row, "loc", "location", "area")),
-        address=Address.from_mapping(row),
+        address=address_from_mapping(row),
         business_hours=strip_or_none(first_value(row, "operTime", "businessHours")),
         telephone=strip_or_none(first_value(row, "tel", "telephone", "phone")),
-        coordinate=PlaceCoordinate.from_mapping(row),
+        coordinate=Coordinate.from_mapping(row),
         raw=dict(row),
     )
 

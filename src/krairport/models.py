@@ -6,10 +6,10 @@ from collections.abc import Iterator, Sequence
 from datetime import datetime
 from typing import Any, Generic, TypeVar
 
-from kraddr.base import Address, PlaceCoordinate
 from pydantic import BaseModel, ConfigDict, Field
 
 from krairport.enums import AirportType, Direction, Provider
+from krairport.geo import Coordinate
 from krairport.types import RawRecord
 
 
@@ -153,10 +153,10 @@ class AirportFacility(KrairportModel):
     category: str | None
     floor: str | None
     location: str | None
-    address: Address | None = None
+    address: str | None = None
     business_hours: str | None
     telephone: str | None
-    coordinate: PlaceCoordinate | None = None
+    coordinate: Coordinate | None = None
     raw: RawRecord = Field(default_factory=dict, repr=False)
 
 
@@ -213,7 +213,7 @@ class ServiceDestination(KrairportModel):
     city_code: str | None
     city_name: str | None
     country_name: str | None
-    coordinate: PlaceCoordinate | None = None
+    coordinate: Coordinate | None = None
     raw: RawRecord = Field(default_factory=dict, repr=False)
 
 
@@ -226,7 +226,7 @@ class AirportMetadata(KrairportModel):
     municipality: str | None = None
     country_code: str = "KR"
     timezone: str = "Asia/Seoul"
-    coordinate: PlaceCoordinate | None = None
+    coordinate: Coordinate | None = None
     elevation_ft: int | None = None
     airport_type: AirportType = AirportType.UNKNOWN
     active: bool = True

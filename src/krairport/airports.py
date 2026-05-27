@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from types import MappingProxyType
 
-from kraddr.base import PlaceCoordinate
-
 from krairport._convert import normalize_airport_code
 from krairport.enums import Airport, AirportType, Provider, normalize_provider
 from krairport.exceptions import UnsupportedAirportError
+from krairport.geo import Coordinate, CoordinateTuple, coerce_coordinate
 from krairport.models import AirportMetadata
 from krairport.types import ProviderLike
 
@@ -33,7 +32,7 @@ def _airport(
 ) -> AirportMetadata:
     coordinate = None
     if latitude is not None and longitude is not None:
-        coordinate = PlaceCoordinate(lat=latitude, lon=longitude)
+        coordinate = Coordinate(lat=latitude, lon=longitude)
     return AirportMetadata(
         code=code.value,
         provider=provider,
@@ -295,12 +294,14 @@ def list_airports(
 
 
 def nearest_airport(
-    coordinate: PlaceCoordinate,
+    coordinate: Coordinate | CoordinateTuple,
     *,
     provider: ProviderLike | None = None,
     active: bool | None = True,
 ) -> AirportMetadata | None:
-    """WGS84 `PlaceCoordinate` 기준 가장 가까운 번들 공항을 반환합니다."""
+    """WGS84 좌표 기준 가장 가까운 번들 공항을 반환합니다."""
+
+    origin = coerce_coordinate(coordinate)
 
     candidates = [
         airport
@@ -312,6 +313,6 @@ def nearest_airport(
 
     def distance_to_origin(airport: AirportMetadata) -> float:
         assert airport.coordinate is not None
-        return coordinate.distance_to_km(airport.coordinate)
+        return origin.distance_to_km(airport.coordinate)
 
     return min(candidates, key=distance_to_origin)

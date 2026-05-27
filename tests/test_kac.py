@@ -151,8 +151,7 @@ def test_kac_parking_status_facilities_buses_and_taxi() -> None:
     assert client.parking_status(airport_code="GMP")[0].occupied == 10
     facility = client.airport_facilities(airport_code="GMP")[0]
     assert facility.name == "안내데스크"
-    assert facility.address is not None
-    assert facility.address.display_address == "서울특별시 강서구 하늘길 112"
+    assert facility.address == "서울특별시 강서구 하늘길 112"
     assert client.airport_buses(airport_code="GMP")[0].adult_fare == 15000
     assert client.jeju_taxi_wait()[0].seoul_count == 2
 

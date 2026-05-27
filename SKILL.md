@@ -22,8 +22,8 @@ description: 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공개 AP
 7. Provider mismatch를 조용히 넘기지 않는다. KAC 전용 endpoint에 `ICN`을 요청하면 `UnsupportedAirportError`를 발생시킨다.
 8. 기본 test는 offline이어야 한다. 보통 test run에서 live traffic을 만들지 않는다.
 9. 공개 enum은 string 호환성을 유지하기 위해 `StrEnum`을 사용한다.
-10. 좌표는 WGS84 decimal degree이며 `kraddr.base.PlaceCoordinate`를 직접 쓴다. GeoJSON 순서가 필요하면 `as_geojson_position()`을 사용한다.
-11. 주소는 `kraddr.base.Address`를 직접 쓴다. 공항 내부 위치 문자열은 주소 DTO와 분리한다.
+10. 좌표는 WGS84 decimal degree이며 `krairport.Coordinate`를 쓴다. GeoJSON 순서가 필요하면 `as_geojson_position()`을 사용한다.
+11. 주소는 provider가 명시적으로 준 주소 문자열만 `str | None`으로 보존한다. 공항 내부 위치 문자열은 주소와 분리한다.
 12. 공개 응답 model은 Pydantic v2 기반 `KrairportModel`을 상속하고 frozen/extra forbid 설정을 유지한다.
 13. 문서의 파일 경로는 `src/krairport/client.py`처럼 프로젝트 기준 상대 경로로 쓴다.
 14. Python docstring과 설명 주석은 한글로 쓴다.
@@ -126,7 +126,7 @@ Provider별 특이 동작은 이 공통 exception으로 mapping한다.
 
 ## Test 규칙
 
-필수 offline test는 provider routing, KAC/IIAC mismatch rejection, XML/JSON 단일·다중 item normalization, timestamp parsing, Windows timezone fallback, 공개 model type assertion, code-share boolean mapping, numeric conversion, result-code/HTTP error mapping, CLI JSON serialization, Pydantic validation/frozen dump, raw endpoint path validation, enum string compatibility, `PlaceCoordinate`/`Address` 직렬화, GeoJSON coordinate order, bundled airport metadata filter, nearest airport lookup을 포함한다.
+필수 offline test는 provider routing, KAC/IIAC mismatch rejection, XML/JSON 단일·다중 item normalization, timestamp parsing, Windows timezone fallback, 공개 model type assertion, code-share boolean mapping, numeric conversion, result-code/HTTP error mapping, CLI JSON serialization, Pydantic validation/frozen dump, raw endpoint path validation, enum string compatibility, `Coordinate`/주소 문자열 직렬화, GeoJSON coordinate order, bundled airport metadata filter, nearest airport lookup을 포함한다.
 
 Optional live test는 `live_kac` 또는 `live_iiac` marker를 사용하고 matching env var가 없으면 skip한다. 실시간 traffic/flight count처럼 변동성이 큰 값은 assert하지 않는다.
 

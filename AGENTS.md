@@ -25,9 +25,9 @@
 - `krairport`는 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공항 OpenAPI를 통합하는 비공식 Python 클라이언트입니다.
 - `ICN`은 IIAC, 그 외 지원 공항은 KAC로 라우팅합니다.
 - public 응답은 Pydantic v2 기반 immutable 모델과 `StrEnum`으로 제공합니다.
-- 공항 좌표는 `kraddr.base.PlaceCoordinate`, 시설 주소는 `kraddr.base.Address`를 파라미터와 반환 모델에 직접 사용합니다.
+- 공항 좌표는 `krairport.Coordinate`, 시설 주소는 `str | None`을 파라미터와 반환 모델에 사용합니다.
 - KAC는 XML-heavy, IIAC는 JSON 우선 호출을 기본으로 합니다.
-- 런타임 의존성은 `httpx`, `pydantic`, `kraddr.base`, Windows용 `tzdata`입니다.
+- 런타임 의존성은 `httpx`, `pydantic`, Windows용 `tzdata`입니다.
 - 기본 테스트는 실제 KAC/IIAC 네트워크 호출 없이 동작해야 합니다.
 
 ## Provider API 사용 원칙
@@ -41,7 +41,7 @@
 
 ## 구현 방향
 
-- 불필요한 wrapper나 호환층을 새로 만들지 않습니다. 좌표와 주소는 `krairport` wrapper 없이 `kraddr.base.PlaceCoordinate`, `kraddr.base.Address`를 직접 import해 씁니다.
+- 불필요한 wrapper나 호환층을 새로 만들지 않습니다. 좌표와 주소 처리는 `krairport` 내부 구현으로 유지하고 외부 주소/좌표 패키지에 의존하지 않습니다.
 - `pykma`, `pyopinet`, `pykex` 또는 가까운 유지보수 라이브러리에 이미 검증된 구현 패턴이 있으면, 작은 local patch로 우회하지 말고 그 구현 방향을 `krairport` 코드에 직접 적용합니다.
 - 최소 수정은 기본 작업 습관이지만, 검증된 구현을 따르는 것이 장기 유지보수와 일관성을 높이면 더 큰 변경도 허용합니다. 이때 변경 범위, 문서, 테스트를 함께 맞춥니다.
 - 다른 라이브러리 구현을 참고할 때도 provider-native 이름, 인증키, 응답 스키마를 그대로 public surface로 흘리지 않고 `krairport`의 모델/예외/라우팅 규칙에 맞춰 흡수합니다.
@@ -83,8 +83,8 @@
 - `src/krairport/enums.py`: provider, direction, airport, language, schedule enum.
 - `src/krairport/types.py`: 외부 wrapper용 type alias.
 - `src/krairport/airports.py`: 번들 공항 메타데이터와 근접 공항 helper.
-- 좌표 정규화, DMS 파싱, 거리 계산은 `kraddr.base.PlaceCoordinate`와 `kraddr.base.coordinates`를 직접 사용합니다.
-- 주소 정규화는 `kraddr.base.Address`를 직접 사용합니다.
+- 좌표 정규화, DMS 파싱, 거리 계산은 `src/krairport/geo.py`의 `Coordinate`와 helper를 사용합니다.
+- 주소는 provider row의 실제 주소 필드가 있을 때만 문자열로 보존합니다.
 - `src/krairport/_http.py`: session, retry, HTTP/body-level error mapping.
 - `src/krairport/_xml.py`: KAC-style XML parsing과 item normalization.
 - `src/krairport/_time.py`: KST-aware datetime 파싱.
@@ -102,8 +102,8 @@
 - IIAC-only API에 비-`ICN` 공항을 조용히 허용하지 않습니다.
 - `airport_code`, `airport`, `schAirCode`, `apcd` 같은 provider-native 이름을 public 모델에 그대로 흘리지 않습니다.
 - 편명, 공항코드, 내부 flight unique id처럼 선행 0이나 문자열 의미가 있는 값은 `int`로 변환하지 않습니다.
-- 좌표 순서를 섞지 않습니다. `PlaceCoordinate.as_tuple()`과 `as_lat_lon()`은 `(latitude, longitude)`, `as_geojson_position()`은 `(longitude, latitude)`입니다.
-- 공항 내부 위치 문자열을 주소로 추정하지 않습니다. provider row에 주소 필드가 있을 때만 `Address.from_mapping()`을 직접 사용합니다.
+- 좌표 순서를 섞지 않습니다. `Coordinate.as_tuple()`과 `as_lat_lon()`은 `(latitude, longitude)`, `as_geojson_position()`은 `(longitude, latitude)`입니다.
+- 공항 내부 위치 문자열을 주소로 추정하지 않습니다. provider row에 주소 필드가 있을 때만 문자열 주소를 보존합니다.
 - public enum은 `StrEnum`으로 유지해 문자열 비교와 JSON 직렬화 호환성을 깨지 않습니다.
 - public 응답 모델은 `KrairportModel` 기반 Pydantic 모델로 유지하고, 직렬화는 `model_dump(mode="json")`, `model_dump_json()`, `to_dict()`, `to_json()`을 사용합니다.
 
@@ -172,7 +172,7 @@
 - Pydantic 모델은 frozen이고 unknown field를 거부합니다.
 - `Provider`, `Direction`은 문자열 비교가 유지됩니다.
 - 좌표는 WGS84 decimal degrees이며 범위 검증을 통과해야 합니다.
-- `krairport` 안에 좌표/주소 wrapper/helper를 만들지 않고 `PlaceCoordinate.from_mapping()`, `Address.from_mapping()` 같은 kraddr.base API를 직접 호출합니다.
+- 좌표/주소는 `src/krairport/geo.py` 안에서 처리하며 외부 주소/좌표 패키지를 다시 도입하지 않습니다.
 - 공항 메타데이터는 앱 지도/검색 편의용이며 항법용 공식 원천으로 안내하지 않습니다.
 
 ### HTTP, 에러, 변환

@@ -6,14 +6,13 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Iterator, Mappin
 from datetime import date
 from typing import Any, TypeVar
 
-from kraddr.base import PlaceCoordinate
-
 from krairport._http import AsyncSessionLike, SessionLike
 from krairport._routing import provider_for_airport
 from krairport.airports import get_airport, list_airports, nearest_airport
 from krairport.config import KrairportConfig
 from krairport.debug import DebugRun, debug_call
 from krairport.enums import Provider
+from krairport.geo import Coordinate, CoordinateTuple
 from krairport.models import (
     AircraftAssignment,
     AirportFacility,
@@ -507,12 +506,12 @@ class KrairportClient:
 
     def nearest_airport(
         self,
-        coordinate: PlaceCoordinate,
+        coordinate: Coordinate | CoordinateTuple,
         *,
         provider: ProviderLike | None = None,
         active: bool | None = True,
     ) -> AirportMetadata | None:
-        """`PlaceCoordinate` 기준 가장 가까운 번들 공항 메타데이터를 반환합니다."""
+        """WGS84 좌표 기준 가장 가까운 번들 공항 메타데이터를 반환합니다."""
 
         return nearest_airport(coordinate, provider=provider, active=active)
 
@@ -1039,7 +1038,7 @@ class AsyncKrairportClient:
 
     def nearest_airport(
         self,
-        coordinate: PlaceCoordinate,
+        coordinate: Coordinate | CoordinateTuple,
         *,
         provider: ProviderLike | None = None,
         active: bool | None = True,

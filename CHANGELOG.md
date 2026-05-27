@@ -11,9 +11,8 @@
 - `api_catalog()`와 서비스키 신청 링크 포함 API 카탈로그 추가
 
 - 배포/저장소 이름을 `python-krairport-api`, import 패키지 이름을 `krairport`로 정리하고 `src/krairport` 레이아웃으로 이동
-- 좌표 public surface를 `kraddr.base.PlaceCoordinate` 직접 사용 방식으로 변경
-- `krairport.geo` 좌표 wrapper/helper 제거
-- 시설 주소 public surface를 `kraddr.base.Address` 직접 사용 방식으로 추가
+- `python-kraddr-base` 런타임 의존성을 제거하고 좌표 public surface를 `krairport.Coordinate`로 이관
+- 시설 주소 public surface를 외부 주소 DTO 없이 `str | None`으로 단순화
 
 ## 0.1.0 - 2026-04-30
 

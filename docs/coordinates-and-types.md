@@ -2,7 +2,7 @@
 
 확인 기준일: 2026-05-06
 
-`krairport`는 외부 프로그램에서 안정적으로 사용할 수 있도록 문자열 API를 유지하면서 `StrEnum`, 타입 alias, `kraddr.base.PlaceCoordinate`와 `kraddr.base.Address` 기반 장소 타입을 함께 제공합니다.
+`krairport`는 외부 프로그램에서 안정적으로 사용할 수 있도록 문자열 API를 유지하면서 `StrEnum`, 타입 alias, 자체 `Coordinate` 기반 장소 좌표를 함께 제공합니다.
 
 ## Pydantic Models
 
@@ -87,14 +87,14 @@ def load_airport(code: AirportCodeLike) -> None:
 | `CoordinateTuple` | `(latitude, longitude)` |
 | `GeoJsonPosition` | `(longitude, latitude)` |
 
-## PlaceCoordinate
+## Coordinate
 
-좌표 public surface는 `kraddr.base.PlaceCoordinate`를 직접 사용합니다. `krairport` 안에 별도 좌표 wrapper나 helper를 두지 않습니다.
+좌표 public surface는 `krairport.Coordinate`를 사용합니다. 외부 좌표 패키지에 의존하지 않고 WGS84 decimal degrees, DMS 파싱, 거리 계산을 이 저장소에서 제공합니다.
 
 ```python
-from krairport import PlaceCoordinate
+from krairport import Coordinate
 
-coord = PlaceCoordinate.from_values("37° 33' 29.88\" N", "126° 47' 27.6\" E")
+coord = Coordinate.from_values("37° 33' 29.88\" N", "126° 47' 27.6\" E")
 coord.as_tuple()             # (latitude, longitude)
 coord.as_geojson_position()  # (longitude, latitude)
 coord.as_lat_lon()           # (latitude, longitude)
@@ -113,13 +113,13 @@ coord.as_lat_lon()           # (latitude, longitude)
 번들 공항 레지스트리는 외부 앱의 지도, 검색, 근접 공항 계산에 사용할 수 있습니다.
 
 ```python
-from krairport import PlaceCoordinate, get_airport, list_airports, nearest_airport
+from krairport import Coordinate, get_airport, list_airports, nearest_airport
 
 icn = get_airport("ICN")
 icn.coordinate.as_geojson_position()
 
 kac_active = list_airports(provider="kac", active=True)
-nearest = nearest_airport(PlaceCoordinate.from_values("37.56 N", "126.79 E"))
+nearest = nearest_airport(Coordinate.from_values("37.56 N", "126.79 E"))
 ```
 
 `AirportMetadata` 필드:
@@ -131,7 +131,7 @@ nearest = nearest_airport(PlaceCoordinate.from_values("37.56 N", "126.79 E"))
 | `name_english`, `name_korean` | 공항명 |
 | `icao_code` | ICAO 코드 |
 | `municipality` | 도시/지역 |
-| `coordinate` | `PlaceCoordinate | None` |
+| `coordinate` | `Coordinate | None` |
 | `timezone` | 기본 `Asia/Seoul` |
 | `airport_type` | `AirportType` |
 | `active` | 운영/비운영 메타데이터 |
@@ -145,21 +145,18 @@ nearest = nearest_airport(PlaceCoordinate.from_values("37.56 N", "126.79 E"))
 주의:
 
 - 번들 좌표는 사용자 앱의 지도/검색 편의용입니다. 항공 운항, 관제, 항법 목적의 공식 원천으로 사용하지 마세요.
-- provider API가 좌표 필드를 직접 반환하는 경우 `PlaceCoordinate.from_mapping()`을 모델 생성 경계에서 바로 사용합니다.
+- provider API가 좌표 필드를 직접 반환하는 경우 `Coordinate.from_mapping()`을 모델 생성 경계에서 바로 사용합니다.
 
-## Address
+## 주소 문자열
 
-주소 public surface는 `kraddr.base.Address`를 직접 사용합니다. `krairport` 안에 주소 wrapper나 helper를 두지 않습니다.
+주소 public surface는 `str | None`입니다. 외부 주소 DTO에 의존하지 않고 provider가 명시적으로 준 주소 문자열만 보존합니다.
 
 ```python
-from krairport import Address
-
-address = Address.from_mapping({"address": "서울특별시 강서구 하늘길 112"})
-address.display_address
+facility.address == "서울특별시 강서구 하늘길 112"
 ```
 
 규칙:
 
-- provider row에 주소 계열 필드가 있으면 모델 생성 경계에서 `Address.from_mapping()`을 바로 호출합니다.
+- provider row에 주소 계열 필드가 있으면 모델 생성 경계에서 문자열로 보존합니다.
 - 공항 내부 층/구역/게이트 같은 위치 설명은 주소로 추정하지 않고 기존 `location` 문자열에 둡니다.
 - 자유 주소 문자열만으로 법정동코드를 임의 추정하지 않습니다.

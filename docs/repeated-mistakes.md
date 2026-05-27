@@ -76,7 +76,7 @@
 
 - 증상: 지도에서 공항이 바다나 다른 국가에 표시됨
 - 원인: UI용 `(latitude, longitude)`와 저장/GeoJSON용 `(longitude, latitude)` 순서를 혼동
-- 가드레일: 좌표는 `kraddr.base.PlaceCoordinate`를 직접 쓰고, `as_tuple()`/`as_lat_lon()`과 `as_geojson_position()`을 구분해 테스트로 고정
+- 가드레일: 좌표는 `krairport.Coordinate`를 쓰고, `as_tuple()`/`as_lat_lon()`과 `as_geojson_position()`을 구분해 테스트로 고정
 
 ## 14. enum 도입으로 문자열 호환성을 깨는 실수
 
@@ -86,9 +86,9 @@
 
 ## 15. 공항 내부 위치를 주소로 오인하는 실수
 
-- 증상: `T1 1F`, `국내선`, `면세구역` 같은 값이 주소 DTO로 직렬화됨
+- 증상: `T1 1F`, `국내선`, `면세구역` 같은 값이 주소 문자열로 직렬화됨
 - 원인: provider의 `loc`/`location` 필드를 실제 도로명/지번주소처럼 처리
-- 가드레일: 내부 위치는 `AirportFacility.location`에 두고, 주소 필드가 있을 때만 `kraddr.base.Address.from_mapping()`을 직접 사용
+- 가드레일: 내부 위치는 `AirportFacility.location`에 두고, 주소 필드가 있을 때만 주소 문자열로 보존
 
 ## 16. Pydantic 전환 후 dataclass 직렬화를 계속 쓰는 실수
 

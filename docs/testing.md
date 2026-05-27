@@ -59,8 +59,8 @@ processor를 추가하고, 민감정보는 fixture 저장 전에 `<REDACTED>`로
 - `PassengerForecast` 구간 값은 `int | None`
 - `Provider` / `Direction`은 `StrEnum`이지만 문자열 비교가 가능해야 함
 - public 응답 모델은 Pydantic `BaseModel`이며 frozen field validation과 `model_dump(mode="json")`를 검증
-- `kraddr.base.PlaceCoordinate`는 WGS84 decimal degrees, GeoJSON 순서, DMS 파싱을 검증
-- `kraddr.base.Address`는 시설 모델에서 직접 반환되고 JSON 직렬화되는지 검증
+- `krairport.Coordinate`는 WGS84 decimal degrees, GeoJSON 순서, DMS 파싱을 검증
+- 시설 주소는 `str | None`으로 반환되고 JSON 직렬화되는지 검증
 - `AirportMetadata`는 provider/active 필터와 nearest airport 계산을 검증
 
 ## Live 테스트
