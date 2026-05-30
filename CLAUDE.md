@@ -12,6 +12,13 @@
 - **좌표/주소**: `krairport.Coordinate`를 좌표 정규화 및 DMS 파싱에 사용하고, 주소는 provider 명시값이 있을 때만 보존합니다.
 - **테스트 및 검증**: 오프라인 테스트를 원칙으로 하며, 실제 API 호출(live test)은 opt-in 마커로 격리되어 있습니다.
 
+## 에이전트 worktree + CodeGraph
+
+ChatGPT Codex는 `F:\dev\python-krairport-api-codex`, Claude Code는 `F:\dev\python-krairport-api-claude`, Google Antigravity 2.0은 `F:\dev\python-krairport-api-antigravity`를 고정 worktree로 사용합니다.
+
+- **브랜치 규칙**: 각 worktree에서는 `git fetch origin` 후 `git switch -c agent/<topic> main`으로 전용 피처 브랜치를 분기하여 작업합니다.
+- **CodeGraph**: 각 worktree 생성 시 최초 1회 `codegraph init -i`를 수행하여 인덱스를 초기화하고, 이후 코드 탐색을 위해 `codegraph sync`를 활용합니다. `.codegraph/`는 gitignore 대상입니다.
+
 ## 빠른 검증 명령
 
 ```bash
