@@ -60,7 +60,21 @@
 - 한글 문서를 PowerShell에서 읽거나 검색할 때는 `Get-Content -Encoding UTF8`, `Select-String -Encoding UTF8`처럼 인코딩을 명시합니다.
 - PowerShell 출력이 깨져 보여도 먼저 UTF-8 인코딩 누락을 의심합니다. 문서 자체가 깨졌다고 판단하기 전에 `-Encoding UTF8`로 다시 확인합니다.
 
+## 에이전트 고정 worktree 정책
+
+각 AI 에이전트 전용 작업 공간을 분리하여 안정적인 작업 환경을 확보하고, 로컬 CodeGraph 인덱스 충돌을 방지하기 위해 에이전트별 고정 worktree를 아래와 같이 구성하여 사용합니다:
+
+- **ChatGPT Codex**: `F:\dev\python-krairport-api-codex` (로컬 브랜치: `wt-codex`)
+- **Claude Code**: `F:\dev\python-krairport-api-claude` (로컬 브랜치: `wt-claude`)
+- **Google Antigravity 2.0**: `F:\dev\python-krairport-api-antigravity` (로컬 브랜치: `wt-antigravity`)
+
+### 에이전트별 작업 규칙
+1. 각 에이전트는 고유하게 지정된 worktree 경로에서 작업을 수행해야 합니다.
+2. 새 기능 구현이나 수정이 필요할 경우, 해당 worktree에서 `git fetch origin`을 수행한 뒤 `git switch -c agent/<topic> main` 형태로 피처 브랜치를 분기하여 작업합니다.
+3. **인덱스 관리**: 각 worktree에서는 생성 직후 `codegraph init -i`를 통해 CodeGraph 인덱스 및 연동을 최초 1회 초기화하며, 로컬 인덱스 폴더인 `.codegraph/`는 절대 깃 저장소에 커밋하지 않습니다. (글로벌 또는 로컬 `.gitignore`로 차단)
+
 ## 문서 라우팅
+
 
 - `README.md`: 사용자용 개요, 설치, 예제, 모델 요약.
 - `krairport-api.md`: 공급자 경계, endpoint, 타입 변환, 모델 규칙.
