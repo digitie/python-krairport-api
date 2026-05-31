@@ -27,8 +27,9 @@ description: 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공개 AP
 12. 공개 응답 model은 Pydantic v2 기반 `KrairportModel`을 상속하고 frozen/extra forbid 설정을 유지한다.
 13. 문서의 파일 경로는 `src/krairport/client.py`처럼 프로젝트 기준 상대 경로로 쓴다.
 14. Python docstring과 설명 주석은 한글로 쓴다.
-15. Windows에서 `rg`가 권한 문제로 막히면 PowerShell `Get-ChildItem`/`Select-String -Encoding UTF8`을 fallback으로 쓴다.
-16. 이미 검증된 sibling library 구현이 있으면 불필요한 wrapper를 만들지 말고 해당 pattern을 직접 반영한다.
+15. 이 worktree에서는 Git 명령을 WSL Git 대신 Windows Git(`git.exe`) 기준으로 사용한다.
+16. Windows에서 `rg`가 권한 문제로 막히면 PowerShell `Get-ChildItem`/`Select-String -Encoding UTF8`을 fallback으로 쓴다.
+17. 이미 검증된 sibling library 구현이 있으면 불필요한 wrapper를 만들지 말고 해당 pattern을 직접 반영한다.
 
 ## 초기 지원 endpoint
 
