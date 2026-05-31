@@ -56,6 +56,7 @@
 
 ## 로컬 작업 환경 규칙
 
+- 이 worktree에서는 Git 명령을 WSL Git 대신 Windows Git(`git.exe`) 기준으로 사용합니다. 예: `git.exe status --short --branch`, `git.exe fetch origin`
 - 이 Windows 환경에서는 `rg` 실행 권한 문제가 반복될 수 있습니다. 막히면 권한 조정이나 재시도에 시간을 쓰지 말고 PowerShell `Get-ChildItem` / `Select-String` 조합으로 우회합니다.
 - 한글 문서를 PowerShell에서 읽거나 검색할 때는 `Get-Content -Encoding UTF8`, `Select-String -Encoding UTF8`처럼 인코딩을 명시합니다.
 - PowerShell 출력이 깨져 보여도 먼저 UTF-8 인코딩 누락을 의심합니다. 문서 자체가 깨졌다고 판단하기 전에 `-Encoding UTF8`로 다시 확인합니다.

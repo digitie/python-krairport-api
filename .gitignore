@@ -10,4 +10,5 @@ __pycache__/
 .venv/
 dist/
 build/
+# 로컬 에이전트 인덱스
 .codegraph/
