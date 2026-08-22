@@ -137,3 +137,16 @@
 - 증상: live 검증에서 `NO OPENAPI SERVICE ERROR.`가 발생하거나 사용하지 않는 `airport_codes()` surface가 다시 생김
 - 원인: `AirportCodeList/getAirportCodeList`는 현재 `krairport`에서 사용할 일이 없고, 번들 공항 메타데이터가 같은 목적을 더 안정적으로 처리함
 - 가드레일: 공항 목록/메타데이터는 `airports()`, `airport_metadata()`, `nearest_airport()`를 사용하고 KAC 공항코드 목록 typed API와 live smoke를 추가하지 않음
+
+## 23. `openapi.airport.co.kr`을 https로 호출하는 실수
+
+- 증상: `resultCode=99 "NO OPENAPI SERVICE ERROR."`가 요청 내용과 무관하게 KAC의 모든 operation에서
+  똑같이 발생(#22의 증상도 사실 이 문제였을 수 있음 — 특정 endpoint 문제가 아니라 host 전체가
+  https에서 라우팅되지 않는 문제였다).
+- 원인: KAC OpenAPI gateway(`openapi.airport.co.kr`)는 plain `http://`로만 정상 응답하고, 같은
+  요청을 `https://`로 보내면 무엇을 요청했든 동일한 "NO OPENAPI SERVICE ERROR."를 반환한다.
+  offline fixture 테스트는 scheme을 구분하지 않으므로 이 문제를 잡지 못했다 — downstream
+  consumer(parking-radar)가 실제 서비스키로 live smoke test를 돌리고 나서야 발견됐다.
+- 가드레일: `src/krairport/providers/kac.py`의 모든 base URL 상수와 `raw_items()`의 f-string은
+  `http://openapi.airport.co.kr/...`를 사용한다. 새 KAC endpoint를 추가할 때 `https://`로 되돌리지
+  않는다. IIAC(`apis.data.go.kr`)는 정상적으로 `https://`이므로 이 규칙과 혼동하지 않는다.
