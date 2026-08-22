@@ -25,17 +25,17 @@ from krairport.models import (
     TaxiStatus,
 )
 
-STATUS_BASE = "https://openapi.airport.co.kr/service/rest/StatusOfFlights"
-AIRCRAFT_BASE = "https://openapi.airport.co.kr/service/rest/FlightStatusAPLList"
-PARKING_FEE_BASE = "https://openapi.airport.co.kr/service/rest/AirportParkingFee"
-FLIGHT_SCHEDULE_BASE = "https://openapi.airport.co.kr/service/rest/FlightScheduleList"
+STATUS_BASE = "http://openapi.airport.co.kr/service/rest/StatusOfFlights"
+AIRCRAFT_BASE = "http://openapi.airport.co.kr/service/rest/FlightStatusAPLList"
+PARKING_FEE_BASE = "http://openapi.airport.co.kr/service/rest/AirportParkingFee"
+FLIGHT_SCHEDULE_BASE = "http://openapi.airport.co.kr/service/rest/FlightScheduleList"
 PARKING_CONGESTION_BASE = (
-    "https://openapi.airport.co.kr/service/rest/AirportParkingCongestion"
+    "http://openapi.airport.co.kr/service/rest/AirportParkingCongestion"
 )
-AIRPORT_PARKING_BASE = "https://openapi.airport.co.kr/service/rest/AirportParking"
-AIRPORT_FACILITIES_BASE = "https://openapi.airport.co.kr/service/rest/AirportFacilities"
-AIRPORT_BUS_BASE = "https://openapi.airport.co.kr/service/rest/AirportBusInfo"
-JEJU_TAXI_WAIT_BASE = "https://openapi.airport.co.kr/service/rest/taxiWaitInfo"
+AIRPORT_PARKING_BASE = "http://openapi.airport.co.kr/service/rest/AirportParking"
+AIRPORT_FACILITIES_BASE = "http://openapi.airport.co.kr/service/rest/AirportFacilities"
+AIRPORT_BUS_BASE = "http://openapi.airport.co.kr/service/rest/AirportBusInfo"
+JEJU_TAXI_WAIT_BASE = "http://openapi.airport.co.kr/service/rest/taxiWaitInfo"
 _SAFE_PATH_PART = re.compile(r"^[A-Za-z0-9_]+$")
 
 
@@ -284,7 +284,7 @@ class KacClient:
         _validate_path_part(service)
         _validate_path_part(operation)
         data = self._http.get_xml(
-            f"https://openapi.airport.co.kr/service/rest/{service}/{operation}",
+            f"http://openapi.airport.co.kr/service/rest/{service}/{operation}",
             dict(params or {}),
         )
         return extract_items(data)
@@ -535,7 +535,7 @@ class AsyncKacClient:
         _validate_path_part(service)
         _validate_path_part(operation)
         data = await self._http.get_xml(
-            f"https://openapi.airport.co.kr/service/rest/{service}/{operation}",
+            f"http://openapi.airport.co.kr/service/rest/{service}/{operation}",
             dict(params or {}),
         )
         return extract_items(data)
