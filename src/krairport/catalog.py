@@ -79,7 +79,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="한국공항공사 실시간 항공운항 현황 상세 조회",
         service="StatusOfFlights",
         operation="getDepFlightStatusList",
-        endpoint="https://openapi.airport.co.kr/service/rest/StatusOfFlights/getDepFlightStatusList",
+        endpoint="http://openapi.airport.co.kr/service/rest/StatusOfFlights/getDepFlightStatusList",
         response_format="xml",
         notes="ICN을 제외한 KAC 공항 출발편",
     ),
@@ -90,7 +90,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="한국공항공사 실시간 항공운항 현황 상세 조회",
         service="StatusOfFlights",
         operation="getArrFlightStatusList",
-        endpoint="https://openapi.airport.co.kr/service/rest/StatusOfFlights/getArrFlightStatusList",
+        endpoint="http://openapi.airport.co.kr/service/rest/StatusOfFlights/getArrFlightStatusList",
         response_format="xml",
         notes="ICN을 제외한 KAC 공항 도착편",
     ),
@@ -158,7 +158,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         service="FlightStatusAPLList",
         operation="getFlightStatusAPLList",
         endpoint=(
-            "https://openapi.airport.co.kr/service/rest/FlightStatusAPLList/"
+            "http://openapi.airport.co.kr/service/rest/FlightStatusAPLList/"
             "getFlightStatusAPLList"
         ),
         response_format="xml",
@@ -170,7 +170,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="한국공항공사 전국공항 주차요금",
         service="AirportParkingFee",
         operation="parkingfee",
-        endpoint="https://openapi.airport.co.kr/service/rest/AirportParkingFee/parkingfee",
+        endpoint="http://openapi.airport.co.kr/service/rest/AirportParkingFee/parkingfee",
         response_format="xml",
     ),
     ApiCatalogItem(
@@ -181,7 +181,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         service="AirportParkingCongestion",
         operation="airportParkingCongestionRT",
         endpoint=(
-            "https://openapi.airport.co.kr/service/rest/AirportParkingCongestion/"
+            "http://openapi.airport.co.kr/service/rest/AirportParkingCongestion/"
             "airportParkingCongestionRT"
         ),
         response_format="xml",
@@ -225,7 +225,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="한국공항공사 정기 항공 운항 스케줄",
         service="FlightScheduleList",
         operation="getDflightScheduleList / getIflightScheduleList",
-        endpoint="https://openapi.airport.co.kr/service/rest/FlightScheduleList/{operation}",
+        endpoint="http://openapi.airport.co.kr/service/rest/FlightScheduleList/{operation}",
         response_format="xml",
         notes="international 값에 따라 국내선/국제선 operation 선택",
     ),
@@ -248,7 +248,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         service="AirportFacilities",
         operation="getAirportFacilities",
         endpoint=(
-            "https://openapi.airport.co.kr/service/rest/AirportFacilities/"
+            "http://openapi.airport.co.kr/service/rest/AirportFacilities/"
             "getAirportFacilities"
         ),
         response_format="xml",
@@ -270,7 +270,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="한국공항공사 전국공항 버스 정보",
         service="AirportBusInfo",
         operation="businfo",
-        endpoint="https://openapi.airport.co.kr/service/rest/AirportBusInfo/businfo",
+        endpoint="http://openapi.airport.co.kr/service/rest/AirportBusInfo/businfo",
         response_format="xml",
     ),
     ApiCatalogItem(
@@ -290,7 +290,7 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         dataset_name="한국공항공사 제주공항 택시 대기 정보",
         service="taxiWaitInfo",
         operation="getJejuTaxiWaitInfo",
-        endpoint="https://openapi.airport.co.kr/service/rest/taxiWaitInfo/getJejuTaxiWaitInfo",
+        endpoint="http://openapi.airport.co.kr/service/rest/taxiWaitInfo/getJejuTaxiWaitInfo",
         response_format="xml",
         notes="KAC 경로는 CJU 택시 대기 정보만 반환",
     ),
