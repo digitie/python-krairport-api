@@ -479,6 +479,23 @@ class KrairportClient:
 
         return self.kac.raw_items(service, operation, params)
 
+    def kac_flight_status_detail_raw_items(
+        self,
+        *,
+        airport_code: str,
+        flight_date: str,
+        page: int = 1,
+        per_page: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """KAC ODCloud 상세 운항정보(FlightStatusListDTL)의 raw item 목록을 반환합니다."""
+
+        return self.kac.flight_status_detail_raw_items(
+            airport_code=airport_code,
+            flight_date=flight_date,
+            page=page,
+            per_page=per_page,
+        )
+
     def iiac_raw_items(
         self,
         service: str,
@@ -1016,6 +1033,23 @@ class AsyncKrairportClient:
         params: Mapping[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         return await self.kac.raw_items(service, operation, params)
+
+    async def kac_flight_status_detail_raw_items(
+        self,
+        *,
+        airport_code: str,
+        flight_date: str,
+        page: int = 1,
+        per_page: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """KAC ODCloud 상세 운항정보(FlightStatusListDTL)의 raw item 목록을 반환합니다."""
+
+        return await self.kac.flight_status_detail_raw_items(
+            airport_code=airport_code,
+            flight_date=flight_date,
+            page=page,
+            per_page=per_page,
+        )
 
     async def iiac_raw_items(
         self,

@@ -169,3 +169,37 @@ def test_kac_raw_items_and_path_validation() -> None:
     assert rows[0]["foo"] == "bar"
     with pytest.raises(ValueError):
         client.raw_items("../noise", "getNoise")
+
+
+def test_flight_status_detail_raw_items_hits_odcloud_host() -> None:
+    session = FakeSession(
+        [
+            FakeResponse(
+                json_data={
+                    "page": 1,
+                    "perPage": 1000,
+                    "totalCount": 1,
+                    "currentCount": 1,
+                    "matchCount": 1,
+                    "data": [{"AIR_FLN": "KE1201", "FLIGHT_DATE": "20260430"}],
+                }
+            )
+        ]
+    )
+    client = KacClient("KAC_KEY", session=session, retries=0)
+
+    rows = client.flight_status_detail_raw_items(airport_code="GMP", flight_date="20260430")
+
+    assert session.calls[0].url == "https://api.odcloud.kr/api/FlightStatusListDTL/v1/getFlightStatusListDetail"
+    assert session.calls[0].params["serviceKey"] == "KAC_KEY"
+    assert session.calls[0].params["cond[AIRPORT::EQ]"] == "GMP"
+    assert session.calls[0].params["cond[FLIGHT_DATE::EQ]"] == "20260430"
+    assert session.calls[0].params["returnType"] == "JSON"
+    assert rows == [{"AIR_FLN": "KE1201", "FLIGHT_DATE": "20260430"}]
+
+
+def test_flight_status_detail_raw_items_rejects_icn() -> None:
+    client = KacClient("KAC_KEY", session=FakeSession([]), retries=0)
+
+    with pytest.raises(UnsupportedAirportError):
+        client.flight_status_detail_raw_items(airport_code="ICN", flight_date="20260430")

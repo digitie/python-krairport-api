@@ -36,6 +36,7 @@ AIRPORT_PARKING_BASE = "http://openapi.airport.co.kr/service/rest/AirportParking
 AIRPORT_FACILITIES_BASE = "http://openapi.airport.co.kr/service/rest/AirportFacilities"
 AIRPORT_BUS_BASE = "http://openapi.airport.co.kr/service/rest/AirportBusInfo"
 JEJU_TAXI_WAIT_BASE = "http://openapi.airport.co.kr/service/rest/taxiWaitInfo"
+FLIGHT_STATUS_DETAIL_URL = "https://api.odcloud.kr/api/FlightStatusListDTL/v1/getFlightStatusListDetail"
 _SAFE_PATH_PART = re.compile(r"^[A-Za-z0-9_]+$")
 
 
@@ -289,6 +290,34 @@ class KacClient:
         )
         return extract_items(data)
 
+    def flight_status_detail_raw_items(
+        self,
+        *,
+        airport_code: str,
+        flight_date: str,
+        page: int = 1,
+        per_page: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """KAC ODCloud 상세 운항정보(FlightStatusListDTL)의 raw item 목록을 반환합니다.
+
+        이 endpoint는 KAC의 다른 서비스들과 달리 `openapi.airport.co.kr`이 아닌
+        공공데이터포털 ODCloud 호스트(`api.odcloud.kr`)를 쓰고, 응답 envelope도
+        `{"data": [...]}` 형태로 다르다 — `raw_items()`의 XML escape hatch로는
+        닿지 않아 별도 메서드로 둔다.
+        """
+
+        code = ensure_kac_airport(airport_code)
+        params = {
+            "page": page,
+            "perPage": per_page,
+            "returnType": "JSON",
+            "cond[FLIGHT_DATE::EQ]": flight_date,
+            "cond[AIRPORT::EQ]": code,
+        }
+        data = self._http.get_json(FLIGHT_STATUS_DETAIL_URL, params)
+        items = data.get("data", [])
+        return [item for item in items if isinstance(item, dict)]
+
 
 class AsyncKacClient:
     """Async KAC API adapter backed by httpx.AsyncClient."""
@@ -539,6 +568,32 @@ class AsyncKacClient:
             dict(params or {}),
         )
         return extract_items(data)
+
+    async def flight_status_detail_raw_items(
+        self,
+        *,
+        airport_code: str,
+        flight_date: str,
+        page: int = 1,
+        per_page: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """Return raw items from KAC's ODCloud detailed flight status endpoint
+        (FlightStatusListDTL). Unlike KAC's other services, this hits
+        `api.odcloud.kr` (not `openapi.airport.co.kr`) with a `{"data": [...]}`
+        envelope, so it can't reuse `raw_items()`'s XML escape hatch.
+        """
+
+        code = ensure_kac_airport(airport_code)
+        params = {
+            "page": page,
+            "perPage": per_page,
+            "returnType": "JSON",
+            "cond[FLIGHT_DATE::EQ]": flight_date,
+            "cond[AIRPORT::EQ]": code,
+        }
+        data = await self._http.get_json(FLIGHT_STATUS_DETAIL_URL, params)
+        items = data.get("data", [])
+        return [item for item in items if isinstance(item, dict)]
 
 
 def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direction) -> Flight:
