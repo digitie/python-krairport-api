@@ -1,5 +1,6 @@
 """한국 공항 공공 API Python 클라이언트."""
 
+from krairport._ratelimit import AsyncTokenBucket
 from krairport.airports import (
     AIRPORTS,
     IIAC_AIRPORTS,
@@ -11,7 +12,7 @@ from krairport.airports import (
     nearest_airport,
 )
 from krairport.catalog import API_CATALOG, ApiCatalogItem, api_catalog
-from krairport.client import AsyncKrairportClient, KrairportClient
+from krairport.client import KrairportClient
 from krairport.config import KrairportConfig
 from krairport.debug import DebugRun, debug_call, jsonable, redact_sensitive
 from krairport.enums import (
@@ -67,10 +68,10 @@ __version__ = "0.1.0"
 PROVIDER_NAME = "python-krairport-api"
 
 __all__ = [
+    "AsyncTokenBucket",
     "AIRPORTS",
     "API_CATALOG",
     "AircraftAssignment",
-    "AsyncKrairportClient",
     "Airport",
     "AirportCodeLike",
     "AirportCodeText",

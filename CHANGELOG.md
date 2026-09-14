@@ -1,5 +1,11 @@
 # Changelog
 
+## 미배포 — 비동기/TPS 전환
+
+- 통합/KAC/IIAC 클라이언트를 비동기 전용으로 통합하고 debug와 CLI/UI를 전환했다.
+- max_rps/공유 AsyncTokenBucket으로 두 공급자·재시도·redirect 송신 예산을 통합했다.
+- 주입된 HTTP 세션은 호출자가 닫으며, 종료된 클라이언트는 추가 송신을 거부한다.
+
 ## Unreleased
 
 - HTTP transport를 `requests`에서 `httpx` 기반 sync/async client로 전환.

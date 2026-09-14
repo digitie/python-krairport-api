@@ -5,7 +5,7 @@ from datetime import date
 import pytest
 
 from krairport import Coordinate
-from krairport.client import AsyncKrairportClient, KrairportClient
+from krairport.client import KrairportClient
 from tests.conftest import AsyncFakeSession, FakeResponse, FakeSession
 
 
@@ -25,7 +25,7 @@ def _xml_response(item: str) -> str:
     )
 
 
-def test_unified_client_routes_kac_departures(load_fixture) -> None:  # type: ignore[no-untyped-def]
+async def test_unified_client_routes_kac_departures(load_fixture) -> None:  # type: ignore[no-untyped-def]
     session = FakeSession([FakeResponse(text=load_fixture("kac_departures.xml"))])
     client = KrairportClient(
         kac_service_key="KAC_KEY",
@@ -34,7 +34,7 @@ def test_unified_client_routes_kac_departures(load_fixture) -> None:  # type: ig
         retries=0,
     )
 
-    rows = client.departures(
+    rows = await client.departures(
         airport_code="GMP",
         searchday=date(2026, 4, 30),
         from_time="0600",
@@ -46,7 +46,7 @@ def test_unified_client_routes_kac_departures(load_fixture) -> None:  # type: ig
     assert rows[0].provider == "kac"
 
 
-def test_unified_client_routes_iiac_arrivals() -> None:
+async def test_unified_client_routes_iiac_arrivals() -> None:
     payload = _json_response(
         {
             "flightId": "KE5942",
@@ -63,7 +63,7 @@ def test_unified_client_routes_iiac_arrivals() -> None:
         retries=0,
     )
 
-    rows = client.arrivals(
+    rows = await client.arrivals(
         airport_code="ICN",
         searchday="20260430",
         use_detailed=True,
@@ -74,7 +74,7 @@ def test_unified_client_routes_iiac_arrivals() -> None:
     assert rows[0].provider == "iiac"
 
 
-def test_unified_client_routes_iiac_parking_status() -> None:
+async def test_unified_client_routes_iiac_parking_status() -> None:
     payload = _json_response(
         {
             "terminal": "T2",
@@ -91,14 +91,14 @@ def test_unified_client_routes_iiac_parking_status() -> None:
         retries=0,
     )
 
-    rows = client.parking_status()
+    rows = await client.parking_status()
 
     assert session.calls[0].url.endswith("/getTrackingParking")
     assert rows[0].terminal == "T2"
     assert rows[0].occupied == 10
 
 
-def test_unified_client_routes_remaining_methods(load_fixture) -> None:  # type: ignore[no-untyped-def]
+async def test_unified_client_routes_remaining_methods(load_fixture) -> None:  # type: ignore[no-untyped-def]
     session = FakeSession(
         [
             FakeResponse(text=load_fixture("kac_arrivals_single.xml")),
@@ -134,14 +134,16 @@ def test_unified_client_routes_remaining_methods(load_fixture) -> None:  # type:
         retries=0,
     )
 
-    assert client.arrivals(airport_code="GMP")[0].provider == "kac"
-    assert client.aircraft_assignments(airport_code="CJU")[0].aircraft_registration == "HL8000"
-    assert client.parking_fees(airport_code="GMP")[0].small_basic_fee == 1000
-    assert client.arrival_congestion(terminal="T1")[0].korean_count == 1
-    assert client.passenger_forecast()[0].t1_departure_total == 3
+    assert (await client.arrivals(airport_code="GMP"))[0].provider == "kac"
+    assert (await client.aircraft_assignments(airport_code="CJU"))[
+        0
+    ].aircraft_registration == "HL8000"
+    assert (await client.parking_fees(airport_code="GMP"))[0].small_basic_fee == 1000
+    assert (await client.arrival_congestion(terminal="T1"))[0].korean_count == 1
+    assert (await client.passenger_forecast())[0].t1_departure_total == 3
 
 
-def test_unified_client_routes_new_missing_api_methods() -> None:
+async def test_unified_client_routes_new_missing_api_methods() -> None:
     def response(item):  # type: ignore[no-untyped-def]
         return FakeResponse(json_data=_json_response(item))
 
@@ -161,14 +163,16 @@ def test_unified_client_routes_new_missing_api_methods() -> None:
         retries=0,
     )
 
-    assert client.flight_schedules(airport_code="ICN", direction="arrival")[0].flight_id == "KE1"
-    assert client.airport_facilities(airport_code="ICN")[0].name == "편의점"
-    assert client.bus_routes(airport_code="ICN")[0].bus_number == "6100"
-    assert client.taxi_status(airport_code="ICN")[0].seoul_count == 3
-    assert client.service_destinations()[0].city_code == "TYO"
+    assert (await client.flight_schedules(airport_code="ICN", direction="arrival"))[
+        0
+    ].flight_id == "KE1"
+    assert (await client.airport_facilities(airport_code="ICN"))[0].name == "편의점"
+    assert (await client.bus_routes(airport_code="ICN"))[0].bus_number == "6100"
+    assert (await client.taxi_status(airport_code="ICN"))[0].seoul_count == 3
+    assert (await client.service_destinations())[0].city_code == "TYO"
 
 
-def test_unified_client_raw_items(load_fixture) -> None:  # type: ignore[no-untyped-def]
+async def test_unified_client_raw_items(load_fixture) -> None:  # type: ignore[no-untyped-def]
     session = FakeSession(
         [
             FakeResponse(text=load_fixture("kac_arrivals_single.xml")),
@@ -182,8 +186,8 @@ def test_unified_client_raw_items(load_fixture) -> None:  # type: ignore[no-unty
         retries=0,
     )
 
-    assert client.kac_raw_items("StatusOfFlights", "getArrFlightStatusList")[0]["flightId"]
-    assert client.iiac_raw_items("ShtbusInfo", "getShtbusInfo")[0]["foo"] == "bar"
+    assert (await client.kac_raw_items("StatusOfFlights", "getArrFlightStatusList"))[0]["flightId"]
+    assert (await client.iiac_raw_items("ShtbusInfo", "getShtbusInfo"))[0]["foo"] == "bar"
 
 
 def test_unified_client_exposes_airport_metadata_helpers() -> None:
@@ -209,15 +213,15 @@ def test_client_from_env_reads_local_dotenv(tmp_path, monkeypatch) -> None:  # t
     assert client.config.iiac_service_key == "DATA_GO_KR_FROM_FILE"
 
 
-def test_unified_client_iter_pages() -> None:
+async def test_unified_client_iter_pages() -> None:
     client = KrairportClient(kac_service_key="KAC_KEY", iiac_service_key="IIAC_KEY")
     calls: list[int] = []
 
-    def fetch_page(*, page_no: int, num_of_rows: int) -> list[int]:
+    async def fetch_page(*, page_no: int, num_of_rows: int) -> list[int]:
         calls.append(page_no)
         return [page_no] * num_of_rows if page_no == 1 else [page_no]
 
-    pages = list(client.iter_pages(fetch_page, num_of_rows=2))
+    pages = [item async for item in client.iter_pages(fetch_page, num_of_rows=2)]
 
     assert calls == [1, 2]
     assert len(pages) == 2
@@ -236,7 +240,7 @@ async def test_async_unified_client_routes_iiac_arrivals() -> None:
         }
     )
     session = AsyncFakeSession([FakeResponse(json_data=payload)])
-    client = AsyncKrairportClient(
+    client = KrairportClient(
         kac_service_key="KAC_KEY",
         iiac_service_key="IIAC_KEY",
         session=session,
@@ -274,19 +278,19 @@ async def test_async_unified_client_routes_many_methods(load_fixture) -> None:  
             FakeResponse(json_data=_json_response({"busnumber": "6100", "adultfare": "18000"})),
             FakeResponse(json_data=_json_response({"seoultaxicnt": "3"})),
             FakeResponse(
-                json_data=_json_response(
-                    {"flightId": "KE1", "airport": "NRT", "temperature": "20"}
-                )
+                json_data=_json_response({"flightId": "KE1", "airport": "NRT", "temperature": "20"})
             ),
             FakeResponse(json_data=_json_response({"airportCode": "NRT", "cityCode": "TYO"})),
             FakeResponse(text=_xml_response("<facilityNm>Info</facilityNm>")),
-            FakeResponse(text=_xml_response("<busnumber>6000</busnumber><adultfare>15000</adultfare>")),
+            FakeResponse(
+                text=_xml_response("<busnumber>6000</busnumber><adultfare>15000</adultfare>")
+            ),
             FakeResponse(text=_xml_response("<stand>1</stand><seoultaxicnt>2</seoultaxicnt>")),
             FakeResponse(text=load_fixture("kac_arrivals_single.xml")),
             FakeResponse(json_data=_json_response({"foo": "bar"})),
         ]
     )
-    client = AsyncKrairportClient(
+    client = KrairportClient(
         kac_service_key="KAC_KEY",
         iiac_service_key="IIAC_KEY",
         session=session,
@@ -318,15 +322,12 @@ async def test_async_unified_client_routes_many_methods(load_fixture) -> None:  
 
 @pytest.mark.asyncio
 async def test_async_iter_pages() -> None:
-    client = AsyncKrairportClient(kac_service_key="KAC_KEY", iiac_service_key="IIAC_KEY")
+    client = KrairportClient(kac_service_key="KAC_KEY", iiac_service_key="IIAC_KEY")
 
     async def fetch_page(*, page_no: int, num_of_rows: int) -> list[int]:
         return [page_no] * num_of_rows if page_no == 1 else []
 
-    pages = [
-        page
-        async for page in client.iter_pages(fetch_page, num_of_rows=2, max_pages=2)
-    ]
+    pages = [page async for page in client.iter_pages(fetch_page, num_of_rows=2, max_pages=2)]
 
     assert [page.page for page in pages] == [1, 2]
     assert pages[0].items == [1, 1]

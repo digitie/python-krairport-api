@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from collections.abc import Iterable
@@ -274,7 +275,11 @@ def _raw_response_tab(
         st.error("Required parameters are missing: " + ", ".join(missing))
         return
 
-    run = _client(kac_key, iiac_key, timeout).debug(function_name, **preview)
+    async def fetch() -> DebugRun:
+        async with _client(kac_key, iiac_key, timeout) as client:
+            return await client.debug(function_name, **preview)
+
+    run = asyncio.run(fetch())
     _store_run(function_name, run)
     _show_json(run.response)
 

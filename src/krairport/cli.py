@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 from datetime import date, datetime
 from typing import Any
@@ -12,7 +13,7 @@ from pydantic import BaseModel
 from krairport.client import KrairportClient
 
 
-def main(argv: list[str] | None = None) -> int:
+async def _amain(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="krairport")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -26,30 +27,30 @@ def main(argv: list[str] | None = None) -> int:
     parking.add_argument("--airport-code", required=True)
 
     args = parser.parse_args(argv)
-    client = KrairportClient.from_env()
+    async with KrairportClient.from_env() as client:
 
-    result: Any
-    if args.command == "departures":
-        result = client.departures(
-            airport_code=args.airport_code,
-            searchday=args.searchday,
-            from_time=args.from_time,
-            to_time=args.to_time,
-            flight_id=args.flight_id,
-        )
-    elif args.command == "arrivals":
-        result = client.arrivals(
-            airport_code=args.airport_code,
-            searchday=args.searchday,
-            from_time=args.from_time,
-            to_time=args.to_time,
-            flight_id=args.flight_id,
-        )
-    else:
-        result = client.parking_status(airport_code=args.airport_code)
+        result: Any
+        if args.command == "departures":
+            result = (await client.departures(
+                airport_code=args.airport_code,
+                searchday=args.searchday,
+                from_time=args.from_time,
+                to_time=args.to_time,
+                flight_id=args.flight_id,
+            ))
+        elif args.command == "arrivals":
+            result = (await client.arrivals(
+                airport_code=args.airport_code,
+                searchday=args.searchday,
+                from_time=args.from_time,
+                to_time=args.to_time,
+                flight_id=args.flight_id,
+            ))
+        else:
+            result = (await client.parking_status(airport_code=args.airport_code))
 
-    print(json.dumps(_jsonable(result), ensure_ascii=False, indent=2))
-    return 0
+        print(json.dumps(_jsonable(result), ensure_ascii=False, indent=2))
+        return 0
 
 
 def _add_flight_args(parser: argparse.ArgumentParser) -> None:
@@ -70,6 +71,10 @@ def _jsonable(value: Any) -> Any:
     if isinstance(value, (datetime, date)):
         return value.isoformat()
     return value
+
+
+def main(argv: list[str] | None = None) -> int:
+    return asyncio.run(_amain(argv))
 
 
 if __name__ == "__main__":

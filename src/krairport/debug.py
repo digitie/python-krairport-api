@@ -60,7 +60,7 @@ class DebugRun:
         return cast(dict[str, Any], jsonable(self))
 
 
-def debug_call(client: Any, function_name: str, **input_data: Any) -> DebugRun:
+async def debug_call(client: Any, function_name: str, **input_data: Any) -> DebugRun:
     """`KrairportClient` public 함수를 실행하고 fixture 후보 데이터를 묶습니다."""
 
     trace = [f"selected function: {function_name}"]
@@ -89,7 +89,7 @@ def debug_call(client: Any, function_name: str, **input_data: Any) -> DebugRun:
     try:
         target = getattr(client, function_name)
         trace.append(f"calling KrairportClient.{function_name}()")
-        processed = target(**input_data)
+        processed = await target(**input_data)
         response_body = _raw_body_from_processed(processed)
         trace.append("captured raw rows from public model.raw fields")
         return DebugRun(

@@ -18,7 +18,7 @@ def _json_response(items):  # type: ignore[no-untyped-def]
     }
 
 
-def test_detailed_arrivals_parse_types_and_request_params() -> None:
+async def test_detailed_arrivals_parse_types_and_request_params() -> None:
     payload = _json_response(
         {
             "airline": "대한항공",
@@ -37,14 +37,14 @@ def test_detailed_arrivals_parse_types_and_request_params() -> None:
     session = FakeSession([FakeResponse(json_data=payload)])
     client = IiacClient("IIAC_KEY", session=session, retries=0)
 
-    rows = client.arrivals(
+    rows = (await client.arrivals(
         airport_code="ICN",
         searchday="20260430",
         from_time="0000",
         to_time="2400",
         flight_id="KE5942",
         detailed=True,
-    )
+    ))
 
     assert session.calls[0].url.endswith("/getPassengerArrivalsDeOdp")
     assert session.calls[0].params["type"] == "json"
@@ -64,7 +64,7 @@ def test_detailed_arrivals_parse_types_and_request_params() -> None:
     assert row.estimated_at.isoformat() == "2026-04-30T06:10:00+09:00"
 
 
-def test_today_departures_do_not_send_searchday() -> None:
+async def test_today_departures_do_not_send_searchday() -> None:
     payload = _json_response(
         [
             {
@@ -79,7 +79,7 @@ def test_today_departures_do_not_send_searchday() -> None:
     session = FakeSession([FakeResponse(json_data=payload)])
     client = IiacClient("IIAC_KEY", session=session, retries=0)
 
-    rows = client.departures(airport_code="ICN", searchday="20260430", detailed=False)
+    rows = (await client.departures(airport_code="ICN", searchday="20260430", detailed=False))
 
     assert session.calls[0].url.endswith("/getPassengerDeparturesOdp")
     assert "searchday" not in session.calls[0].params
@@ -87,14 +87,14 @@ def test_today_departures_do_not_send_searchday() -> None:
     assert rows[0].codeshare is False
 
 
-def test_iiac_rejects_non_icn() -> None:
+async def test_iiac_rejects_non_icn() -> None:
     client = IiacClient("IIAC_KEY", session=FakeSession([]), retries=0)
 
     with pytest.raises(UnsupportedAirportError):
-        client.parking_status(airport_code="GMP")
+        (await client.parking_status(airport_code="GMP"))
 
 
-def test_parking_status_converts_counts() -> None:
+async def test_parking_status_converts_counts() -> None:
     payload = _json_response(
         {
             "terminal": "T1",
@@ -110,7 +110,7 @@ def test_parking_status_converts_counts() -> None:
         retries=0,
     )
 
-    rows = client.parking_status()
+    rows = (await client.parking_status())
 
     assert rows[0].airport_code == "ICN"
     assert rows[0].occupied == 1234
@@ -118,7 +118,7 @@ def test_parking_status_converts_counts() -> None:
     assert rows[0].updated_at is not None
 
 
-def test_arrival_congestion_converts_counts() -> None:
+async def test_arrival_congestion_converts_counts() -> None:
     payload = _json_response(
         {
             "terno": "T1",
@@ -138,7 +138,7 @@ def test_arrival_congestion_converts_counts() -> None:
         retries=0,
     )
 
-    rows = client.arrival_congestion(terminal="T1")
+    rows = (await client.arrival_congestion(terminal="T1"))
 
     assert rows[0].terminal == "T1"
     assert rows[0].entry_gate == "A"
@@ -146,7 +146,7 @@ def test_arrival_congestion_converts_counts() -> None:
     assert rows[0].foreign_count == 250
 
 
-def test_passenger_forecast_converts_counts() -> None:
+async def test_passenger_forecast_converts_counts() -> None:
     payload = _json_response(
         {
             "adate": "20260430",
@@ -164,7 +164,7 @@ def test_passenger_forecast_converts_counts() -> None:
         retries=0,
     )
 
-    rows = client.passenger_forecast(selectdate=1)
+    rows = (await client.passenger_forecast(selectdate=1))
 
     assert rows[0].display_date == "20260430"
     assert rows[0].time_range == "06_07"
@@ -172,7 +172,7 @@ def test_passenger_forecast_converts_counts() -> None:
     assert rows[0].t2_departure_total == 500
 
 
-def test_taxi_bus_weather_schedule_destination_and_facility() -> None:
+async def test_taxi_bus_weather_schedule_destination_and_facility() -> None:
     session = FakeSession(
         [
             FakeResponse(
@@ -242,12 +242,12 @@ def test_taxi_bus_weather_schedule_destination_and_facility() -> None:
     )
     client = IiacClient("IIAC_KEY", session=session, retries=0)
 
-    assert client.taxi_status(terminal="P01")[0].seoul_count == 3
-    assert client.bus_routes(area="1")[0].adult_fare == 18000
-    assert client.world_weather(direction="arrival")[0].temperature == 20
-    assert client.flight_schedules(direction="arrival")[0].flight_id == "KE1"
-    assert client.service_destinations()[0].city_code == "TYO"
-    facility = client.facilities()[0]
+    assert (await client.taxi_status(terminal="P01"))[0].seoul_count == 3
+    assert (await client.bus_routes(area="1"))[0].adult_fare == 18000
+    assert (await client.world_weather(direction="arrival"))[0].temperature == 20
+    assert (await client.flight_schedules(direction="arrival"))[0].flight_id == "KE1"
+    assert (await client.service_destinations())[0].city_code == "TYO"
+    facility = (await client.facilities())[0]
     assert facility.name == "편의점"
     assert facility.address == "인천광역시 중구 공항로 272"
 
@@ -259,7 +259,7 @@ def test_taxi_bus_weather_schedule_destination_and_facility() -> None:
     assert session.calls[5].url.endswith("/getFacilityKR")
 
 
-def test_iiac_raw_items_and_path_validation() -> None:
+async def test_iiac_raw_items_and_path_validation() -> None:
     session = FakeSession(
         [
             FakeResponse(json_data=_json_response({"foo": "bar"})),
@@ -268,12 +268,12 @@ def test_iiac_raw_items_and_path_validation() -> None:
     )
     client = IiacClient("IIAC_KEY", session=session, retries=0)
 
-    rows = client.raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1})
-    changed_url_rows = client.raw_items(
+    rows = (await client.raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1}))
+    changed_url_rows = (await client.raw_items(
         "FlightClosingInfoSpot",
         "getFlightClosingInfoSpot",
         {"pageNo": 1},
-    )
+    ))
 
     assert session.calls[0].url.endswith("/ShtbusInfo/getShtbusInfo")
     assert session.calls[0].params["type"] == "json"
@@ -281,4 +281,4 @@ def test_iiac_raw_items_and_path_validation() -> None:
     assert rows[0]["foo"] == "bar"
     assert changed_url_rows[0]["flightId"] == "KE1"
     with pytest.raises(ValueError):
-        client.raw_items("http://example.com", "getShtbusInfo")
+        (await client.raw_items("http://example.com", "getShtbusInfo"))

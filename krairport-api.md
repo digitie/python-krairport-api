@@ -7,8 +7,8 @@
 ```python
 from krairport import DebugRun, KrairportClient
 
-client = KrairportClient.from_env()
-run: DebugRun = client.debug("departures", airport_code="GMP", searchday="20260430")
+async with KrairportClient.from_env() as client:
+    run: DebugRun = (await client.debug("departures", airport_code="GMP", searchday="20260430"))
 ```
 
 지원 함수 이름은 `departures`, `arrivals`, `aircraft_assignments`, `parking_fees`,
@@ -104,7 +104,7 @@ KrairportClient(
     *,
     timeout: float = 10.0,
     retries: int = 3,
-    session: httpx.Client-compatible object | None = None,
+    session: httpx.AsyncClient-compatible object | None = None,
 )
 
 KrairportClient.from_env(
@@ -112,20 +112,18 @@ KrairportClient.from_env(
     env_file: str | None = None,
 )
 
-AsyncKrairportClient.from_env(...)
-KrairportClient.aio(...)
 ```
 
-상위 클라이언트는 `python-krheritage-api`와 같은 형태로 context manager와 async facade를 제공합니다.
-동기 facade는 기존 호출을 유지하고, 비동기 facade는 `httpx.AsyncClient` 기반 provider client를 사용합니다.
+통합/공급자 클라이언트는 비동기 전용이며 async context manager와 await 조회를 제공합니다.
+기존 동기 facade와 Async 별칭은 제거했습니다. 예제는 async 함수 안에서 실행합니다.
 
 ```python
-from krairport import AsyncKrairportClient, KrairportClient
+from krairport import KrairportClient
 
-with KrairportClient.from_env() as client:
-    rows = client.departures(airport_code="GMP")
+async with KrairportClient.from_env() as client:
+    rows = (await client.departures(airport_code="GMP"))
 
-async with AsyncKrairportClient.from_env() as client:
+async with KrairportClient.from_env() as client:
     rows = await client.world_weather(direction="arrival", airport_code="ICN")
 ```
 
@@ -265,8 +263,8 @@ def nearest_airport(
 typed 모델로 고정하지 않은 공식 엔드포인트는 다음으로 접근합니다.
 
 ```python
-client.kac_raw_items("noise", "getNoise", {"pageNo": 1})
-client.iiac_raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1})
+(await client.kac_raw_items("noise", "getNoise", {"pageNo": 1}))
+(await client.iiac_raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1}))
 ```
 
 `service`와 `operation`은 영문/숫자/underscore만 허용합니다.
@@ -441,7 +439,7 @@ KAC `StatusOfFlights` WADL 기준:
 
 ## 7. HTTP 계층 규칙
 
-- HTTP transport는 `httpx.Client` / `httpx.AsyncClient` 기반입니다.
+- HTTP transport는 `httpx.AsyncClient` 기반입니다.
 - KAC/IIAC를 분리한 provider adapter를 둡니다.
 - 재시도는 `429`, `500`, `502`, `503`, `504`만 허용합니다.
 - 인증 오류는 재시도하지 않습니다.

@@ -5,17 +5,23 @@ from krairport.models import Flight, ParkingAreaStatus
 
 
 class FakeClient:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        pass
+
     @classmethod
     def from_env(cls):  # type: ignore[no-untyped-def]
         return cls()
 
-    def departures(self, **kwargs):  # type: ignore[no-untyped-def]
+    async def departures(self, **kwargs):  # type: ignore[no-untyped-def]
         return [_flight("departure")]
 
-    def arrivals(self, **kwargs):  # type: ignore[no-untyped-def]
+    async def arrivals(self, **kwargs):  # type: ignore[no-untyped-def]
         return [_flight("arrival")]
 
-    def parking_status(self, **kwargs):  # type: ignore[no-untyped-def]
+    async def parking_status(self, **kwargs):  # type: ignore[no-untyped-def]
         return [
             ParkingAreaStatus(
                 airport_code="ICN",
