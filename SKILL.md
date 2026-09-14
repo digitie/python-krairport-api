@@ -58,6 +58,12 @@ description: 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공개 AP
 
 Routing, parsing, model layer가 안정되기 전에는 scope를 넓히지 않는다. Coverage 판단은 `docs/api-coverage.md`를 기준으로 한다.
 
+## 비동기와 TPS 계약
+
+네트워크 작업과 debug는 await, 페이지 순회는 async for를 사용한다. 공통
+AsyncTokenBucket은 기본 max_rps=5이며 통합 클라이언트의 KAC/IIAC가 같은 예산을 쓴다.
+동기 facade나 장기 Async 별칭을 다시 만들지 않는다. 재시도와 redirect도 과금한다.
+
 ## 공개 API 규칙
 
 ```python

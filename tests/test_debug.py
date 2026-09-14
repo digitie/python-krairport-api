@@ -6,7 +6,7 @@ from krairport import DebugRun, KrairportClient, jsonable, redact_sensitive
 from tests.conftest import FakeResponse, FakeSession
 
 
-def test_debug_departures_returns_fixture_ready_run(load_fixture) -> None:  # type: ignore[no-untyped-def]
+async def test_debug_departures_returns_fixture_ready_run(load_fixture) -> None:  # type: ignore[no-untyped-def]
     session = FakeSession([FakeResponse(text=load_fixture("kac_departures.xml"))])
     client = KrairportClient(
         kac_service_key="KAC_KEY",
@@ -15,12 +15,12 @@ def test_debug_departures_returns_fixture_ready_run(load_fixture) -> None:  # ty
         retries=0,
     )
 
-    run = client.debug_departures(
+    run = (await client.debug_departures(
         airport_code="GMP",
         searchday=date(2026, 4, 30),
         from_time="0600",
         to_time="1200",
-    )
+    ))
 
     assert isinstance(run, DebugRun)
     assert run.function == "departures"
@@ -33,10 +33,10 @@ def test_debug_departures_returns_fixture_ready_run(load_fixture) -> None:  # ty
     assert dumped["processed"][0]["scheduled_at"] == "2026-04-30T06:00:00+09:00"
 
 
-def test_debug_rejects_unknown_function_without_calling_network() -> None:
+async def test_debug_rejects_unknown_function_without_calling_network() -> None:
     client = KrairportClient(kac_service_key="KAC_KEY", iiac_service_key="IIAC_KEY")
 
-    run = client.debug("from_env")
+    run = (await client.debug("from_env"))
 
     assert run.error is not None
     assert run.error["type"] == "ValueError"

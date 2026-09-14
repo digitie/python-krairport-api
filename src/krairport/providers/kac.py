@@ -7,7 +7,8 @@ from collections.abc import Mapping
 from typing import Any
 
 from krairport._convert import first_value, strip_or_none, to_bool_or_none, to_int_or_none
-from krairport._http import AsyncHttpClient, AsyncSessionLike, HttpClient, SessionLike
+from krairport._http import HttpClient, SessionLike
+from krairport._ratelimit import AsyncTokenBucket
 from krairport._routing import ensure_kac_airport
 from krairport._time import parse_kst_datetime
 from krairport._xml import extract_items
@@ -40,8 +41,10 @@ FLIGHT_STATUS_DETAIL_URL = "https://api.odcloud.kr/api/FlightStatusListDTL/v1/ge
 _SAFE_PATH_PART = re.compile(r"^[A-Za-z0-9_]+$")
 
 
+
+
 class KacClient:
-    """한국공항공사 API용 저수준 클라이언트."""
+    """한국공항공사 비동기 API 클라이언트."""
 
     def __init__(
         self,
@@ -50,294 +53,19 @@ class KacClient:
         session: SessionLike | None = None,
         timeout: float = 10.0,
         retries: int = 3,
+        max_rps: float = 5.0,
+        rate_limiter: AsyncTokenBucket | None = None,
     ) -> None:
         self._http = HttpClient(
             service_key,
             session=session,
             timeout=timeout,
             retries=retries,
+            max_rps=max_rps,
+            rate_limiter=rate_limiter,
         )
 
-    def __enter__(self) -> KacClient:
-        return self
-
-    def __exit__(self, *_: object) -> None:
-        self.close()
-
-    def close(self) -> None:
-        self._http.close()
-
-    def departures(
-        self,
-        *,
-        airport_code: str,
-        searchday: str | None = None,
-        from_time: str | None = None,
-        to_time: str | None = None,
-        flight_id: str | None = None,
-        flight_unique_id: str | None = None,
-        line: str | None = None,
-        arr_airport_code: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 10,
-    ) -> list[Flight]:
-        code = ensure_kac_airport(airport_code)
-        params = {
-            "searchday": searchday,
-            "from_time": from_time,
-            "to_time": to_time,
-            "airport_code": code,
-            "f_id": flight_unique_id,
-            "flight_id": flight_id,
-            "line": line,
-            "arr_airport_code": arr_airport_code,
-            "pageNo": page_no,
-            "numOfRows": num_of_rows,
-        }
-        data = self._http.get_xml(f"{STATUS_BASE}/getDepFlightStatusList", params)
-        return [
-            _build_flight(row, airport_code=code, direction=Direction.DEPARTURE)
-            for row in extract_items(data)
-        ]
-
-    def arrivals(
-        self,
-        *,
-        airport_code: str,
-        searchday: str | None = None,
-        from_time: str | None = None,
-        to_time: str | None = None,
-        flight_id: str | None = None,
-        flight_unique_id: str | None = None,
-        line: str | None = None,
-        dep_airport_code: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 10,
-    ) -> list[Flight]:
-        code = ensure_kac_airport(airport_code)
-        params = {
-            "searchday": searchday,
-            "from_time": from_time,
-            "to_time": to_time,
-            "airport_code": code,
-            "f_id": flight_unique_id,
-            "flight_id": flight_id,
-            "line": line,
-            "dep_airport_code": dep_airport_code,
-            "pageNo": page_no,
-            "numOfRows": num_of_rows,
-        }
-        data = self._http.get_xml(f"{STATUS_BASE}/getArrFlightStatusList", params)
-        return [
-            _build_flight(row, airport_code=code, direction=Direction.ARRIVAL)
-            for row in extract_items(data)
-        ]
-
-    def aircraft_assignments(
-        self,
-        *,
-        airport_code: str | None = None,
-        sch_st_time: str | None = None,
-        sch_ed_time: str | None = None,
-        flight_id: str | None = None,
-        flight_unique_id: str | None = None,
-        aircraft_registration: str | None = None,
-        aircraft_type: str | None = None,
-        line: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 10,
-    ) -> list[AircraftAssignment]:
-        code = ensure_kac_airport(airport_code) if airport_code else None
-        params = {
-            "schStTime": sch_st_time,
-            "schEdTime": sch_ed_time,
-            "schAirCode": code,
-            "schFID": flight_unique_id,
-            "schFln": flight_id,
-            "Line": line,
-            "schAPLno": aircraft_registration,
-            "schAPM": aircraft_type,
-            "pageNo": page_no,
-            "numOfRows": num_of_rows,
-        }
-        data = self._http.get_xml(f"{AIRCRAFT_BASE}/getFlightStatusAPLList", params)
-        return [
-            _build_aircraft_assignment(row, requested_airport_code=code)
-            for row in extract_items(data)
-        ]
-
-    def parking_fees(self, *, airport_code: str | None = None) -> list[ParkingFee]:
-        code = ensure_kac_airport(airport_code) if airport_code else None
-        params = {"schAirportCode": code}
-        data = self._http.get_xml(f"{PARKING_FEE_BASE}/parkingfee", params)
-        return [_build_parking_fee(row, requested_airport_code=code) for row in extract_items(data)]
-
-    def flight_schedules(
-        self,
-        *,
-        direction: str | Direction,
-        airport_code: str | None = None,
-        counterpart_airport_code: str | None = None,
-        sch_date: str | None = None,
-        airline_code: str | None = None,
-        flight_id: str | None = None,
-        international: bool = False,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-    ) -> list[FlightSchedule]:
-        code = ensure_kac_airport(airport_code) if airport_code else None
-        operation = "getIflightScheduleList" if international else "getDflightScheduleList"
-        direction_value = normalize_direction(direction)
-        if direction_value is Direction.DEPARTURE:
-            dept_code = code
-            arrv_code = counterpart_airport_code
-        elif direction_value is Direction.ARRIVAL:
-            dept_code = counterpart_airport_code
-            arrv_code = code
-        params = {
-            "schDate": sch_date,
-            "schDeptCityCode": dept_code,
-            "schArrvCityCode": arrv_code,
-            "schAirLine": airline_code,
-            "schFlightNum": flight_id,
-            "pageNo": page_no,
-            "numOfRows": num_of_rows,
-        }
-        data = self._http.get_xml(f"{FLIGHT_SCHEDULE_BASE}/{operation}", params)
-        return [
-            _build_flight_schedule(row, direction=direction_value, international=international)
-            for row in extract_items(data)
-        ]
-
-    def parking_status(
-        self,
-        *,
-        airport_code: str,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-        realtime: bool = False,
-    ) -> list[ParkingAreaStatus]:
-        code = ensure_kac_airport(airport_code)
-        params: dict[str, Any]
-        if realtime:
-            url = f"{AIRPORT_PARKING_BASE}/airportparkingRT"
-            params = {"schAirportCode": code}
-        else:
-            url = f"{PARKING_CONGESTION_BASE}/airportParkingCongestionRT"
-            params = {"schAirportCode": code, "pageNo": page_no, "numOfRows": num_of_rows}
-        data = self._http.get_xml(url, params)
-        return [
-            _build_parking_status(row, requested_airport_code=code)
-            for row in extract_items(data)
-        ]
-
-    def airport_facilities(
-        self,
-        *,
-        airport_code: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-    ) -> list[AirportFacility]:
-        code = ensure_kac_airport(airport_code) if airport_code else None
-        params = {"apcd": code, "pageNo": page_no, "numOfRows": num_of_rows}
-        data = self._http.get_xml(f"{AIRPORT_FACILITIES_BASE}/getAirportFacilities", params)
-        return [
-            _build_airport_facility(row, requested_airport_code=code)
-            for row in extract_items(data)
-        ]
-
-    def airport_buses(
-        self,
-        *,
-        airport_code: str | None = None,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-    ) -> list[BusRoute]:
-        code = ensure_kac_airport(airport_code) if airport_code else None
-        params = {"schAirport": code, "pageNo": page_no, "numOfRows": num_of_rows}
-        data = self._http.get_xml(f"{AIRPORT_BUS_BASE}/businfo", params)
-        return [
-            _build_bus_route(row, provider=Provider.KAC, airport_code=code)
-            for row in extract_items(data)
-        ]
-
-    def jeju_taxi_wait(
-        self,
-        *,
-        page_no: int = 1,
-        num_of_rows: int = 100,
-    ) -> list[TaxiStatus]:
-        params = {"pageNo": page_no, "numOfRows": num_of_rows}
-        data = self._http.get_xml(f"{JEJU_TAXI_WAIT_BASE}/getJejuTaxiWaitInfo", params)
-        return [
-            _build_taxi_status(row, provider=Provider.KAC, airport_code="CJU")
-            for row in extract_items(data)
-        ]
-
-    def raw_items(
-        self,
-        service: str,
-        operation: str,
-        params: Mapping[str, Any] | None = None,
-    ) -> list[dict[str, Any]]:
-        """KAC REST 서비스 작업의 정규화된 XML item 목록을 반환합니다."""
-
-        _validate_path_part(service)
-        _validate_path_part(operation)
-        data = self._http.get_xml(
-            f"http://openapi.airport.co.kr/service/rest/{service}/{operation}",
-            dict(params or {}),
-        )
-        return extract_items(data)
-
-    def flight_status_detail_raw_items(
-        self,
-        *,
-        airport_code: str,
-        flight_date: str,
-        page: int = 1,
-        per_page: int = 1000,
-    ) -> list[dict[str, Any]]:
-        """KAC ODCloud 상세 운항정보(FlightStatusListDTL)의 raw item 목록을 반환합니다.
-
-        이 endpoint는 KAC의 다른 서비스들과 달리 `openapi.airport.co.kr`이 아닌
-        공공데이터포털 ODCloud 호스트(`api.odcloud.kr`)를 쓰고, 응답 envelope도
-        `{"data": [...]}` 형태로 다르다 — `raw_items()`의 XML escape hatch로는
-        닿지 않아 별도 메서드로 둔다.
-        """
-
-        code = ensure_kac_airport(airport_code)
-        params = {
-            "page": page,
-            "perPage": per_page,
-            "returnType": "JSON",
-            "cond[FLIGHT_DATE::EQ]": flight_date,
-            "cond[AIRPORT::EQ]": code,
-        }
-        data = self._http.get_json(FLIGHT_STATUS_DETAIL_URL, params)
-        items = data.get("data", [])
-        return [item for item in items if isinstance(item, dict)]
-
-
-class AsyncKacClient:
-    """Async KAC API adapter backed by httpx.AsyncClient."""
-
-    def __init__(
-        self,
-        service_key: str | None,
-        *,
-        session: AsyncSessionLike | None = None,
-        timeout: float = 10.0,
-        retries: int = 3,
-    ) -> None:
-        self._http = AsyncHttpClient(
-            service_key,
-            session=session,
-            timeout=timeout,
-            retries=retries,
-        )
-
-    async def __aenter__(self) -> AsyncKacClient:
+    async def __aenter__(self) -> KacClient:
         return self
 
     async def __aexit__(self, *_: object) -> None:
@@ -559,7 +287,7 @@ class AsyncKacClient:
         operation: str,
         params: Mapping[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        """Return normalized raw XML items from a KAC REST service operation."""
+        """한국공항공사 REST 서비스의 XML 원시 항목을 정규화해 반환한다."""
 
         _validate_path_part(service)
         _validate_path_part(operation)
@@ -577,10 +305,10 @@ class AsyncKacClient:
         page: int = 1,
         per_page: int = 1000,
     ) -> list[dict[str, Any]]:
-        """Return raw items from KAC's ODCloud detailed flight status endpoint
-        (FlightStatusListDTL). Unlike KAC's other services, this hits
-        `api.odcloud.kr` (not `openapi.airport.co.kr`) with a `{"data": [...]}`
-        envelope, so it can't reuse `raw_items()`'s XML escape hatch.
+        """한국공항공사 ODCloud 상세 운항정보의 원시 항목을 반환한다.
+
+        FlightStatusListDTL은 api.odcloud.kr에서 {"data": [...]} 형태의
+        JSON을 반환하므로 XML을 처리하는 raw_items()와 별도로 요청한다.
         """
 
         code = ensure_kac_airport(airport_code)

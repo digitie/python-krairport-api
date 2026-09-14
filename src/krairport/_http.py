@@ -1,16 +1,20 @@
-"""HTTP transport helpers shared by provider clients."""
+"""공급자가 공유하는 비동기 HTTP 전송 도우미."""
 
 from __future__ import annotations
 
 import inspect
 from collections.abc import Mapping
 from typing import Any, Protocol, cast
+from urllib.parse import quote
 
 import httpx
 
+from krairport._httpx import send_after_token
+from krairport._ratelimit import AsyncTokenBucket
 from krairport._xml import parse_xml, response_header
 from krairport.exceptions import (
     KrairportAuthError,
+    KrairportError,
     KrairportNetworkError,
     KrairportParseError,
     KrairportRateLimitError,
@@ -26,19 +30,19 @@ class ResponseLike(Protocol):
     def json(self) -> Any: ...
 
 
+
+
 class SessionLike(Protocol):
-    def get(self, url: str, *, params: Mapping[str, Any], timeout: float) -> ResponseLike: ...
-
-
-class AsyncSessionLike(Protocol):
     async def get(self, url: str, *, params: Mapping[str, Any], timeout: float) -> ResponseLike: ...
 
 
 TRANSIENT_STATUSES = {429, 500, 502, 503, 504}
 
 
+
+
 class HttpClient:
-    """Synchronous httpx-backed client used by the public sync facade."""
+    """공급자가 사용하는 비동기 HTTP 클라이언트."""
 
     def __init__(
         self,
@@ -47,78 +51,23 @@ class HttpClient:
         session: SessionLike | None = None,
         timeout: float = 10.0,
         retries: int = 3,
+        max_rps: float = 5.0,
+        rate_limiter: AsyncTokenBucket | None = None,
     ) -> None:
+        self.rate_limiter = rate_limiter if rate_limiter is not None else AsyncTokenBucket(max_rps)
+        if session is not None and not inspect.iscoroutinefunction(session.get):
+            raise TypeError("session.get must be async")
+        self._owns_session = session is None
+        self._closed = False
         self._service_key = _clean_service_key(service_key)
         self._session = cast(
             SessionLike,
-            session or httpx.Client(follow_redirects=True),
+            session if session is not None else httpx.AsyncClient(follow_redirects=True),
         )
         self._timeout = timeout
         self._retries = retries
 
-    def __enter__(self) -> HttpClient:
-        return self
-
-    def __exit__(self, *_: object) -> None:
-        self.close()
-
-    def close(self) -> None:
-        close = getattr(self._session, "close", None)
-        if callable(close):
-            close()
-
-    def get_json(self, url: str, params: Mapping[str, Any]) -> dict[str, Any]:
-        response = self._request(url, params)
-        return _response_json(response)
-
-    def get_xml(self, url: str, params: Mapping[str, Any]) -> dict[str, Any]:
-        response = self._request(url, params)
-        return _response_xml(response)
-
-    def _request(self, url: str, params: Mapping[str, Any]) -> ResponseLike:
-        request_params = _request_params(self._service_key, params)
-        last_error: httpx.TransportError | None = None
-        for attempt in range(self._retries + 1):
-            try:
-                response = self._session.get(
-                    url,
-                    params=request_params,
-                    timeout=self._timeout,
-                )
-            except httpx.TransportError as exc:
-                last_error = exc
-                if attempt < self._retries:
-                    continue
-                raise KrairportNetworkError(str(exc)) from exc
-
-            if response.status_code in TRANSIENT_STATUSES and attempt < self._retries:
-                continue
-            _raise_for_status(response)
-            return response
-
-        raise KrairportNetworkError(str(last_error) if last_error else "request failed")
-
-
-class AsyncHttpClient:
-    """Asynchronous httpx-backed client used by async provider facades."""
-
-    def __init__(
-        self,
-        service_key: str | None,
-        *,
-        session: AsyncSessionLike | None = None,
-        timeout: float = 10.0,
-        retries: int = 3,
-    ) -> None:
-        self._service_key = _clean_service_key(service_key)
-        self._session = cast(
-            AsyncSessionLike,
-            session or httpx.AsyncClient(follow_redirects=True),
-        )
-        self._timeout = timeout
-        self._retries = retries
-
-    async def __aenter__(self) -> AsyncHttpClient:
+    async def __aenter__(self) -> HttpClient:
         return self
 
     async def __aexit__(self, *_: object) -> None:
@@ -126,34 +75,48 @@ class AsyncHttpClient:
 
     async def aclose(self) -> None:
         close = getattr(self._session, "aclose", None)
-        if callable(close):
-            result = close()
-            if _is_awaitable(result):
-                await result
+        if self._owns_session and callable(close):
+            await close()
+        self._closed = True
 
     async def get_json(self, url: str, params: Mapping[str, Any]) -> dict[str, Any]:
-        response = await self._request(url, params)
-        return _response_json(response)
+        try:
+            response = await self._request(url, params)
+            return _response_json(response)
+        except KrairportError as exc:
+            exc.args = (_redact_key(str(exc), self._service_key),)
+            raise exc from None
 
     async def get_xml(self, url: str, params: Mapping[str, Any]) -> dict[str, Any]:
-        response = await self._request(url, params)
-        return _response_xml(response)
+        try:
+            response = await self._request(url, params)
+            return _response_xml(response)
+        except KrairportError as exc:
+            exc.args = (_redact_key(str(exc), self._service_key),)
+            raise exc from None
 
     async def _request(self, url: str, params: Mapping[str, Any]) -> ResponseLike:
+        if self._closed:
+            raise RuntimeError("KrairportClient is closed")
         request_params = _request_params(self._service_key, params)
-        last_error: httpx.TransportError | None = None
+        last_error: httpx.HTTPError | None = None
         for attempt in range(self._retries + 1):
+            await self.rate_limiter.acquire()
             try:
-                response = await self._session.get(
-                    url,
-                    params=request_params,
-                    timeout=self._timeout,
-                )
-            except httpx.TransportError as exc:
+                if isinstance(self._session, httpx.AsyncClient):
+                    request = self._session.build_request(
+                        "GET", url, params=request_params, timeout=self._timeout
+                    )
+                    response = await send_after_token(self._session, request, self.rate_limiter)
+                else:
+                    response = await self._session.get(
+                        url, params=request_params, timeout=self._timeout
+                    )
+            except httpx.HTTPError as exc:
                 last_error = exc
                 if attempt < self._retries:
                     continue
-                raise KrairportNetworkError(str(exc)) from exc
+                raise KrairportNetworkError(_redact_key(str(exc), self._service_key)) from None
 
             if response.status_code in TRANSIENT_STATUSES and attempt < self._retries:
                 continue
@@ -163,8 +126,12 @@ class AsyncHttpClient:
         raise KrairportNetworkError(str(last_error) if last_error else "request failed")
 
 
-def _is_awaitable(value: object) -> bool:
-    return inspect.isawaitable(value)
+
+
+def _redact_key(text: str, key: str | None) -> str:
+    if not key:
+        return text
+    return text.replace(key, "<REDACTED>").replace(quote(key, safe=""), "<REDACTED>")
 
 
 def _request_params(service_key: str | None, params: Mapping[str, Any]) -> dict[str, Any]:

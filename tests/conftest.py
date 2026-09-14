@@ -40,7 +40,7 @@ class FakeSession:
         self._responses = list(responses)
         self.calls: list[RecordedCall] = []
 
-    def get(self, url: str, *, params: Mapping[str, Any], timeout: float) -> FakeResponse:
+    async def get(self, url: str, *, params: Mapping[str, Any], timeout: float) -> FakeResponse:
         self.calls.append(RecordedCall(url=url, params=dict(params), timeout=timeout))
         if not self._responses:
             raise AssertionError("FakeSession has no response left")

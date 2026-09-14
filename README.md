@@ -3,16 +3,16 @@
 ## Debug UI와 fixture replay
 
 `krairport`는 디버그 UI가 테스트 fixture를 만들 수 있도록 `DebugRun`과
-`KrairportClient.debug()`를 제공합니다. 라이브러리 자체는 Streamlit에 의존하지 않고,
+`await client.debug()`를 제공합니다. 라이브러리 자체는 Streamlit에 의존하지 않고,
 `tools/streamlit_debug_ui`의 별도 UI 패키지가 설치된 `krairport`를 import해서 실행합니다.
 
 ```python
 from krairport import KrairportClient
 
-client = KrairportClient.from_env()
-run = client.debug_departures(airport_code="GMP", searchday="20260430")
-print(run.response["body"])
-print(run.processed)
+async with KrairportClient.from_env() as client:
+    run = (await client.debug_departures(airport_code="GMP", searchday="20260430"))
+    print(run.response["body"])
+    print(run.processed)
 ```
 
 저장된 fixture는 `tests/fixtures/{function}/{case}.json`에 두며,
@@ -29,37 +29,26 @@ for item in api_catalog("departures"):
     print(item.provider, item.dataset_name, item.service_key_url)
 ```
 
-## Async/httpx client shape
+## 비동기 전용 클라이언트와 TPS
 
-The runtime transport is httpx-based. The synchronous facade remains compatible
-with existing callers, and the async facade follows the `python-krheritage-api`
-style:
-
-```python
-from krairport import AsyncKrairportClient, KrairportClient
-
-with KrairportClient.from_env() as client:
-    rows = client.departures(airport_code="GMP", num_of_rows=10)
-
-async with AsyncKrairportClient.from_env() as client:
-    rows = await client.world_weather(direction="arrival", airport_code="ICN")
-```
-
-For `python-krtour-map` integration, public provider models keep `raw`, expose
-Pydantic `model_dump(mode="json")`, and the client exposes `iter_pages(...)`
-with the common `page_no` / `num_of_rows` contract:
+`KrairportClient`, `KacClient`, `IiacClient`는 비동기 전용이다. 조회·디버그는 await,
+페이지 순회는 async for를 사용한다. 로컬 공항 메타데이터·좌표 helper는 일반 함수다.
+기존 Async 이름과 aio/sync facade를 제거했다. 아래 예제는 async 함수 안에서 실행한다.
 
 ```python
-client = KrairportClient.from_env()
-for page in client.iter_pages(
-    client.world_weather,
-    direction="arrival",
-    airport_code="ICN",
-    num_of_rows=100,
-    max_pages=2,
-):
-    print(page.page, len(page.items))
+from krairport import KrairportClient
+
+async with KrairportClient.from_env(max_rps=5) as client:
+    rows = await client.departures(airport_code="GMP", num_of_rows=10)
+    async for page in client.iter_pages(
+        client.world_weather, direction="arrival", airport_code="ICN", max_pages=2
+    ):
+        print(page.page, len(page.items))
 ```
+
+KAC·IIAC를 합한 예산을 사용하며 여러 클라이언트에는 같은 AsyncTokenBucket을 주입할
+수 있다. [docs/async-tps.md](docs/async-tps.md)에 용량·취소·redirect 범위를 설명한다.
+모델의 raw, model_dump(mode="json"), page_no/num_of_rows 계약은 유지한다.
 
 한국공항공사(KAC)와 인천국제공항공사(IIAC) OpenAPI를 하나의 Python 인터페이스로 묶기 위한 공항 데이터 라이브러리 설계 문서입니다.
 
@@ -122,35 +111,35 @@ pip install -e ".[dev]"
 ```python
 from krairport import Airport, Coordinate, Direction, KrairportClient
 
-airport = KrairportClient.from_env()
+async with KrairportClient.from_env() as airport:
 
-# 1) 김포공항 출발편 조회 -> KAC로 자동 라우팅
-for flight in airport.departures(airport_code=Airport.GMP, searchday="20260430", from_time="0600", to_time="1200"):
-    print(flight.flight_id, flight.status_korean, flight.scheduled_at, flight.provider)
+    # 1) 김포공항 출발편 조회 -> KAC로 자동 라우팅
+    for flight in (await airport.departures(airport_code=Airport.GMP, searchday="20260430", from_time="0600", to_time="1200")):
+        print(flight.flight_id, flight.status_korean, flight.scheduled_at, flight.provider)
 
-# 2) 인천공항 도착편 조회 -> IIAC로 자동 라우팅
-for flight in airport.arrivals(airport_code="ICN", searchday="20260430", from_time="0600", to_time="1200"):
-    print(flight.flight_id, flight.arrival_airport_code, flight.estimated_at, flight.terminal)
+    # 2) 인천공항 도착편 조회 -> IIAC로 자동 라우팅
+    for flight in (await airport.arrivals(airport_code="ICN", searchday="20260430", from_time="0600", to_time="1200")):
+        print(flight.flight_id, flight.arrival_airport_code, flight.estimated_at, flight.terminal)
 
-# 3) 인천공항 입국장 혼잡도
-for row in airport.arrival_congestion(terminal="T1"):
-    print(row.entry_gate, row.flight_id, row.korean_count, row.foreign_count)
+    # 3) 인천공항 입국장 혼잡도
+    for row in (await airport.arrival_congestion(terminal="T1")):
+        print(row.entry_gate, row.flight_id, row.korean_count, row.foreign_count)
 
-# 4) 김포공항 주차요금
-for fee in airport.parking_fees(airport_code="GMP"):
-    print(fee.airport_code, fee.small_basic_minutes, fee.small_basic_fee)
+    # 4) 김포공항 주차요금
+    for fee in (await airport.parking_fees(airport_code="GMP")):
+        print(fee.airport_code, fee.small_basic_minutes, fee.small_basic_fee)
 
-# 5) 김포/제주 등 KAC 실시간 항공기 등록번호/기종
-for plane in airport.aircraft_assignments(airport_code="CJU", sch_st_time="202604300600", sch_ed_time="202604301200"):
-    print(plane.flight_id, plane.aircraft_registration, plane.aircraft_type)
+    # 5) 김포/제주 등 KAC 실시간 항공기 등록번호/기종
+    for plane in (await airport.aircraft_assignments(airport_code="CJU", sch_st_time="202604300600", sch_ed_time="202604301200")):
+        print(plane.flight_id, plane.aircraft_registration, plane.aircraft_type)
 
-# 6) enum/type/좌표 메타데이터 활용
-icn = airport.airport_metadata(Airport.ICN)
-print(icn.coordinate.as_geojson_position())
-print(airport.nearest_airport(Coordinate.from_values("37.56 N", "126.79 E")).code)
+    # 6) enum/type/좌표 메타데이터 활용
+    icn = airport.airport_metadata(Airport.ICN)
+    print(icn.coordinate.as_geojson_position())
+    print(airport.nearest_airport(Coordinate.from_values("37.56 N", "126.79 E")).code)
 
-# direction도 문자열과 enum을 모두 받습니다.
-airport.flight_schedules(airport_code=Airport.ICN, direction=Direction.ARRIVAL)
+    # direction도 문자열과 enum을 모두 받습니다.
+    (await airport.flight_schedules(airport_code=Airport.ICN, direction=Direction.ARRIVAL))
 ```
 
 ---

@@ -15,7 +15,7 @@ tests/test_generated_fixtures.py
 ```
 
 Streamlit UI는 별도 패키지에서 실행합니다. 라이브러리는 Streamlit에 의존하지 않고,
-UI는 설치된 `krairport` 패키지를 import해서 `KrairportClient.debug()`를 호출합니다.
+UI는 설치된 `krairport` 패키지를 import해서 `await client.debug()`를 호출합니다.
 
 ## DebugRun
 
@@ -25,13 +25,13 @@ UI는 설치된 `krairport` 패키지를 import해서 `KrairportClient.debug()`�
 ```python
 from krairport import KrairportClient
 
-client = KrairportClient.from_env()
-run = client.debug_departures(
-    airport_code="GMP",
-    searchday="20260430",
-    from_time="0600",
-    to_time="1200",
-)
+async with KrairportClient.from_env() as client:
+    run = (await client.debug_departures(
+        airport_code="GMP",
+        searchday="20260430",
+        from_time="0600",
+        to_time="1200",
+    ))
 ```
 
 `DebugRun` 필드:

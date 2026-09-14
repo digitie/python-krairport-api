@@ -3,7 +3,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from krairport._http import AsyncHttpClient, HttpClient
+from krairport._http import HttpClient
 from krairport.exceptions import (
     KrairportAuthError,
     KrairportNetworkError,
@@ -16,7 +16,7 @@ from tests.conftest import AsyncFakeSession, FakeResponse, FakeSession
 
 
 class TimeoutSession:
-    def get(self, url, *, params, timeout):  # type: ignore[no-untyped-def]
+    async def get(self, url, *, params, timeout):  # type: ignore[no-untyped-def]
         raise httpx.TimeoutException("timed out")
 
 
@@ -25,35 +25,35 @@ class AsyncTimeoutSession:
         raise httpx.TimeoutException("timed out")
 
 
-def test_missing_service_key_raises_auth_error() -> None:
+async def test_missing_service_key_raises_auth_error() -> None:
     client = HttpClient(None, session=FakeSession([]))
 
     with pytest.raises(KrairportAuthError):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
-def test_service_key_is_stripped_before_request() -> None:
+async def test_service_key_is_stripped_before_request() -> None:
     session = FakeSession([FakeResponse(json_data={"response": {"header": {"resultCode": "00"}}})])
     client = HttpClient("  KEY\n", session=session, retries=0)
 
-    client.get_json("https://example.test", {})
+    (await client.get_json("https://example.test", {}))
 
     assert session.calls[0].params["serviceKey"] == "KEY"
 
 
-def test_blank_service_key_raises_auth_error() -> None:
+async def test_blank_service_key_raises_auth_error() -> None:
     client = HttpClient(" \n\t ", session=FakeSession([]))
 
     with pytest.raises(KrairportAuthError):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
-def test_http_status_mapping() -> None:
+async def test_http_status_mapping() -> None:
     session = FakeSession([FakeResponse(status_code=429, text="too many")])
     client = HttpClient("KEY", session=session, retries=0)
 
     with pytest.raises(KrairportRateLimitError):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
 @pytest.mark.parametrize(
@@ -64,60 +64,60 @@ def test_http_status_mapping() -> None:
         (500, KrairportServerError),
     ],
 )
-def test_more_http_status_mapping(status, expected) -> None:  # type: ignore[no-untyped-def]
+async def test_more_http_status_mapping(status, expected) -> None:  # type: ignore[no-untyped-def]
     session = FakeSession([FakeResponse(status_code=status, text="error")])
     client = HttpClient("KEY", session=session, retries=0)
 
     with pytest.raises(expected):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
-def test_network_timeout_maps_to_network_error() -> None:
+async def test_network_timeout_maps_to_network_error() -> None:
     client = HttpClient("KEY", session=TimeoutSession(), retries=0)
 
     with pytest.raises(KrairportNetworkError):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
-def test_provider_result_code_auth_mapping() -> None:
+async def test_provider_result_code_auth_mapping() -> None:
     payload = {"response": {"header": {"resultCode": "30", "resultMsg": "SERVICE KEY ERROR"}}}
     client = HttpClient("KEY", session=FakeSession([FakeResponse(json_data=payload)]), retries=0)
 
     with pytest.raises(KrairportAuthError):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
-def test_provider_result_code_request_mapping() -> None:
+async def test_provider_result_code_request_mapping() -> None:
     payload = {"response": {"header": {"resultCode": "03", "resultMsg": "NO DATA"}}}
     client = HttpClient("KEY", session=FakeSession([FakeResponse(json_data=payload)]), retries=0)
 
     with pytest.raises(KrairportRequestError):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
-def test_provider_result_code_server_mapping() -> None:
+async def test_provider_result_code_server_mapping() -> None:
     payload = {"response": {"header": {"resultCode": "99", "resultMsg": "SERVER ERROR"}}}
     client = HttpClient("KEY", session=FakeSession([FakeResponse(json_data=payload)]), retries=0)
 
     with pytest.raises(KrairportServerError):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
-def test_json_parse_failure_raises_parse_error() -> None:
+async def test_json_parse_failure_raises_parse_error() -> None:
     client = HttpClient("KEY", session=FakeSession([FakeResponse(text="not json")]), retries=0)
 
     with pytest.raises(KrairportParseError):
-        client.get_json("https://example.test", {})
+        (await client.get_json("https://example.test", {}))
 
 
-def test_xml_response_success(load_fixture) -> None:  # type: ignore[no-untyped-def]
+async def test_xml_response_success(load_fixture) -> None:  # type: ignore[no-untyped-def]
     client = HttpClient(
         "KEY",
         session=FakeSession([FakeResponse(text=load_fixture("kac_arrivals_single.xml"))]),
         retries=0,
     )
 
-    data = client.get_xml("https://example.test", {})
+    data = (await client.get_xml("https://example.test", {}))
 
     assert data["response"]["header"]["resultCode"] == "00"
 
@@ -126,7 +126,7 @@ def test_xml_response_success(load_fixture) -> None:  # type: ignore[no-untyped-
 async def test_async_http_client_json_success() -> None:
     payload = {"response": {"header": {"resultCode": "00"}, "body": {"items": []}}}
     session = AsyncFakeSession([FakeResponse(json_data=payload)])
-    client = AsyncHttpClient(" KEY ", session=session, retries=0)
+    client = HttpClient(" KEY ", session=session, retries=0)
 
     data = await client.get_json("https://example.test", {"foo": None})
 
@@ -136,7 +136,7 @@ async def test_async_http_client_json_success() -> None:
 
 @pytest.mark.asyncio
 async def test_async_http_timeout_maps_to_network_error() -> None:
-    client = AsyncHttpClient("KEY", session=AsyncTimeoutSession(), retries=0)
+    client = HttpClient("KEY", session=AsyncTimeoutSession(), retries=0)
 
     with pytest.raises(KrairportNetworkError):
         await client.get_json("https://example.test", {})

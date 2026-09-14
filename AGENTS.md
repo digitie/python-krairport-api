@@ -20,6 +20,12 @@
 
 문서가 충돌하면 더 높은 우선순위의 문서를 따르고, 낮은 우선순위 문서를 같은 변경에서 갱신합니다.
 
+## 비동기와 TPS 계약
+
+네트워크 작업과 debug는 await, 페이지 순회는 async for를 사용한다. 공통
+AsyncTokenBucket은 기본 max_rps=5이며 통합 클라이언트의 KAC/IIAC가 같은 예산을 쓴다.
+동기 facade나 장기 Async 별칭을 다시 만들지 않는다. 재시도와 redirect도 과금한다.
+
 ## 프로젝트 기준
 
 - `krairport`는 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공항 OpenAPI를 통합하는 비공식 Python 클라이언트입니다.

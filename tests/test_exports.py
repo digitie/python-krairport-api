@@ -7,8 +7,9 @@ from krairport.enums import Airport, Direction, Provider
 def test_public_exports() -> None:
     assert krairport.__version__ == "0.1.0"
     assert hasattr(krairport, "Coordinate")
-    assert hasattr(krairport, "AsyncKrairportClient")
     assert hasattr(krairport, "KrairportClient")
+    assert hasattr(krairport, "AsyncTokenBucket")
+    assert not hasattr(krairport, "AsyncKrairportClient")
     assert hasattr(krairport, "KrairportConfig")
     assert hasattr(krairport, "Flight")
     assert hasattr(krairport, "to_decimal_degrees")
