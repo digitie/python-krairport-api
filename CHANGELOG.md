@@ -1,5 +1,12 @@
 # Changelog
 
+## 미배포 — KAC 운항 GW
+
+- 출도착을 공식 GW 15158625로 전환하고 `flightid`/`arrvAirportCode` 별칭을 반영했다.
+- `KacClient.flight_status()`가 페이지 누락·반복·변경·예산 소진을 오류로 구분한다.
+- `Flight`에 공항명과 노선 구분을 선택 필드로 추가했다. IIAC/주차/ODCloud raw는 그대로다.
+- 승인 상태와 새 GW live 성공은 미확인이며 운영 완료가 아니다.
+
 ## 미배포 — 비동기/TPS 전환
 
 - 통합/KAC/IIAC 클라이언트를 비동기 전용으로 통합하고 debug와 CLI/UI를 전환했다.

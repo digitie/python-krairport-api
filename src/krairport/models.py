@@ -67,6 +67,9 @@ class Flight(KrairportModel):
     terminal: str | None
     gate: str | None
     codeshare: bool | None
+    departure_airport_name: str | None = None
+    arrival_airport_name: str | None = None
+    line_type: str | None = None
     raw: RawRecord = Field(default_factory=dict, repr=False)
 
 

@@ -50,6 +50,9 @@
       "terminal": null,
       "gate": null,
       "codeshare": false,
+      "departure_airport_name": null,
+      "arrival_airport_name": null,
+      "line_type": null,
       "raw": {
         "flightId": "KE1201",
         "scheduleDateTime": "202604300600",

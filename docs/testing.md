@@ -1,5 +1,11 @@
 # 테스트 정책
 
+## KAC GW 회귀
+
+`tests/test_kac_gateway.py`는 실제 XML 파서를 거쳐 페이지 축소·메타데이터 누락·변경,
+중간 빈 페이지, 중복 항공편, 두 방향 합산 예산, 403 무재시도와 입력 검증을 확인한다.
+기본 실행은 외부 요청을 하지 않는다. 승인 거부의 skip을 live 성공으로 보고하지 않는다.
+
 ## Debug UI fixture replay
 
 디버그 UI에서 저장한 JSON fixture는 `tests/fixtures/{function}/{case}.json`에 둡니다.

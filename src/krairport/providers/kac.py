@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Any
 
 from krairport._convert import first_value, strip_or_none, to_bool_or_none, to_int_or_none
@@ -26,7 +27,7 @@ from krairport.models import (
     TaxiStatus,
 )
 
-STATUS_BASE = "http://openapi.airport.co.kr/service/rest/StatusOfFlights"
+STATUS_BASE = "https://apis.data.go.kr/B551178/flight-status"
 AIRCRAFT_BASE = "http://openapi.airport.co.kr/service/rest/FlightStatusAPLList"
 PARKING_FEE_BASE = "http://openapi.airport.co.kr/service/rest/AirportParkingFee"
 FLIGHT_SCHEDULE_BASE = "http://openapi.airport.co.kr/service/rest/FlightScheduleList"
@@ -101,7 +102,7 @@ class KacClient:
             "pageNo": page_no,
             "numOfRows": num_of_rows,
         }
-        data = await self._http.get_xml(f"{STATUS_BASE}/getDepFlightStatusList", params)
+        data = await self._http.get_xml(f"{STATUS_BASE}/depart", params)
         return [
             _build_flight(row, airport_code=code, direction=Direction.DEPARTURE)
             for row in extract_items(data)
@@ -134,11 +135,73 @@ class KacClient:
             "pageNo": page_no,
             "numOfRows": num_of_rows,
         }
-        data = await self._http.get_xml(f"{STATUS_BASE}/getArrFlightStatusList", params)
+        data = await self._http.get_xml(f"{STATUS_BASE}/arrival", params)
         return [
             _build_flight(row, airport_code=code, direction=Direction.ARRIVAL)
             for row in extract_items(data)
         ]
+
+    async def flight_status(
+        self,
+        *,
+        airport_code: str,
+        searchday: str,
+        num_of_rows: int = 100,
+        max_pages: int = 20,
+    ) -> list[Flight]:
+        """조회일의 제공 범위를 페이지 메타데이터로 끝까지 읽고, 불완전하면 실패한다.
+
+        max_pages는 출발·도착을 합한 논리 페이지 상한이다. HTTP 재시도는 별도다.
+        서버의 페이지 크기 축소를
+        수용하지만 중간 빈 페이지, 반복·변경된 범위, 예산 소진을 성공으로 숨기지 않는다.
+        """
+        code = ensure_kac_airport(airport_code)
+        if not re.fullmatch(r"[0-9]{8}", searchday):
+            raise ValueError("searchday는 YYYYMMDD 형식이어야 합니다.")
+        datetime.strptime(searchday, "%Y%m%d")
+        if type(num_of_rows) is not int or not 1 <= num_of_rows <= 1000:
+            raise ValueError("num_of_rows는 1~1000 정수여야 합니다.")
+        if type(max_pages) is not int or not 2 <= max_pages <= 100:
+            raise ValueError("max_pages는 2~100 정수여야 합니다.")
+        flights: list[Flight] = []
+        calls = 0
+        for direction, operation in [
+            (Direction.DEPARTURE, "depart"), (Direction.ARRIVAL, "arrival")
+        ]:
+            page_no = 1
+            expected_total: int | None = None
+            expected_size: int | None = None
+            identities: set[tuple[str, str, str]] = set()
+            while True:
+                if calls >= max_pages:
+                    raise KrairportParseError("KAC 출도착 페이지 예산 소진: 불완전한 결과")
+                data = await self._http.get_xml(f"{STATUS_BASE}/{operation}", {
+                    "airport_code": code, "searchday": searchday,
+                    "pageNo": page_no, "numOfRows": num_of_rows,
+                })
+                calls += 1
+                rows, total, size = _flight_page_rows(data, page_no)
+                if expected_total is not None and (
+                    total != expected_total or size != expected_size
+                ):
+                    raise KrairportParseError("KAC 출도착 페이지 범위가 조회 중 변경되었습니다.")
+                expected_total, expected_size = total, size
+                for row in rows:
+                    flight = _build_flight(row, airport_code=code, direction=direction)
+                    if not flight.flight_id or flight.scheduled_at is None:
+                        raise KrairportParseError("KAC 출도착 편명/예정시각이 없습니다.")
+                    identity = (
+                        flight.flight_unique_id or "", flight.flight_id,
+                        flight.scheduled_at.isoformat(),
+                    )
+                    if identity in identities:
+                        raise KrairportParseError("KAC 출도착 페이지에 중복 항공편이 있습니다.")
+                    identities.add(identity)
+                    flights.append(flight)
+                if page_no * size >= total:
+                    break
+                page_no += 1
+        return flights
 
     async def aircraft_assignments(
         self,
@@ -324,9 +387,41 @@ class KacClient:
         return [item for item in items if isinstance(item, dict)]
 
 
+def _flight_page_rows(
+    data: Mapping[str, Any], page_no: int,
+) -> tuple[list[dict[str, Any]], int, int]:
+    response = data.get("response")
+    if not isinstance(response, Mapping) or not isinstance(response.get("body"), Mapping):
+        raise KrairportParseError("KAC 출도착 페이지 body가 없습니다.")
+    header = response.get("header")
+    if not isinstance(header, Mapping) or str(header.get("resultCode")) not in {"00", "0"}:
+        raise KrairportParseError("KAC 출도착 성공 상태가 없습니다.")
+    body = response["body"]
+    numbers = []
+    for field in ("pageNo", "numOfRows", "totalCount"):
+        value = body.get(field)
+        if isinstance(value, bool) or not re.fullmatch(r"[0-9]{1,10}", str(value)):
+            raise KrairportParseError("KAC 출도착 페이지 메타데이터가 올바르지 않습니다.")
+        numbers.append(int(value))
+    page, size, total = numbers
+    if page != page_no or size < 1 or (total == 0 and page != 1):
+        raise KrairportParseError("KAC 출도착 페이지 범위가 올바르지 않습니다.")
+    items = body.get("items")
+    if total > 0 and not isinstance(items, Mapping):
+        raise KrairportParseError("KAC 출도착 페이지 항목이 없습니다.")
+    if not isinstance(items, Mapping) and items not in (None, ""):
+        raise KrairportParseError("KAC 출도착 페이지 항목 구조가 올바르지 않습니다.")
+    rows = extract_items(data)
+    if len(rows) != max(0, min(size, total - (page - 1) * size)):
+        raise KrairportParseError("KAC 출도착 페이지 항목 수가 맞지 않습니다.")
+    return rows, total, size
+
+
 def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direction) -> Flight:
     try:
-        flight_id = str(first_value(row, "flightId", "flight_id", "airFln", "schFln") or "")
+        flight_id = str(
+            first_value(row, "flightId", "flightid", "flight_id", "airFln", "schFln") or ""
+        )
         scheduled = parse_kst_datetime(
             first_value(
                 row,
@@ -361,8 +456,11 @@ def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direc
                 first_value(row, "depAirportCode", "dep_airport_code")
             ),
             arrival_airport_code=strip_or_none(
-                first_value(row, "arrAirportCode", "arr_airport_code")
+                first_value(row, "arrAirportCode", "arrvAirportCode", "arr_airport_code")
             ),
+            departure_airport_name=strip_or_none(first_value(row, "depAirport")),
+            arrival_airport_name=strip_or_none(first_value(row, "arrAirport", "arrvAirport")),
+            line_type=strip_or_none(first_value(row, "line")),
             scheduled_at=scheduled,
             estimated_at=estimated,
             status_korean=strip_or_none(first_value(row, "rmkKor", "remarkKor", "statusKor")),

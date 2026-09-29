@@ -1,5 +1,12 @@
 # krairport API 명세
 
+## 2026-09-29 KAC GW 계약
+
+KAC 출도착은 `https://apis.data.go.kr/B551178/flight-status/depart` 및 `/arrival`이다.
+`KacClient.flight_status()`의 페이지 정합성/호출 예산과 새 선택 모델 필드는
+[GW 계약](docs/kac-flight-gateway.md)을 따른다. 기존 ODCloud raw는 그대로이며
+이를 GW로 조용히 대체하지 않는다. 아래 과거 `StatusOfFlights` 주소는 사용하지 않는다.
+
 ## DebugRun / fixture 생성 API
 
 디버그 UI와 fixture replay를 위해 `src/krairport/debug.py`를 public 보조 API로 둡니다.
@@ -43,8 +50,8 @@ replay 테스트를 수행합니다. 자세한 포맷은 `docs/debug-fixtures.md
 
 | Domain | Provider | Operation | 비고 |
 |---|---|---|---|
-| 항공편 출발 | KAC | `getDepFlightStatusList` | 전국공항(인천 제외) |
-| 항공편 도착 | KAC | `getArrFlightStatusList` | 전국공항(인천 제외) |
+| 항공편 출발 | KAC | `flight-status/depart` | 전국공항(인천 제외) |
+| 항공편 도착 | KAC | `flight-status/arrival` | 전국공항(인천 제외) |
 | 항공기 기종/등록번호 | KAC | `getFlightStatusAPLList` | KAC 운항조회 보강용 |
 | 주차요금 | KAC | `parkingfee` | XML-only |
 | 여객편 당일 도착 | IIAC | `getPassengerArrivalsOdp` | 당일 운항 |

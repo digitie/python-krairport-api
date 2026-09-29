@@ -41,7 +41,7 @@ async def test_unified_client_routes_kac_departures(load_fixture) -> None:  # ty
         to_time="1200",
     )
 
-    assert session.calls[0].url.endswith("/getDepFlightStatusList")
+    assert session.calls[0].url == "https://apis.data.go.kr/B551178/flight-status/depart"
     assert session.calls[0].params["airport_code"] == "GMP"
     assert rows[0].provider == "kac"
 

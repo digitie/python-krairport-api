@@ -1,5 +1,24 @@
 # python-krairport-api
 
+## KAC 출도착 GW 전환 (2026-09-29)
+
+KAC `departures()`/`arrivals()`는 [15158625](https://www.data.go.kr/data/15158625/openapi.do)의
+`B551178/flight-status/depart`, `/arrival`을 사용한다. IIAC와 주차 API는 바뀌지 않는다.
+기존 ODCloud raw 메서드는 구 계약 그대로이며 GW를 대신 호출하지 않는다.
+
+```python
+async with KrairportClient.from_env(retries=0) as client:
+    flights = await client.kac.flight_status(
+        airport_code="GMP", searchday="20260929", num_of_rows=100, max_pages=20
+    )
+```
+
+`flight_status()`는 출발·도착 전체 페이지의 정합성을 확인한 뒤 `list[Flight]`를 반환한다.
+메타데이터 누락·변경, 반복/빈 중간 페이지, 상한 도달은 예외다. 하루의 모든 운항이나
+동일 시점의 스냅샷을 보장한다는 뜻은 아니다. [범위와 검증 정책](docs/kac-flight-gateway.md).
+`Flight`에 공항명과 `line_type` 선택 필드를 추가했다. 새 서비스 승인 및 실제 성공 응답은
+아직 확인되지 않았으므로 운영 정상화 완료로 간주하지 않는다.
+
 ## Debug UI와 fixture replay
 
 `krairport`는 디버그 UI가 테스트 fixture를 만들 수 있도록 `DebugRun`과
@@ -150,8 +169,8 @@ async with KrairportClient.from_env() as airport:
 
 | Public method | Provider | Source endpoint | 반환 |
 |---|---|---|---|
-| `KrairportClient.departures(...)` | KAC 또는 IIAC | KAC `getDepFlightStatusList`, IIAC `getPassengerDeparturesDeOdp`/`getPassengerDeparturesOdp` | `list[Flight]` |
-| `KrairportClient.arrivals(...)` | KAC 또는 IIAC | KAC `getArrFlightStatusList`, IIAC `getPassengerArrivalsDeOdp`/`getPassengerArrivalsOdp` | `list[Flight]` |
+| `KrairportClient.departures(...)` | KAC 또는 IIAC | KAC `flight-status/depart`, IIAC `getPassengerDeparturesDeOdp`/`getPassengerDeparturesOdp` | `list[Flight]` |
+| `KrairportClient.arrivals(...)` | KAC 또는 IIAC | KAC `flight-status/arrival`, IIAC `getPassengerArrivalsDeOdp`/`getPassengerArrivalsOdp` | `list[Flight]` |
 | `KrairportClient.aircraft_assignments(...)` | KAC | `getFlightStatusAPLList` | `list[AircraftAssignment]` |
 | `KrairportClient.parking_fees(...)` | KAC | `parkingfee` | `list[ParkingFee]` |
 | `KrairportClient.parking_status(...)` | KAC 또는 IIAC | KAC `airportParkingCongestionRT`, IIAC `getTrackingParking` | `list[ParkingAreaStatus]` |
