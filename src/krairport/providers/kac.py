@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from krairport._convert import first_value, strip_or_none, to_bool_or_none, to_int_or_none
 from krairport._http import HttpClient, SessionLike
@@ -103,6 +103,7 @@ class KacClient:
             "numOfRows": num_of_rows,
         }
         data = await self._http.get_xml(f"{STATUS_BASE}/depart", params)
+        _flight_response_body(data)
         return [
             _build_flight(row, airport_code=code, direction=Direction.DEPARTURE)
             for row in extract_items(data)
@@ -136,6 +137,7 @@ class KacClient:
             "numOfRows": num_of_rows,
         }
         data = await self._http.get_xml(f"{STATUS_BASE}/arrival", params)
+        _flight_response_body(data)
         return [
             _build_flight(row, airport_code=code, direction=Direction.ARRIVAL)
             for row in extract_items(data)
@@ -190,10 +192,8 @@ class KacClient:
                     flight = _build_flight(row, airport_code=code, direction=direction)
                     if not flight.flight_id or flight.scheduled_at is None:
                         raise KrairportParseError("KAC 출도착 편명/예정시각이 없습니다.")
-                    identity = (
-                        flight.flight_unique_id or "", flight.flight_id,
-                        flight.scheduled_at.isoformat(),
-                    )
+                    identity = (("fid", flight.flight_unique_id, "") if flight.flight_unique_id
+                        else ("schedule", flight.flight_id, flight.scheduled_at.isoformat()))
                     if identity in identities:
                         raise KrairportParseError("KAC 출도착 페이지에 중복 항공편이 있습니다.")
                     identities.add(identity)
@@ -387,22 +387,26 @@ class KacClient:
         return [item for item in items if isinstance(item, dict)]
 
 
-def _flight_page_rows(
-    data: Mapping[str, Any], page_no: int,
-) -> tuple[list[dict[str, Any]], int, int]:
+def _flight_response_body(data: Mapping[str, Any]) -> Mapping[str, Any]:
     response = data.get("response")
     if not isinstance(response, Mapping) or not isinstance(response.get("body"), Mapping):
         raise KrairportParseError("KAC 출도착 페이지 body가 없습니다.")
     header = response.get("header")
     if not isinstance(header, Mapping) or str(header.get("resultCode")) not in {"00", "0"}:
         raise KrairportParseError("KAC 출도착 성공 상태가 없습니다.")
-    body = response["body"]
+    return cast(Mapping[str, Any], response["body"])
+
+
+def _flight_page_rows(
+    data: Mapping[str, Any], page_no: int,
+) -> tuple[list[dict[str, Any]], int, int]:
+    body = _flight_response_body(data)
     numbers = []
     for field in ("pageNo", "numOfRows", "totalCount"):
         value = body.get(field)
         if isinstance(value, bool) or not re.fullmatch(r"[0-9]{1,10}", str(value)):
             raise KrairportParseError("KAC 출도착 페이지 메타데이터가 올바르지 않습니다.")
-        numbers.append(int(value))
+        numbers.append(int(str(value)))
     page, size, total = numbers
     if page != page_no or size < 1 or (total == 0 and page != 1):
         raise KrairportParseError("KAC 출도착 페이지 범위가 올바르지 않습니다.")
@@ -429,7 +433,7 @@ def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direc
                 "scheduledatetime",
                 "scheduleDatetime",
                 "scheduletime",
-            )
+            ), require_time=True,
         )
         estimated = parse_kst_datetime(
             first_value(
@@ -438,7 +442,7 @@ def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direc
                 "estimateddatetime",
                 "estimatedDatetime",
                 "estimatedtime",
-            )
+            ), require_time=True,
         )
         return Flight(
             provider=Provider.KAC,
@@ -470,8 +474,8 @@ def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direc
             codeshare=to_bool_or_none(first_value(row, "codeshare", "cdsrYn")),
             raw=dict(row),
         )
-    except (TypeError, ValueError) as exc:
-        raise KrairportParseError(f"failed to parse KAC flight record: {exc}") from exc
+    except (TypeError, ValueError):
+        raise KrairportParseError("KAC 항공편 응답을 해석할 수 없습니다.") from None
 
 
 def _build_aircraft_assignment(

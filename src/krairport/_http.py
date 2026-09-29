@@ -196,6 +196,15 @@ def _raise_for_data_result(data: Mapping[str, Any]) -> None:
 
 
 def _find_header(data: Mapping[str, Any]) -> Mapping[str, Any]:
+    if "OpenAPI_ServiceResponse" in data:
+        envelope = data["OpenAPI_ServiceResponse"]
+        header = envelope.get("cmmMsgHeader") if isinstance(envelope, Mapping) else None
+        if not isinstance(header, Mapping) or not header.get("returnReasonCode"):
+            raise KrairportParseError("공공데이터 GW 오류 헤더가 올바르지 않습니다.")
+        return {
+            "resultCode": header["returnReasonCode"],
+            "resultMsg": header.get("returnAuthMsg", ""),
+        }
     if "response" in data and isinstance(data["response"], Mapping):
         response = data["response"]
         header = response.get("header")

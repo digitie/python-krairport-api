@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from krairport import KrairportClient
-from krairport.exceptions import KrairportAuthError, KrairportParseError
+from krairport.exceptions import KrairportAuthError, KrairportParseError, KrairportRateLimitError
 from tests.conftest import FakeResponse, FakeSession
 
 
@@ -84,6 +84,60 @@ async def test_gateway_reads_clamped_pages_and_both_directions() -> None:
     assert [c.params["pageNo"] for c in session.calls] == [1, 2, 1]
     assert all(c.params["numOfRows"] == 100 for c in session.calls)
     assert [c.url.rsplit("/", 1)[1] for c in session.calls] == ["depart", "depart", "arrival"]
+
+
+@pytest.mark.parametrize("method", ["departures", "arrivals", "flight_status"])
+@pytest.mark.parametrize(
+    "code,error", [("22", KrairportRateLimitError), ("30", KrairportAuthError)]
+)
+async def test_gateway_error_envelope_is_never_an_empty_success(method, code, error):
+    session = FakeSession([FakeResponse(text=(
+        "<OpenAPI_ServiceResponse><cmmMsgHeader>"
+        f"<returnReasonCode>{code}</returnReasonCode>"
+        "<returnAuthMsg>fixture-error</returnAuthMsg>"
+        "</cmmMsgHeader></OpenAPI_ServiceResponse>"
+    ))])
+    async with KrairportClient(kac_service_key="test-key", session=session, retries=0) as client:
+        with pytest.raises(error):
+            await getattr(client.kac, method)(airport_code="GMP", searchday="20260929")
+    assert len(session.calls) == 1
+
+
+async def test_gateway_rejects_repeated_fid_even_when_schedule_changes():
+    first = _page(total="2")
+    second = _page(page="2", total="2")
+    second["response"]["body"]["items"]["item"]["scheduledatetime"] = "202609291000"
+    session = GatewaySession([first, second, _page(flight="KE002")])
+    async with KrairportClient(kac_service_key="test-key", session=session, retries=0) as client:
+        with pytest.raises(KrairportParseError):
+            await client.kac.flight_status(airport_code="GMP", searchday="20260929")
+    assert len(session.calls) == 2
+
+
+@pytest.mark.parametrize("method", ["departures", "arrivals", "flight_status"])
+@pytest.mark.parametrize("value", ["20260929", "private-fixture-value"])
+async def test_gateway_rejects_missing_time_without_leaking_raw_values(method, value):
+    import traceback
+    page = _page()
+    page["response"]["body"]["items"]["item"]["scheduledatetime"] = value
+    session = GatewaySession([page, _page(flight="KE002")])
+    query_day = "20260929"
+    async with KrairportClient(kac_service_key="test-key", session=session, retries=0) as client:
+        with pytest.raises(KrairportParseError) as caught:
+            await getattr(client.kac, method)(airport_code="GMP", searchday=query_day)
+    assert value not in str(caught.value)
+    assert value not in "".join(traceback.format_exception(caught.value))
+    assert caught.value.__cause__ is None
+
+
+@pytest.mark.parametrize("method", ["departures", "arrivals"])
+async def test_gateway_list_rejects_missing_success_header(method):
+    page = _page()
+    page["response"].pop("header")
+    session = GatewaySession([page])
+    async with KrairportClient(kac_service_key="test-key", session=session, retries=0) as client:
+        with pytest.raises(KrairportParseError):
+            await getattr(client.kac, method)(airport_code="GMP")
 
 
 @pytest.mark.parametrize("field", ["pageNo", "numOfRows", "totalCount"])

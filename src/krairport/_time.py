@@ -16,7 +16,9 @@ except ZoneInfoNotFoundError:
     KST = timezone(timedelta(hours=9), "Asia/Seoul")
 
 
-def parse_kst_datetime(value: Any, *, base_date: str | date | None = None) -> datetime | None:
+def parse_kst_datetime(
+    value: Any, *, base_date: str | date | None = None, require_time: bool = False
+) -> datetime | None:
     """공급자 timestamp 값을 timezone 정보가 있는 KST datetime으로 파싱합니다."""
 
     if value is None:
@@ -24,6 +26,8 @@ def parse_kst_datetime(value: Any, *, base_date: str | date | None = None) -> da
     if isinstance(value, datetime):
         return value.replace(tzinfo=KST) if value.tzinfo is None else value.astimezone(KST)
     if isinstance(value, date):
+        if require_time:
+            raise ValueError("시각이 없는 날짜는 운항시각이 아닙니다.")
         return datetime.combine(value, time.min, KST)
 
     text = strip_or_none(value)
@@ -31,6 +35,8 @@ def parse_kst_datetime(value: Any, *, base_date: str | date | None = None) -> da
         return None
 
     digits = _timestamp_digits(text)
+    if require_time and len(digits) == 8:
+        raise ValueError("시각이 없는 날짜는 운항시각이 아닙니다.")
     if len(digits) in {14, 12, 8}:
         return _parse_digits(digits)
     if len(digits) in {4, 6} and base_date is not None:
