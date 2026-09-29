@@ -486,7 +486,8 @@ KrairportError
 - KAC XML `items.item` 단일 dict / list 정규화
 - IIAC JSON `items.item` 단일 dict / list 정규화
 - 과학적 표기 시간 파싱
-- `Flight` 공통 필드 정규화
+- `Flight` 공통 필드 정규화. KAC GW `masterflightid`는 선택 문자열
+  `master_flight_id`로 보존하며 없는 관계를 추정하지 않는다.
 - KAC `aircraft_assignments`의 등록번호/기종 매핑
 - IIAC `arrival_congestion`의 인원수 타입 변환
 - `passenger_forecast`의 구역별 합계 필드 변환

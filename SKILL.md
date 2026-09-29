@@ -92,6 +92,9 @@ KrairportClient.from_env(
 
 ### Flight model 핵심 필드
 
+KAC GW의 `masterflightid`는 선택 필드 `master_flight_id`로 보존한다. 시각이 같다는
+이유만으로 서로 다른 운항을 공동운항으로 추정하지 않는다.
+
 Provider별 필드명이 달라도 공개 model에는 `provider`, `airport_code`, `flight_id`, `flight_unique_id`, `direction`, `airline_name`, `airline_code`, `departure_airport_code`, `arrival_airport_code`, `scheduled_at`, `estimated_at`, `status_korean`, `status_english`, `terminal`, `gate`, `codeshare`, `raw`를 정규화해 담는다.
 
 ### 변환 정책

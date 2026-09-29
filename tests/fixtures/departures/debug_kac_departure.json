@@ -50,6 +50,7 @@
       "terminal": null,
       "gate": null,
       "codeshare": false,
+      "master_flight_id": null,
       "departure_airport_name": null,
       "arrival_airport_name": null,
       "line_type": null,

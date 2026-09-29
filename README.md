@@ -16,8 +16,8 @@ async with KrairportClient.from_env(retries=0) as client:
 `flight_status()`는 출발·도착 전체 페이지의 정합성을 확인한 뒤 `list[Flight]`를 반환한다.
 메타데이터 누락·변경, 반복/빈 중간 페이지, 상한 도달은 예외다. 하루의 모든 운항이나
 동일 시점의 스냅샷을 보장한다는 뜻은 아니다. [범위와 검증 정책](docs/kac-flight-gateway.md).
-`Flight`에 공항명과 `line_type` 선택 필드를 추가했다. 새 서비스 승인 및 실제 성공 응답은
-아직 확인되지 않았으므로 운영 정상화 완료로 간주하지 않는다.
+`Flight`에 공항명, `line_type`, 공동운항 대표 편명 `master_flight_id` 선택 필드를 추가했다.
+신규 승인 후 청주 출·도착 105건 조회를 확인했다. 소비자 운영 배포/live 검증은 별도다.
 
 ## Debug UI와 fixture replay
 

@@ -67,6 +67,7 @@ class Flight(KrairportModel):
     terminal: str | None
     gate: str | None
     codeshare: bool | None
+    master_flight_id: str | None = None
     departure_airport_name: str | None = None
     arrival_airport_name: str | None = None
     line_type: str | None = None

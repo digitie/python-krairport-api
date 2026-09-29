@@ -483,6 +483,7 @@ def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direc
             terminal=strip_or_none(first_value(row, "terminal", "terminalId", "terminalid")),
             gate=strip_or_none(first_value(row, "gate", "gatenumber", "gateNumber")),
             codeshare=to_bool_or_none(first_value(row, "codeshare", "cdsrYn")),
+            master_flight_id=strip_or_none(first_value(row, "masterflightid")),
             raw=dict(row),
         )
     except (TypeError, ValueError):

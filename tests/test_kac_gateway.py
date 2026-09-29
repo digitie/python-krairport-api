@@ -86,6 +86,7 @@ async def test_gateway_reads_clamped_pages_and_both_directions() -> None:
     assert flights[0].arrival_airport_code == flights[2].arrival_airport_code == "CJU"
     assert flights[0].line_type == "국내"
     assert flights[0].raw["masterflightid"] == "KE001"
+    assert flights[0].master_flight_id == "KE001"
     assert [c.params["pageNo"] for c in session.calls] == [1, 2, 1]
     assert all(c.params["numOfRows"] == 100 for c in session.calls)
     assert [c.url.rsplit("/", 1)[1] for c in session.calls] == ["depart", "depart", "arrival"]
