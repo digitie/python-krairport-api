@@ -6,7 +6,12 @@ from typing import Any
 import pytest
 
 from krairport import KrairportClient
-from krairport.exceptions import KrairportAuthError, KrairportParseError, KrairportRateLimitError
+from krairport.exceptions import (
+    KrairportAuthError,
+    KrairportParseError,
+    KrairportRateLimitError,
+    KrairportServerError,
+)
 from tests.conftest import FakeResponse, FakeSession
 
 
@@ -88,7 +93,9 @@ async def test_gateway_reads_clamped_pages_and_both_directions() -> None:
 
 @pytest.mark.parametrize("method", ["departures", "arrivals", "flight_status"])
 @pytest.mark.parametrize(
-    "code,error", [("22", KrairportRateLimitError), ("30", KrairportAuthError)]
+    "code,error", [("22", KrairportRateLimitError), ("30", KrairportAuthError),
+                   ("01", KrairportServerError), ("05", KrairportServerError),
+                   ("23", KrairportRateLimitError)]
 )
 async def test_gateway_error_envelope_is_never_an_empty_success(method, code, error):
     session = FakeSession([FakeResponse(text=(
@@ -134,6 +141,25 @@ async def test_gateway_rejects_missing_time_without_leaking_raw_values(method, v
 async def test_gateway_list_rejects_missing_success_header(method):
     page = _page()
     page["response"].pop("header")
+    session = GatewaySession([page])
+    async with KrairportClient(kac_service_key="test-key", session=session, retries=0) as client:
+        with pytest.raises(KrairportParseError):
+            await getattr(client.kac, method)(airport_code="GMP")
+
+
+@pytest.mark.parametrize("method", ["departures", "arrivals"])
+@pytest.mark.parametrize("fault", ["string", "missing_item", "count_mismatch", "missing_metadata"])
+async def test_gateway_list_rejects_malformed_success_body(method, fault):
+    page = _page()
+    body = page["response"]["body"]
+    if fault == "string":
+        body["items"] = "upstream-error"
+    elif fault == "missing_item":
+        body["items"] = {"unexpected": "payload"}
+    elif fault == "count_mismatch":
+        body["totalCount"] = "0"
+    else:
+        body.pop("pageNo")
     session = GatewaySession([page])
     async with KrairportClient(kac_service_key="test-key", session=session, retries=0) as client:
         with pytest.raises(KrairportParseError):

@@ -103,10 +103,9 @@ class KacClient:
             "numOfRows": num_of_rows,
         }
         data = await self._http.get_xml(f"{STATUS_BASE}/depart", params)
-        _flight_response_body(data)
         return [
             _build_flight(row, airport_code=code, direction=Direction.DEPARTURE)
-            for row in extract_items(data)
+            for row in _flight_list_rows(data, page_no)
         ]
 
     async def arrivals(
@@ -137,10 +136,9 @@ class KacClient:
             "numOfRows": num_of_rows,
         }
         data = await self._http.get_xml(f"{STATUS_BASE}/arrival", params)
-        _flight_response_body(data)
         return [
             _build_flight(row, airport_code=code, direction=Direction.ARRIVAL)
-            for row in extract_items(data)
+            for row in _flight_list_rows(data, page_no)
         ]
 
     async def flight_status(
@@ -395,6 +393,19 @@ def _flight_response_body(data: Mapping[str, Any]) -> Mapping[str, Any]:
     if not isinstance(header, Mapping) or str(header.get("resultCode")) not in {"00", "0"}:
         raise KrairportParseError("KAC 출도착 성공 상태가 없습니다.")
     return cast(Mapping[str, Any], response["body"])
+
+
+def _flight_list_rows(data: Mapping[str, Any], page_no: int) -> list[dict[str, Any]]:
+    body = _flight_response_body(data)
+    if any(field in body for field in ("pageNo", "numOfRows", "totalCount")):
+        return _flight_page_rows(data, page_no)[0]
+    # 과거 단일 페이지 응답은 메타데이터가 없지만 항목의 손상은 허용하지 않는다.
+    items = body.get("items")
+    if items in (None, ""):
+        return []
+    if not isinstance(items, Mapping) or (items and "item" not in items):
+        raise KrairportParseError("KAC 출도착 항목 구조가 올바르지 않습니다.")
+    return extract_items(data)
 
 
 def _flight_page_rows(
