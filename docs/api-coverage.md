@@ -23,8 +23,9 @@
 
 | Public method | Provider | Endpoint |
 |---|---|---|
-| `departures()` | KAC | `StatusOfFlights/getDepFlightStatusList` |
-| `arrivals()` | KAC | `StatusOfFlights/getArrFlightStatusList` |
+| `departures()` | KAC | `B551178/flight-status/depart` (GW, live 성공 미확인) |
+| `arrivals()` | KAC | `B551178/flight-status/arrival` (GW, live 성공 미확인) |
+| `client.kac.flight_status()` | KAC | 두 방향의 페이지 정합성 검증·호출 상한 |
 | `departures()` | IIAC | `StatusOfPassengerFlightsOdp/getPassengerDeparturesOdp`, `StatusOfPassengerFlightsDeOdp/getPassengerDeparturesDeOdp` |
 | `arrivals()` | IIAC | `StatusOfPassengerFlightsOdp/getPassengerArrivalsOdp`, `StatusOfPassengerFlightsDeOdp/getPassengerArrivalsDeOdp` |
 | `aircraft_assignments()` | KAC | `FlightStatusAPLList/getFlightStatusAPLList` |

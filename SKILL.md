@@ -35,8 +35,8 @@ description: 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공개 AP
 
 | Public method | Provider | Endpoint |
 |---|---|---|
-| `KrairportClient.departures()` | KAC | `getDepFlightStatusList` |
-| `KrairportClient.arrivals()` | KAC | `getArrFlightStatusList` |
+| `KrairportClient.departures()` | KAC | `flight-status/depart` |
+| `KrairportClient.arrivals()` | KAC | `flight-status/arrival` |
 | `KrairportClient.departures()` | IIAC | `getPassengerDeparturesDeOdp` 또는 `getPassengerDeparturesOdp` |
 | `KrairportClient.arrivals()` | IIAC | `getPassengerArrivalsDeOdp` 또는 `getPassengerArrivalsOdp` |
 | `KrairportClient.aircraft_assignments()` | KAC | `getFlightStatusAPLList` |
@@ -92,6 +92,9 @@ KrairportClient.from_env(
 
 ### Flight model 핵심 필드
 
+KAC GW의 `masterflightid`는 선택 필드 `master_flight_id`로 보존한다. 시각이 같다는
+이유만으로 서로 다른 운항을 공동운항으로 추정하지 않는다.
+
 Provider별 필드명이 달라도 공개 model에는 `provider`, `airport_code`, `flight_id`, `flight_unique_id`, `direction`, `airline_name`, `airline_code`, `departure_airport_code`, `arrival_airport_code`, `scheduled_at`, `estimated_at`, `status_korean`, `status_english`, `terminal`, `gate`, `codeshare`, `raw`를 정규화해 담는다.
 
 ### 변환 정책
@@ -138,6 +141,9 @@ Provider별 특이 동작은 이 공통 exception으로 mapping한다.
 Optional live test는 `live_kac` 또는 `live_iiac` marker를 사용하고 matching env var가 없으면 skip한다. 실시간 traffic/flight count처럼 변동성이 큰 값은 assert하지 않는다.
 
 ## 흔한 실수
+
+- GW 페이지의 누락 메타데이터를 0으로 바꿔 완전한 빈 결과처럼 반환하지 않는다.
+  서버 응답 범위 확인과 SDK 품질 정책은 [GW 계약](docs/kac-flight-gateway.md)을 따른다.
 
 - `ICN`을 일반 KAC 공항처럼 처리하지 않는다.
 - 모든 endpoint가 JSON을 지원한다고 가정하지 않는다.

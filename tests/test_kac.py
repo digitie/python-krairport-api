@@ -21,7 +21,7 @@ async def test_departures_parse_types_and_request_params(load_fixture) -> None: 
         flight_id="KE1201",
     ))
 
-    assert session.calls[0].url.endswith("/getDepFlightStatusList")
+    assert session.calls[0].url == "https://apis.data.go.kr/B551178/flight-status/depart"
     assert session.calls[0].params["serviceKey"] == "KAC_KEY"
     assert session.calls[0].params["airport_code"] == "GMP"
     assert session.calls[0].params["flight_id"] == "KE1201"

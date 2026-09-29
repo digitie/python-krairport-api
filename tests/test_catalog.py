@@ -17,7 +17,7 @@ def test_api_catalog_exposes_human_readable_dataset_names() -> None:
     rows = api_catalog("departures")
 
     dataset_names = {row.dataset_name for row in rows}
-    assert "한국공항공사 실시간 항공운항 현황 상세 조회" in dataset_names
+    assert "한국공항공사 실시간 항공기 운항정보 조회_GW" in dataset_names
     assert "인천국제공항공사 여객기 운항 현황 상세 조회 서비스" in dataset_names
     assert all(row.to_dict()["dataset_name"] for row in rows)
     assert all(row.to_dict()["service_key_url"].startswith("https://") for row in rows)
