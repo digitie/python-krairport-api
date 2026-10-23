@@ -11,12 +11,13 @@ from tests.conftest import AsyncFakeSession, FakeResponse
 def body(total=3, page=1, size=2, items=None):
     return {
         "response": {
+            "header": {"resultCode": "00"},
             "body": {
                 "totalCount": total,
                 "pageNo": page,
                 "numOfRows": size,
                 "items": {"item": items if items is not None else [{"id": "a"}, {"id": "b"}]},
-            }
+            },
         }
     }
 
@@ -146,3 +147,36 @@ async def test_unbounded_integer_metadata_is_parse_error(key):
     data["response"]["body"][key] = "1" * 4301
     with pytest.raises(KrairportParseError):
         await run([data])
+
+
+@pytest.mark.parametrize("provider", [Provider.KAC, Provider.IIAC])
+@pytest.mark.parametrize(
+    "header", [None, {}, {"resultMsg": "upstream error"}, {"resultCode": "99"}]
+)
+async def test_full_set_requires_explicit_success_header(provider, header):
+    data = body(total=0, items=[])
+    if header is None:
+        data["response"].pop("header", None)
+    else:
+        data["response"]["header"] = header
+
+    async def fetch(page, size):
+        return data
+
+    with pytest.raises(KrairportParseError, match="explicit success"):
+        await collect_parking_pages(
+            fetch, lambda data: [], provider=provider, page_size=2, max_pages=3
+        )
+
+
+async def test_full_set_missing_items_is_not_empty_receipt():
+    data = body(total=0, items=[])
+    del data["response"]["body"]["items"]
+    with pytest.raises(KrairportParseError):
+        await run([data])
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf"), "\ud800", object()])
+async def test_nonfinite_or_unserializable_item_is_sanitized_parse_error(value):
+    with pytest.raises(KrairportParseError, match="safely serialized"):
+        await run([body(total=1, items=[{"value": value}])])

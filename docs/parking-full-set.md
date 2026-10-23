@@ -21,3 +21,5 @@ Transport는 별도로 주차장 identity·관측시각·범위·급감 여부�
 실제 API 키를 사용하거나 운영 배포하지 않는다.
 
 적대 리뷰 회귀로 malformed nonempty items/예상 밖 키를 빈 성공으로 승인하지 않으며, 메타 숫자는 변환 전에 5자리로 제한한다. 정상 빈 XML items와 JSON empty만 빈 receipt 후보가 된다.
+
+신규 full-set은 header.resultCode의 명시 성공과 items 키 존재를 추가로 요구한다. resultMsg만 있는 응답을 성공으로 해석하지 않는다. 비정상 JSON 값/Unicode/직렬화 오류는 원문 없는 ParseError로 변환한다. 기존 HTTP의 느슨한 응답 호환 정책은 유지한다.

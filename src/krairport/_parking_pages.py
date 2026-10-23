@@ -61,8 +61,15 @@ async def collect_parking_pages(
     for page_no in range(1, max_pages + 1):
         data = await fetch_page(page_no, page_size)
         response = data.get("response", data)
+        header = response.get("header") if isinstance(response, Mapping) else None
+        if not isinstance(header, Mapping) or str(header.get("resultCode", "")).strip() not in {
+            "00",
+            "0",
+            "NORMAL_CODE",
+        }:
+            raise KrairportParseError("parking response lacks explicit success code")
         body = response.get("body") if isinstance(response, Mapping) else None
-        if not isinstance(body, Mapping):
+        if not isinstance(body, Mapping) or "items" not in body:
             raise KrairportParseError("parking response body is missing")
         observed_total = _integer(body.get("totalCount"), "totalCount")
         if total is None:
@@ -82,9 +89,12 @@ async def collect_parking_pages(
         if len(items) != min(page_size, max(total - len(rows), 0)):
             raise KrairportParseError("parking page size does not match source total")
         for item in items:
-            body_bytes = json.dumps(
-                item, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False
-            ).encode()
+            try:
+                body_bytes = json.dumps(
+                    item, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False
+                ).encode()
+            except (ValueError, TypeError, UnicodeError):
+                raise KrairportParseError("parking row cannot be safely serialized") from None
             byte_count += len(body_bytes)
             if byte_count > 8 * 1024 * 1024:
                 raise KrairportParseError("parking raw set exceeds byte budget")
