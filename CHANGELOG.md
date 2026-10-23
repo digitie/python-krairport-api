@@ -1,3 +1,7 @@
+## 수집 승인용 주차장 값 검증 추가
+
+- parse_parking_snapshot_values/ParkingSnapshotValues로 원문 오류를 현재시각/0으로 바꾸지 않는다. 기존 API는 유지한다.
+
 # 주차장 완결 raw 집합 추가
 
 - public parking_raw_set과 ParkingRawSet으로 total·페이지·수신량·중복·상한을 검증한다. 기존 API는 유지한다.

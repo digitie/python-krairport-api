@@ -48,11 +48,13 @@ from krairport.models import (
     ParkingAreaStatus,
     ParkingFee,
     ParkingRawSet,
+    ParkingSnapshotValues,
     PassengerForecast,
     ServiceDestination,
     TaxiStatus,
     WorldWeather,
 )
+from krairport.parking import parse_parking_snapshot_values
 from krairport.types import (
     AirportCodeLike,
     AirportCodeText,
@@ -107,6 +109,8 @@ __all__ = [
     "KrairportServerError",
     "ParkingAreaStatus",
     "ParkingRawSet",
+    "ParkingSnapshotValues",
+    "parse_parking_snapshot_values",
     "ParkingFee",
     "PaginatedResult",
     "PassengerForecast",
