@@ -50,6 +50,17 @@ class PaginatedResult(KrairportModel, Generic[T]):
         self.items.extend(items)
 
 
+class ParkingRawSet(KrairportModel):
+    """원천 total과 실제 페이지를 모두 검증한 주차장 원시 집합이다."""
+
+    provider: Provider
+    items: tuple[dict[str, Any], ...]
+    total_count: int
+    page_count: int
+    page_size: int
+    wire_page_metadata: bool
+
+
 class Flight(KrairportModel):
     provider: Provider
     airport_code: str

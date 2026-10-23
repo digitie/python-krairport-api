@@ -171,3 +171,9 @@ Optional live test는 `live_kac` 또는 `live_iiac` marker를 사용하고 match
 ## Debug UI fixture 규칙
 
 Streamlit과 UI 전용 의존성은 `krairport` package 밖에 둔다. `KrairportClient.debug()` 또는 `debug_*` helper로 `DebugRun`을 만들고, 생성된 case는 `tests/fixtures/{function}/{case}.json`에 저장한다. 기본 pytest replay는 외부 API를 호출하지 않고 `tests/runners.py`를 사용한다.
+
+## 주차장 완결 집합 API
+
+`await client.parking_raw_set(provider="kac", page_size=100, max_pages=10)`은 원천 total과
+실제 페이지 수신을 검증한 `ParkingRawSet`을 반환한다. IIAC는 provider="iiac"를 쓴다.
+기존 목록 API는 그대로다. [완결성·오류·상한 계약](docs/parking-full-set.md)을 참고한다.

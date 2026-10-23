@@ -9,6 +9,7 @@ from typing import Any, cast
 
 from krairport._convert import first_value, strip_or_none, to_bool_or_none, to_int_or_none
 from krairport._http import HttpClient, SessionLike
+from krairport._parking_pages import collect_parking_pages
 from krairport._ratelimit import AsyncTokenBucket
 from krairport._routing import ensure_kac_airport
 from krairport._time import parse_kst_datetime
@@ -24,6 +25,7 @@ from krairport.models import (
     FlightSchedule,
     ParkingAreaStatus,
     ParkingFee,
+    ParkingRawSet,
     TaxiStatus,
 )
 
@@ -341,6 +343,21 @@ class KacClient:
             _build_taxi_status(row, provider=Provider.KAC, airport_code="CJU")
             for row in extract_items(data)
         ]
+
+    async def parking_raw_set(
+        self, *, page_size: int = 100, max_pages: int = 10,
+    ) -> ParkingRawSet:
+        """원천 total·페이지 수신이 일치하는 전체 주차장 원시 집합을 반환한다."""
+
+        async def fetch(page: int, size: int) -> Mapping[str, Any]:
+            return await self._http.get_xml(
+                f"{AIRPORT_PARKING_BASE}/airportparkingRT",
+                {"pageNo": page, "numOfRows": size},
+            )
+
+        return await collect_parking_pages(
+            fetch, extract_items, provider=Provider.KAC, page_size=page_size, max_pages=max_pages,
+        )
 
     async def raw_items(
         self,

@@ -465,3 +465,9 @@ tests/
 ## 변경 이력
 
 - `0.1.0`: KAC/IIAC 통합 클라이언트, provider adapter, KST 시간/타입 변환, XML/JSON 파서, CLI, fixture 기반 테스트와 문서 보강.
+
+## 주차장 완결 집합 API
+
+`await client.parking_raw_set(provider="kac", page_size=100, max_pages=10)`은 원천 total과
+실제 페이지 수신을 검증한 `ParkingRawSet`을 반환한다. IIAC는 provider="iiac"를 쓴다.
+기존 목록 API는 그대로다. [완결성·오류·상한 계약](docs/parking-full-set.md)을 참고한다.
