@@ -50,6 +50,14 @@ class PaginatedResult(KrairportModel, Generic[T]):
         self.items.extend(items)
 
 
+class ParkingSnapshotValues(KrairportModel):
+    """원문 숫자와 KST 관측시각을 엄격히 해석한 값이다. 현재시각 fallback은 없다."""
+
+    total_spaces: int
+    occupied_spaces: int
+    observed_at: datetime
+
+
 class ParkingRawSet(KrairportModel):
     """원천 total과 실제 페이지를 모두 검증한 주차장 원시 집합이다."""
 

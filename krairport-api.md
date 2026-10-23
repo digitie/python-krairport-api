@@ -554,3 +554,11 @@ Live 테스트:
 `await client.parking_raw_set(provider="kac", page_size=100, max_pages=10)`은 원천 total과
 실제 페이지 수신을 검증한 `ParkingRawSet`을 반환한다. IIAC는 provider="iiac"를 쓴다.
 기존 목록 API는 그대로다. [완결성·오류·상한 계약](docs/parking-full-set.md)을 참고한다.
+
+## 수집 승인용 엄격한 현황 값
+
+`parse_parking_snapshot_values(raw, provider="kac"|"iiac")`는 `ParkingSnapshotValues`로
+총면수·점유면수·timezone-aware KST 관측시각을 반환한다. 숫자의 오류문자열/음수/bool/
+소수/상한초과와 없거나 유효하지 않은 원천시각을 원문 없는 KrairportParseError로 거부한다.
+기존 status API의 느슨한 숫자·시각 변환은 바꾸지 않는다. HTTP를 호출하지 않는 public
+원천검증 함수이므로 수집 승인 전에 raw와 canonical 값의 대응을 확인할 수 있다.
