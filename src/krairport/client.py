@@ -25,6 +25,7 @@ from krairport.models import (
     PaginatedResult,
     ParkingAreaStatus,
     ParkingFee,
+    ParkingRawSet,
     PassengerForecast,
     ServiceDestination,
     TaxiStatus,
@@ -429,6 +430,16 @@ class KrairportClient:
             page_no=page_no,
             num_of_rows=num_of_rows,
         )
+
+    async def parking_raw_set(
+        self, *, provider: ProviderLike, page_size: int = 100, max_pages: int = 10,
+    ) -> ParkingRawSet:
+        """기관 전체의 완결 주차장 원시 집합. 공항별 검색·주차요금과 분리한다."""
+        from krairport.enums import normalize_provider
+
+        selected = normalize_provider(provider)
+        client = self.kac if selected is Provider.KAC else self.iiac
+        return await client.parking_raw_set(page_size=page_size, max_pages=max_pages)
 
     async def kac_raw_items(
         self,

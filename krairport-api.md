@@ -548,3 +548,9 @@ Live 테스트:
 - IIAC 입국장현황: https://www.data.go.kr/data/15095061/openapi.do
 - IIAC 승객예고: https://www.data.go.kr/data/15095066/openapi.do
 - OurAirports data downloads: https://ourairports.com/data/
+
+## 주차장 완결 집합 API
+
+`await client.parking_raw_set(provider="kac", page_size=100, max_pages=10)`은 원천 total과
+실제 페이지 수신을 검증한 `ParkingRawSet`을 반환한다. IIAC는 provider="iiac"를 쓴다.
+기존 목록 API는 그대로다. [완결성·오류·상한 계약](docs/parking-full-set.md)을 참고한다.
