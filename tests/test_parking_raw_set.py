@@ -101,3 +101,48 @@ async def test_public_client_uses_real_provider_paths_and_pagination(provider):
         else "StatusOfParking/getTrackingParking"
     )
     assert all(call.url.endswith(expected) for call in session.calls)
+
+
+@pytest.mark.parametrize(
+    "items",
+    [
+        "provider schema error",
+        {"unexpected": []},
+        {"item": [], "unexpected": "failure"},
+        ["invalid"],
+        {"item": "provider schema error"},
+    ],
+)
+async def test_malformed_empty_never_becomes_authoritative_receipt(items):
+    data = body(total=0, items=[])
+    data["response"]["body"]["items"] = items
+
+    async def fetch(page, size):
+        return data
+
+    with pytest.raises(KrairportParseError):
+        await collect_parking_pages(
+            fetch, lambda data: [], provider=Provider.KAC, page_size=2, max_pages=3
+        )
+
+
+@pytest.mark.parametrize("items", ["", None, {}, [], {"item": []}])
+async def test_normal_empty_container_remains_valid(items):
+    data = body(total=0, items=[])
+    data["response"]["body"]["items"] = items
+
+    async def fetch(page, size):
+        return data
+
+    result = await collect_parking_pages(
+        fetch, lambda data: [], provider=Provider.KAC, page_size=2, max_pages=3
+    )
+    assert result.total_count == 0 and result.items == ()
+
+
+@pytest.mark.parametrize("key", ["totalCount", "pageNo", "numOfRows"])
+async def test_unbounded_integer_metadata_is_parse_error(key):
+    data = body(total=2)
+    data["response"]["body"][key] = "1" * 4301
+    with pytest.raises(KrairportParseError):
+        await run([data])

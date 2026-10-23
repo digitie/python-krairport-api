@@ -19,3 +19,5 @@ Transport는 별도로 주차장 identity·관측시각·범위·급감 여부�
 
 기본 테스트는 fixture로 KAC XML/IIAC JSON 두 실제 public 경로와 페이지 메타를 검증하며,
 실제 API 키를 사용하거나 운영 배포하지 않는다.
+
+적대 리뷰 회귀로 malformed nonempty items/예상 밖 키를 빈 성공으로 승인하지 않으며, 메타 숫자는 변환 전에 5자리로 제한한다. 정상 빈 XML items와 JSON empty만 빈 receipt 후보가 된다.

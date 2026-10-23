@@ -16,9 +16,29 @@ def _integer(value: Any, name: str) -> int:
     if isinstance(value, bool) or value is None:
         raise KrairportParseError(f"parking {name} metadata is missing or invalid")
     text = str(value)
-    if not text.isascii() or not text.isdigit():
+    if len(text) > 5 or not text.isascii() or not text.isdigit():
         raise KrairportParseError(f"parking {name} metadata is not a nonnegative integer")
     return int(text)
+
+
+def _validate_items_container(value: Any) -> None:
+    """기존의 느슨한 추출기가 malformed nonempty를 빈 집합으로 숨기지 못하게 한다."""
+    if value is None or value == "":
+        return
+    if isinstance(value, Mapping):
+        if set(value) - {"item"}:
+            raise KrairportParseError("parking items contains unexpected keys")
+        rows = value.get("item")
+    elif isinstance(value, list):
+        rows = value
+    else:
+        raise KrairportParseError("parking items container is malformed")
+    if rows is None or rows == "":
+        return
+    if isinstance(rows, Mapping):
+        return
+    if not isinstance(rows, list) or any(not isinstance(row, Mapping) for row in rows):
+        raise KrairportParseError("parking item container is malformed")
 
 
 async def collect_parking_pages(
@@ -57,6 +77,7 @@ async def collect_parking_pages(
                     raise KrairportParseError(f"parking {name} does not match request")
             else:
                 wire_page_metadata = False
+        _validate_items_container(body.get("items"))
         items = extract_items(data)
         if len(items) != min(page_size, max(total - len(rows), 0)):
             raise KrairportParseError("parking page size does not match source total")
