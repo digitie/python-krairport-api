@@ -33,6 +33,10 @@
 - fixture로 재현 후 parser 보강
 - `raw` payload를 확인해 실제 필드명 기준으로 수정
 
+KAC GW 전체 조회에서 정상 공동운항까지 중복으로 실패했다면 SDK가 `(fid, flight_id)`
+식별 계약을 포함하는지 확인한다. `fid` 공유만으로 행을 삭제하거나 파싱 예외를 빈 목록으로
+바꾸지 않는다. 최신 계약에서도 같은 편명 반복이나 모순된 공동운항은 의도적으로 실패한다.
+
 ## `ZoneInfoNotFoundError: Asia/Seoul`
 
 Windows 환경에서 `tzdata`가 설치되지 않았을 때 발생할 수 있습니다.
