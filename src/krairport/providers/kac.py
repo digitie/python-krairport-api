@@ -174,6 +174,7 @@ class KacClient:
             expected_total: int | None = None
             expected_size: int | None = None
             identities: set[tuple[str, str, str]] = set()
+            flights_by_fid: dict[str, Flight] = {}
             while True:
                 if calls >= max_pages:
                     raise KrairportParseError("KAC 출도착 페이지 예산 소진: 불완전한 결과")
@@ -192,10 +193,18 @@ class KacClient:
                     flight = _build_flight(row, airport_code=code, direction=direction)
                     if not flight.flight_id or flight.scheduled_at is None:
                         raise KrairportParseError("KAC 출도착 편명/예정시각이 없습니다.")
-                    identity = (("fid", flight.flight_unique_id, "") if flight.flight_unique_id
+                    identity = (("fid", flight.flight_unique_id, flight.flight_id)
+                        if flight.flight_unique_id
                         else ("schedule", flight.flight_id, flight.scheduled_at.isoformat()))
                     if identity in identities:
                         raise KrairportParseError("KAC 출도착 페이지에 중복 항공편이 있습니다.")
+                    if flight.flight_unique_id:
+                        previous = flights_by_fid.get(flight.flight_unique_id)
+                        if previous is not None:
+                            _validate_shared_fid(
+                                previous, flight, airport_code=code, searchday=searchday,
+                            )
+                        flights_by_fid.setdefault(flight.flight_unique_id, flight)
                     identities.add(identity)
                     flights.append(flight)
                 if page_no * size >= total:
@@ -447,6 +456,33 @@ def _flight_page_rows(
     if len(rows) != max(0, min(size, total - (page - 1) * size)):
         raise KrairportParseError("KAC 출도착 페이지 항목 수가 맞지 않습니다.")
     return rows, total, size
+
+
+def _validate_shared_fid(
+    previous: Flight, flight: Flight, *, airport_code: str, searchday: str,
+) -> None:
+    """같은 fid의 서로 다른 편명은 명시적이고 일관된 공동운항만 허용한다."""
+    consistent = (
+        previous.codeshare is True and flight.codeshare is True
+        and bool(previous.master_flight_id)
+        and previous.master_flight_id == flight.master_flight_id
+        and previous.scheduled_at == flight.scheduled_at
+        and bool(previous.departure_airport_code) and bool(previous.arrival_airport_code)
+        and previous.departure_airport_code == flight.departure_airport_code
+        and previous.arrival_airport_code == flight.arrival_airport_code
+        and (flight.departure_airport_code if flight.direction == Direction.DEPARTURE
+             else flight.arrival_airport_code) == airport_code
+    )
+    if not consistent:
+        raise KrairportParseError("KAC 출도착 공동운항 식별 정보가 일치하지 않습니다.")
+    expected_io = "O" if flight.direction == Direction.DEPARTURE else "I"
+    for item in (previous, flight):
+        raw_day = strip_or_none(item.raw.get("searchday"))
+        raw_io = strip_or_none(item.raw.get("io"))
+        if (raw_day is not None and raw_day != searchday) or (
+            raw_io is not None and raw_io != expected_io
+        ):
+            raise KrairportParseError("KAC 출도착 공동운항 날짜/방향이 일치하지 않습니다.")
 
 
 def _build_flight(row: Mapping[str, Any], *, airport_code: str, direction: Direction) -> Flight:

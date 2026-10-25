@@ -94,6 +94,12 @@ KrairportClient.from_env(
 
 KAC GW의 `masterflightid`는 선택 필드 `master_flight_id`로 보존한다. 시각이 같다는
 이유만으로 서로 다른 운항을 공동운항으로 추정하지 않는다.
+전체 조회에서 같은 방향의 `(fid, flight_id)` 반복은 예정시각이 바뀌어도 거부한다.
+같은 `fid`의 다른 편명은 두 행 모두 명시적 공동운항이며 같은 비어 있지 않은
+대표 편명·출도착 공항 코드·예정시각을 가질 때만 허용한다. 원본 날짜/방향이 있으면
+조회 조건과 일치해야 하며, 수초 차이가 가능한 `fgenTime`은 일치 조건에 넣지 않는다.
+두 행의 노선 일치만으로 충분하지 않다. 공동운항의 `fid` 재사용에는 요청 공항과
+출발 조회의 출발 공항/도착 조회의 도착 공항이 같은지도 검사한다.
 
 Provider별 필드명이 달라도 공개 model에는 `provider`, `airport_code`, `flight_id`, `flight_unique_id`, `direction`, `airline_name`, `airline_code`, `departure_airport_code`, `arrival_airport_code`, `scheduled_at`, `estimated_at`, `status_korean`, `status_english`, `terminal`, `gate`, `codeshare`, `raw`를 정규화해 담는다.
 

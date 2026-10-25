@@ -8,6 +8,12 @@
 GitHub CI는 Python 3.11/3.12/3.13 오프라인 회귀·커버리지와 Ruff/mypy를 실행한다.
 기존 CI workflow가 없어 이번 GW PR에 추가했으며 운영 키를 주입하지 않는다.
 
+`tests/test_kac_codeshare.py`는 공개 김포 첫 페이지 100행을 XML로 재생해 공동운항
+개별 편명·문자열 ID·원본·KST를 검증한다. 방향별 중복, 페이지 겹침, 모순된 공동운항과
+생성 시각 차이도 다룬다. fixture는 100행 부분 집합이며 실제 하루 전체 수용과 분리한다.
+요청 공항과 다른 노선/역방향의 공동운항 4반례는 거부하고 기존 단일 행 정책은 보존한다.
+실제 수용의 공항/날짜·호출 제한·결과는 [GW 계약](kac-flight-gateway.md)에 기록한다.
+
 ## Debug UI fixture replay
 
 디버그 UI에서 저장한 JSON fixture는 `tests/fixtures/{function}/{case}.json`에 둡니다.
