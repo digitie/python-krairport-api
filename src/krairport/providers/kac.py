@@ -201,7 +201,9 @@ class KacClient:
                     if flight.flight_unique_id:
                         previous = flights_by_fid.get(flight.flight_unique_id)
                         if previous is not None:
-                            _validate_shared_fid(previous, flight, searchday=searchday)
+                            _validate_shared_fid(
+                                previous, flight, airport_code=code, searchday=searchday,
+                            )
                         flights_by_fid.setdefault(flight.flight_unique_id, flight)
                     identities.add(identity)
                     flights.append(flight)
@@ -456,7 +458,9 @@ def _flight_page_rows(
     return rows, total, size
 
 
-def _validate_shared_fid(previous: Flight, flight: Flight, *, searchday: str) -> None:
+def _validate_shared_fid(
+    previous: Flight, flight: Flight, *, airport_code: str, searchday: str,
+) -> None:
     """같은 fid의 서로 다른 편명은 명시적이고 일관된 공동운항만 허용한다."""
     consistent = (
         previous.codeshare is True and flight.codeshare is True
@@ -466,6 +470,8 @@ def _validate_shared_fid(previous: Flight, flight: Flight, *, searchday: str) ->
         and bool(previous.departure_airport_code) and bool(previous.arrival_airport_code)
         and previous.departure_airport_code == flight.departure_airport_code
         and previous.arrival_airport_code == flight.arrival_airport_code
+        and (flight.departure_airport_code if flight.direction == Direction.DEPARTURE
+             else flight.arrival_airport_code) == airport_code
     )
     if not consistent:
         raise KrairportParseError("KAC 출도착 공동운항 식별 정보가 일치하지 않습니다.")

@@ -9,7 +9,9 @@ KAC 출도착은 `https://apis.data.go.kr/B551178/flight-status/depart` 및 `/ar
 
 GW 전체 조회는 같은 방향 내 `(flight_unique_id, flight_id)`를 식별자로 쓴다.
 동일 고유 ID의 서로 다른 편명은 명시적 공동운항 관계와 대표 편명·노선·예정시각의
-일치를 검증하고 개별 `Flight`로 반환한다. `raw`와 `master_flight_id`는 보존한다.
+일치를 검증하고 개별 `Flight`로 반환한다. 공동운항 재사용을 허용할 때는 출발 조회의
+출발 공항 또는 도착 조회의 도착 공항이 요청 공항과 같아야 한다.
+`raw`와 `master_flight_id`는 보존한다.
 고유 ID가 없는 경우 기존 `(flight_id, scheduled_at)` 대체 식별자는 유지한다.
 
 ## DebugRun / fixture 생성 API

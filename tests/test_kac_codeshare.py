@@ -140,6 +140,41 @@ async def test_codeshare_allows_absent_optional_raw_day_and_io() -> None:
     assert len(flights) == 2
 
 
+@pytest.mark.parametrize(
+    "direction,departure,arrival",
+    [
+        ("departure", "CJU", "PUS"), ("departure", "CJU", "GMP"),
+        ("arrival", "PUS", "CJU"), ("arrival", "GMP", "CJU"),
+    ],
+)
+async def test_shared_fid_route_must_match_requested_airport_and_direction(
+    direction: str, departure: str, arrival: str,
+) -> None:
+    pair = _pair()
+    for row in pair:
+        row["io"] = "O" if direction == "departure" else "I"
+        row["depAirportCode"] = departure
+        row["arrvAirportCode"] = arrival
+    responses = [_response(pair)]
+    if direction == "arrival":
+        responses.insert(0, _response([]))
+    session = FakeSession(responses)
+    async with KrairportClient(kac_service_key="offline-key", session=session, retries=0) as client:
+        with pytest.raises(KrairportParseError, match="공동운항"):
+            await client.kac.flight_status(airport_code="GMP", searchday="20261025")
+    assert len(session.calls) == (1 if direction == "departure" else 2)
+
+
+async def test_singleton_route_policy_is_unchanged() -> None:
+    row = _pair()[0]
+    row["depAirportCode"], row["arrvAirportCode"] = "CJU", "PUS"
+    session = FakeSession([_response([row]), _response([])])
+    async with KrairportClient(kac_service_key="offline-key", session=session, retries=0) as client:
+        flights = await client.kac.flight_status(airport_code="GMP", searchday="20261025")
+    assert len(flights) == 1
+    assert flights[0].departure_airport_code == "CJU"
+
+
 @pytest.mark.parametrize("changed_schedule", [False, True])
 @pytest.mark.parametrize("across_pages", [False, True])
 async def test_same_fid_and_marketing_id_remain_duplicates(
