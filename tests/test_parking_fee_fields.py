@@ -68,7 +68,9 @@ async def test_missing_fees_remain_none_and_zero_is_not_replaced_by_alias() -> N
     assert result.large_holiday_daily_max_fee is None
 
 
-@pytest.mark.parametrize("value", ["1.5", "-1", "NaN", "Infinity", "invalid"])
+@pytest.mark.parametrize("value", [
+    "1.5", "-1", "NaN", "Infinity", "invalid", "-1,000", "1,000.5", "invalid,", "NaN,",
+])
 async def test_invalid_fee_is_not_truncated_or_fabricated(value: str) -> None:
     with pytest.raises(KrairportParseError):
         await _read({"parkingHoliMinuteAccount": value})

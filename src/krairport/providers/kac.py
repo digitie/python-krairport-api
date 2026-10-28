@@ -579,11 +579,11 @@ def _parking_fee_integer(value: Any) -> int | None:
     text = strip_or_none(value)
     if text is None:
         return None
+    if not text.isascii() or re.fullmatch(r"[0-9,]+", text) is None:
+        raise ValueError("주차요금 필드는 0 이상의 정수여야 합니다.")
     if "," in text and re.fullmatch(r"[1-9][0-9]{0,2}(?:,[0-9]{3})+", text) is None:
         return None
     normalized = text.replace(",", "")
-    if not normalized.isascii() or not normalized.isdecimal():
-        raise ValueError("주차요금 필드는 0 이상의 정수여야 합니다.")
     return int(normalized)
 
 
