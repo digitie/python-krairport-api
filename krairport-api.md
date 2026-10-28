@@ -310,6 +310,23 @@ Coordinate
 KrairportModel
 ```
 
+### 주차요금 필드
+
+`ParkingFee`의 기존 소형/대형 기본시간·기본요금·일 최대요금에 더해
+각 차종의 `free_minutes`, `unit_minutes`, `unit_fee`와
+`holiday_free_minutes`, `holiday_basic_minutes`, `holiday_basic_fee`,
+`holiday_unit_minutes`, `holiday_unit_fee`, `holiday_daily_max_fee`를
+`small_`/`large_` 접두어로 제공합니다. 새 필드와 `airport_name`은 모두 기본값 `None`입니다.
+
+KAC `parkingParkingName`을 주차장 이름의 첫 번째 출처로,
+`parkingMaxAccount`/`parkingMaxAccountd`를 일 최대요금의 첫 번째 출처로 사용합니다.
+이전 `parkingName`/`parkingArea`/`parkingDiv`, `parkingDayMaxAccount(d)`/
+`parkingOneDayAccount(d)`는 값이 없을 때만 사용합니다. 휴일은 `parkingHoli*`에서
+읽으며 평일 값으로 휴일 필드를 추정하지 않습니다. 정수형 원/분만 허용합니다.
+잘못된 천단위 쉼표 표기는 원문을 보존하며 `None`으로 처리합니다. 정상적인 세 자리
+천단위 묶음과 쉼표 없는 정수만 정규화합니다.
+음수·소수·비수치는 파싱 오류입니다. `raw`와 기존 공항 라우팅은 그대로 유지합니다.
+
 ## 5. 타입 변환 규칙
 
 ### 5.1 날짜/시간
