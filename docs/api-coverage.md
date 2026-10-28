@@ -29,7 +29,7 @@
 | `departures()` | IIAC | `StatusOfPassengerFlightsOdp/getPassengerDeparturesOdp`, `StatusOfPassengerFlightsDeOdp/getPassengerDeparturesDeOdp` |
 | `arrivals()` | IIAC | `StatusOfPassengerFlightsOdp/getPassengerArrivalsOdp`, `StatusOfPassengerFlightsDeOdp/getPassengerArrivalsDeOdp` |
 | `aircraft_assignments()` | KAC | `FlightStatusAPLList/getFlightStatusAPLList` |
-| `parking_fees()` | KAC | `AirportParkingFee/parkingfee` |
+| `parking_fees()` | KAC | `AirportParkingFee/parkingfee` (평일·휴일, 소형·대형 전체 요금 필드) |
 | `parking_status()` | KAC | `AirportParkingCongestion/airportParkingCongestionRT` |
 | `parking_status()` | IIAC | `StatusOfParking/getTrackingParking` |
 | `arrival_congestion()` | IIAC | `StatusOfArrivals/getArrivalsCongestion` |
@@ -129,3 +129,7 @@ client.iiac_raw_items("ShtbusInfo", "getShtbusInfo", {"pageNo": 1})
 - IIAC 통계성 API
 
 typed 모델로 승격할 때는 fixture를 먼저 추가하고, 필드별 Python 타입 assertion을 함께 추가합니다.
+
+주차요금 typed 응답은 소형/대형의 평일·휴일 무료시간, 기본시간/요금,
+추가 단위시간/요금, 일 최대요금과 실제 주차장 이름을 포함합니다.
+제공되지 않은 값은 `None`이며 최종 요금·할인·공휴일 정책을 계산하지 않습니다.

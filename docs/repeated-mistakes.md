@@ -166,3 +166,10 @@
 - 가드레일: `src/krairport/providers/kac.py`의 모든 base URL 상수와 `raw_items()`의 f-string은
   `http://openapi.airport.co.kr/...`를 사용한다. 새 KAC endpoint를 추가할 때 `https://`로 되돌리지
   않는다. IIAC(`apis.data.go.kr`)는 정상적으로 `https://`이므로 이 규칙과 혼동하지 않는다.
+
+## 주차요금 실제 필드 누락
+
+`parkingName`/`parkingDayMaxAccount`만 읽으면 실제 KAC의 `parkingParkingName`/
+`parkingMaxAccount`가 typed 응답에서 사라진다. 휴일·추가 단위요금도 같은 모델에
+정규화해야 소비자가 provider 원문 파싱을 다시 만들지 않는다. 원문에서 값이 없는 경우와
+명시적인 `0`을 구분하고, 소수 요금을 정수로 절삭하지 않는다.

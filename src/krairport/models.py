@@ -115,6 +115,25 @@ class ParkingFee(KrairportModel):
     large_basic_fee: int | None
     small_daily_max_fee: int | None
     large_daily_max_fee: int | None
+    airport_name: str | None = None
+    small_free_minutes: int | None = None
+    small_unit_minutes: int | None = None
+    small_unit_fee: int | None = None
+    large_free_minutes: int | None = None
+    large_unit_minutes: int | None = None
+    large_unit_fee: int | None = None
+    small_holiday_free_minutes: int | None = None
+    small_holiday_basic_minutes: int | None = None
+    small_holiday_basic_fee: int | None = None
+    small_holiday_unit_minutes: int | None = None
+    small_holiday_unit_fee: int | None = None
+    small_holiday_daily_max_fee: int | None = None
+    large_holiday_free_minutes: int | None = None
+    large_holiday_basic_minutes: int | None = None
+    large_holiday_basic_fee: int | None = None
+    large_holiday_unit_minutes: int | None = None
+    large_holiday_unit_fee: int | None = None
+    large_holiday_daily_max_fee: int | None = None
     raw: RawRecord = Field(default_factory=dict, repr=False)
 
 

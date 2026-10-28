@@ -574,23 +574,75 @@ def _build_aircraft_assignment(
         raise KrairportParseError(f"failed to parse KAC aircraft record: {exc}") from exc
 
 
+def _parking_fee_integer(value: Any) -> int | None:
+    """없는 값과 0을 구별하고 음수·소수 요금을 절삭하여 정상 요금으로 만들지 않는다."""
+    text = strip_or_none(value)
+    if text is None:
+        return None
+    if "," in text and re.fullmatch(r"[1-9][0-9]{0,2}(?:,[0-9]{3})+", text) is None:
+        return None
+    normalized = text.replace(",", "")
+    if not normalized.isascii() or not normalized.isdecimal():
+        raise ValueError("주차요금 필드는 0 이상의 정수여야 합니다.")
+    return int(normalized)
+
+
 def _build_parking_fee(row: Mapping[str, Any], *, requested_airport_code: str | None) -> ParkingFee:
     try:
         airport_code = strip_or_none(first_value(row, "airportCode", "schAirportCode"))
         return ParkingFee(
             airport_code=airport_code or requested_airport_code or "",
             parking_name=strip_or_none(
-                first_value(row, "parkingName", "parkingArea", "parkingDiv")
+                first_value(row, "parkingParkingName", "parkingName", "parkingArea", "parkingDiv")
             ),
-            small_basic_minutes=to_int_or_none(first_value(row, "parkingBasicM")),
-            small_basic_fee=to_int_or_none(first_value(row, "parkingBasicAccount")),
-            large_basic_minutes=to_int_or_none(first_value(row, "parkingBasicMd")),
-            large_basic_fee=to_int_or_none(first_value(row, "parkingBasicAccountd")),
-            small_daily_max_fee=to_int_or_none(
-                first_value(row, "parkingDayMaxAccount", "parkingOneDayAccount")
+            small_basic_minutes=_parking_fee_integer(first_value(row, "parkingBasicM")),
+            small_basic_fee=_parking_fee_integer(first_value(row, "parkingBasicAccount")),
+            large_basic_minutes=_parking_fee_integer(first_value(row, "parkingBasicMd")),
+            large_basic_fee=_parking_fee_integer(first_value(row, "parkingBasicAccountd")),
+            small_daily_max_fee=_parking_fee_integer(
+                first_value(
+                    row, "parkingMaxAccount", "parkingDayMaxAccount", "parkingOneDayAccount"
+                )
             ),
-            large_daily_max_fee=to_int_or_none(
-                first_value(row, "parkingDayMaxAccountd", "parkingOneDayAccountd")
+            large_daily_max_fee=_parking_fee_integer(
+                first_value(
+                    row, "parkingMaxAccountd", "parkingDayMaxAccountd", "parkingOneDayAccountd"
+                )
+            ),
+            airport_name=strip_or_none(first_value(row, "siteName")),
+            small_free_minutes=_parking_fee_integer(first_value(row, "parkingFreeM")),
+            small_unit_minutes=_parking_fee_integer(first_value(row, "parkingMinuteM")),
+            small_unit_fee=_parking_fee_integer(first_value(row, "parkingMinuteAccount")),
+            large_free_minutes=_parking_fee_integer(first_value(row, "parkingFreeMd")),
+            large_unit_minutes=_parking_fee_integer(first_value(row, "parkingMinuteMd")),
+            large_unit_fee=_parking_fee_integer(first_value(row, "parkingMinuteAccountd")),
+            small_holiday_free_minutes=_parking_fee_integer(first_value(row, "parkingHoliFreeM")),
+            small_holiday_basic_minutes=_parking_fee_integer(first_value(row, "parkingHoliBasicM")),
+            small_holiday_basic_fee=_parking_fee_integer(
+                first_value(row, "parkingHoliBasicAccount")
+            ),
+            small_holiday_unit_minutes=_parking_fee_integer(first_value(row, "parkingHoliMinuteM")),
+            small_holiday_unit_fee=_parking_fee_integer(
+                first_value(row, "parkingHoliMinuteAccount")
+            ),
+            small_holiday_daily_max_fee=_parking_fee_integer(
+                first_value(row, "parkingHoliMaxAccount")
+            ),
+            large_holiday_free_minutes=_parking_fee_integer(first_value(row, "parkingHoliFreeMd")),
+            large_holiday_basic_minutes=_parking_fee_integer(
+                first_value(row, "parkingHoliBasicMd")
+            ),
+            large_holiday_basic_fee=_parking_fee_integer(
+                first_value(row, "parkingHoliBasicAccountd")
+            ),
+            large_holiday_unit_minutes=_parking_fee_integer(
+                first_value(row, "parkingHoliMinuteMd")
+            ),
+            large_holiday_unit_fee=_parking_fee_integer(
+                first_value(row, "parkingHoliMinuteAccountd")
+            ),
+            large_holiday_daily_max_fee=_parking_fee_integer(
+                first_value(row, "parkingHoliMaxAccountd")
             ),
             raw=dict(row),
         )

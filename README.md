@@ -263,8 +263,35 @@ class ParkingFee(KrairportModel):
     large_basic_fee: int | None
     small_daily_max_fee: int | None
     large_daily_max_fee: int | None
+    airport_name: str | None = None
+    small_free_minutes: int | None = None
+    small_unit_minutes: int | None = None
+    small_unit_fee: int | None = None
+    large_free_minutes: int | None = None
+    large_unit_minutes: int | None = None
+    large_unit_fee: int | None = None
+    small_holiday_free_minutes: int | None = None
+    small_holiday_basic_minutes: int | None = None
+    small_holiday_basic_fee: int | None = None
+    small_holiday_unit_minutes: int | None = None
+    small_holiday_unit_fee: int | None = None
+    small_holiday_daily_max_fee: int | None = None
+    large_holiday_free_minutes: int | None = None
+    large_holiday_basic_minutes: int | None = None
+    large_holiday_basic_fee: int | None = None
+    large_holiday_unit_minutes: int | None = None
+    large_holiday_unit_fee: int | None = None
+    large_holiday_daily_max_fee: int | None = None
     raw: dict
 ```
+
+`parking_fees()`는 KAC의 실제 `parkingParkingName`, `parkingMaxAccount(d)`와
+`parkingHoli*`를 정규화합니다. 기존 이름·최대요금 별칭도 유지하며 실제 필드를 먼저
+사용합니다. 빈 값과 `-`는 `None`, 명시적인 `0`은 `0`으로 보존합니다. 음수·소수·비수치
+요금을 절삭하거나 무료 요금으로 바꾸지 않고 `KrairportParseError`로 거부합니다.
+쉼표는 정상적인 세 자리 천단위 묶음만 허용하고, 손상된 구분 표기는 추정하지 않고 `None`으로 남깁니다.
+추가 필드는 기본값 `None`이라 기존 생성자 호출을 유지합니다. 이 모델은 공급자 요금표이며
+공휴일 판정·주차장 연결·무료 회차 적용·최종 주차요금 계산은 포함하지 않습니다.
 
 ### `ArrivalCongestion`
 

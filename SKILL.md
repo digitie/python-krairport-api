@@ -148,6 +148,11 @@ Optional live test는 `live_kac` 또는 `live_iiac` marker를 사용하고 match
 
 ## 흔한 실수
 
+- KAC 요금의 `parkingParkingName`, `parkingMaxAccount(d)`, `parkingHoli*`를
+  누락하지 않는다. `ParkingFee`에서 양 차종의 평일·휴일 무료/기본/단위/최대요금을
+  정규화하며, 없는 값은 `None`, 실제 `0`은 그대로 보존한다. 음수·소수 요금을 절삭하지 않는다.
+  공휴일·무료 회차·24시간 적용 정책을 API 응답만으로 추정하여 모델에 넣지 않는다.
+
 - GW 페이지의 누락 메타데이터를 0으로 바꿔 완전한 빈 결과처럼 반환하지 않는다.
   서버 응답 범위 확인과 SDK 품질 정책은 [GW 계약](docs/kac-flight-gateway.md)을 따른다.
 
