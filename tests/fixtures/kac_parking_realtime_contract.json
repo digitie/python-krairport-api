@@ -1,0 +1,105 @@
+{
+  "source": "https://www.data.go.kr/data/15158681/openapi.do",
+  "source_swagger_sha256": "51ad76fe25d97b7314c66f0aa4f29c5f8b0a9f2b878c0745a821be94e45484bb",
+  "endpoint": "https://apis.data.go.kr/B551178/parking-realtime-status/info",
+  "method": "GET",
+  "parameters": [
+    {
+      "name": "serviceKey",
+      "in": "query",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "pageNo",
+      "in": "query",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "name": "numOfRows",
+      "in": "query",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "name": "schAirportCode",
+      "in": "query",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "name": "type",
+      "in": "query",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "header": {
+        "type": "object",
+        "properties": {
+          "resultCode": {
+            "type": "string"
+          },
+          "resultMsg": {
+            "type": "string"
+          }
+        }
+      },
+      "body": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "object",
+                "properties": {
+                  "parkingIstay": {
+                    "type": "string"
+                  },
+                  "aprEng": {
+                    "type": "string"
+                  },
+                  "aprKor": {
+                    "type": "string"
+                  },
+                  "parkingAirportCodeName": {
+                    "type": "string"
+                  },
+                  "parkingFullSpace": {
+                    "type": "string"
+                  },
+                  "parkingGetdate": {
+                    "type": "string"
+                  },
+                  "parkingGettime": {
+                    "type": "string"
+                  },
+                  "parkingIincnt": {
+                    "type": "string"
+                  },
+                  "parkingIoutcnt": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "totalCount": {
+            "type": "string"
+          },
+          "pageNo": {
+            "type": "string"
+          },
+          "numOfRows": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -33,10 +33,7 @@ STATUS_BASE = "https://apis.data.go.kr/B551178/flight-status"
 AIRCRAFT_BASE = "http://openapi.airport.co.kr/service/rest/FlightStatusAPLList"
 PARKING_FEE_BASE = "http://openapi.airport.co.kr/service/rest/AirportParkingFee"
 FLIGHT_SCHEDULE_BASE = "http://openapi.airport.co.kr/service/rest/FlightScheduleList"
-PARKING_CONGESTION_BASE = (
-    "http://openapi.airport.co.kr/service/rest/AirportParkingCongestion"
-)
-AIRPORT_PARKING_BASE = "http://openapi.airport.co.kr/service/rest/AirportParking"
+PARKING_REALTIME_URL = "https://apis.data.go.kr/B551178/parking-realtime-status/info"
 AIRPORT_FACILITIES_BASE = "http://openapi.airport.co.kr/service/rest/AirportFacilities"
 AIRPORT_BUS_BASE = "http://openapi.airport.co.kr/service/rest/AirportBusInfo"
 JEJU_TAXI_WAIT_BASE = "http://openapi.airport.co.kr/service/rest/taxiWaitInfo"
@@ -296,15 +293,12 @@ class KacClient:
         num_of_rows: int = 100,
         realtime: bool = False,
     ) -> list[ParkingAreaStatus]:
+        """공식 주차 GW를 조회한다. 기존 realtime 인자값 모두 같은 주차 현황을 사용한다."""
         code = ensure_kac_airport(airport_code)
-        params: dict[str, Any]
-        if realtime:
-            url = f"{AIRPORT_PARKING_BASE}/airportparkingRT"
-            params = {"schAirportCode": code}
-        else:
-            url = f"{PARKING_CONGESTION_BASE}/airportParkingCongestionRT"
-            params = {"schAirportCode": code, "pageNo": page_no, "numOfRows": num_of_rows}
-        data = await self._http.get_xml(url, params)
+        params = {
+            "schAirportCode": code, "pageNo": page_no, "numOfRows": num_of_rows, "type": "xml",
+        }
+        data = await self._http.get_xml(PARKING_REALTIME_URL, params)
         return [
             _build_parking_status(row, requested_airport_code=code)
             for row in extract_items(data)
@@ -360,8 +354,8 @@ class KacClient:
 
         async def fetch(page: int, size: int) -> Mapping[str, Any]:
             return await self._http.get_xml(
-                f"{AIRPORT_PARKING_BASE}/airportparkingRT",
-                {"pageNo": page, "numOfRows": size},
+                PARKING_REALTIME_URL,
+                {"pageNo": page, "numOfRows": size, "type": "xml"},
             )
 
         return await collect_parking_pages(
@@ -678,6 +672,17 @@ def _build_parking_status(
     row: Mapping[str, Any], *, requested_airport_code: str
 ) -> ParkingAreaStatus:
     try:
+        updated_at = parse_kst_datetime(first_value(row, "sysGetdate", "datetm", "updateTime"))
+        if updated_at is None:
+            day = strip_or_none(row.get("parkingGetdate"))
+            clock = strip_or_none(row.get("parkingGettime"))
+            if day is not None and clock is not None:
+                try:
+                    updated_at = parse_kst_datetime(f"{day} {clock}", require_time=True)
+                except (TypeError, ValueError, OverflowError):
+                    raise KrairportParseError(
+                        "failed to parse KAC parking observation timestamp"
+                    ) from None
         return ParkingAreaStatus(
             airport_code=str(
                 first_value(row, "airportCode", "parkingAirportCode", "schAirportCode")
@@ -685,7 +690,10 @@ def _build_parking_status(
             ),
             terminal=strip_or_none(first_value(row, "terminal", "terminalId")),
             parking_area=str(
-                first_value(row, "parkingName", "parkingArea", "parkingAirportName") or ""
+                first_value(
+                    row, "parkingName", "parkingArea", "parkingAirportName",
+                    "parkingAirportCodeName",
+                ) or ""
             ),
             occupied=to_int_or_none(
                 first_value(row, "parkingOccupiedSpace", "occupied", "parkingIstay")
@@ -693,7 +701,7 @@ def _build_parking_status(
             capacity=to_int_or_none(
                 first_value(row, "parkingTotalSpace", "capacity", "parkingFullSpace")
             ),
-            updated_at=parse_kst_datetime(first_value(row, "sysGetdate", "datetm", "updateTime")),
+            updated_at=updated_at,
             raw=dict(row),
         )
     except (TypeError, ValueError) as exc:

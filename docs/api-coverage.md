@@ -2,6 +2,9 @@
 
 확인 기준일: 2026-04-30
 
+KAC 주차 현황은 2026-11-13 공식 15158681의 embedded Swagger `/info` 계약으로 갱신했다.
+이 날짜를 다른 서비스의 검증 기준일로 확대하지 않는다.
+
 이 문서는 KAC/IIAC 공식 목록과 `krairport` 구현 범위를 대조한 기록입니다. 목적은 "빠진 API"를 다시 손으로 훑는 일을 줄이고, typed 모델로 안정화된 API와 raw fallback으로 접근 가능한 API를 구분하는 것입니다.
 
 공식 확인 출처:
@@ -30,7 +33,8 @@
 | `arrivals()` | IIAC | `StatusOfPassengerFlightsOdp/getPassengerArrivalsOdp`, `StatusOfPassengerFlightsDeOdp/getPassengerArrivalsDeOdp` |
 | `aircraft_assignments()` | KAC | `FlightStatusAPLList/getFlightStatusAPLList` |
 | `parking_fees()` | KAC | `AirportParkingFee/parkingfee` (평일·휴일, 소형·대형 전체 요금 필드) |
-| `parking_status()` | KAC | `AirportParkingCongestion/airportParkingCongestionRT` |
+| `parking_status()` | KAC | `B551178/parking-realtime-status/info` (15158681 GW) |
+| `parking_raw_set(provider="kac")` | KAC | 같은 GW의 공항 필터 없는 완결 페이지 조회 |
 | `parking_status()` | IIAC | `StatusOfParking/getTrackingParking` |
 | `arrival_congestion()` | IIAC | `StatusOfArrivals/getArrivalsCongestion` |
 | `passenger_forecast()` | IIAC | `PassengerNoticeKR/getfPassengerNoticeIKR` |
@@ -63,8 +67,8 @@ client.kac_raw_items("noise", "getNoise", {"pageNo": 1})
 |---|---|
 | `FlightStatusList` | raw |
 | `FlightScheduleList` | typed |
-| `AirportParkingCongestion` | typed |
-| `AirportParking` | typed via `KacClient.parking_status(realtime=True)` |
+| `AirportParkingCongestion` | legacy raw 경로 보존, typed 현황은 새 GW |
+| `AirportParking` | legacy raw 경로 보존, typed 현황은 새 GW |
 | `AirportParkingFee` | typed |
 | `FlightStatusAPLList` | typed |
 | `AirportFacilities` | typed |
@@ -79,6 +83,9 @@ client.kac_raw_items("noise", "getNoise", {"pageNo": 1})
 | `contractService`, `AirportLeaseInfo` | raw |
 | `ValetParking` | raw |
 | `serviceLine`, `apronAirport`, `FlightApronStateList` | raw |
+
+새 KAC `parking-realtime-status`는 전용 주차 메서드로 접근한다. 위 legacy raw helper의
+host/안전한 path 규칙을 바꾸지 않으며 다른 서비스의 연결 성공을 보장하지 않는다.
 
 ### IIAC
 

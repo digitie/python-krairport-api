@@ -49,10 +49,11 @@ def parse_parking_snapshot_values(
         capacity = _count(raw.get("parkingarea"))
         occupied = _count(raw.get("parking"))
         value = raw.get("datetm")
+        # 실제 IIAC의 0 밀리초 표기만 허용한다. 공통 파서가 버리는 비영 소수부는 거부한다.
         if (
             not isinstance(value, str)
             or re.fullmatch(
-                r"(?:[0-9]{12}|[0-9]{14}|[0-9]{4}-[0-9]{2}-[0-9]{2} "
+                r"(?:[0-9]{12}|[0-9]{14}(?:\.000)?|[0-9]{4}-[0-9]{2}-[0-9]{2} "
                 r"[0-9]{2}:[0-9]{2}(?::[0-9]{2})?)",
                 value.strip(),
             )

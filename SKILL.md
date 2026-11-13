@@ -41,6 +41,7 @@ description: 한국공항공사(KAC)와 인천국제공항공사(IIAC) 공개 AP
 | `KrairportClient.arrivals()` | IIAC | `getPassengerArrivalsDeOdp` 또는 `getPassengerArrivalsOdp` |
 | `KrairportClient.aircraft_assignments()` | KAC | `getFlightStatusAPLList` |
 | `KrairportClient.parking_fees()` | KAC | `parkingfee` |
+| `KrairportClient.parking_status()` | KAC | `parking-realtime-status/info` (15158681 GW) |
 | `KrairportClient.parking_status()` | IIAC | `getTrackingParking` |
 | `KrairportClient.arrival_congestion()` | IIAC | `getArrivalsCongestion` |
 | `KrairportClient.passenger_forecast()` | IIAC | `getfPassengerNoticeIKR` |
@@ -196,3 +197,12 @@ Streamlit과 UI 전용 의존성은 `krairport` package 밖에 둔다. `Krairpor
 소수/상한초과와 없거나 유효하지 않은 원천시각을 원문 없는 KrairportParseError로 거부한다.
 기존 status API의 느슨한 숫자·시각 변환은 바꾸지 않는다. HTTP를 호출하지 않는 public
 원천검증 함수이므로 수집 승인 전에 raw와 canonical 값의 대응을 확인할 수 있다.
+
+IIAC의 엄격한 관측시각은 실제 `YYYYMMDDHHMMSS.000`도 허용한다. 공통 시간 파서는
+소수부를 버리므로 엄격한 경계에서 비영 소수부를 넓게 허용하지 않는다. 초·KST·과거 날짜와
+원문을 유지하고 잘못된 날짜·불가능한 시각·날짜만 있는 입력은 계속 거부한다.
+
+KAC 주차 `parking_status`/`parking_raw_set`은 공식 15158681의 HTTPS `/info`만 사용한다.
+운항·요금 등 다른 서비스 base를 일괄 치환하지 않는다. Catalog 식별자를 유지해도 실제
+활용신청 URL은 15158681로 정정한다. 합성 메타/행과 실제 공개 필드 투영 fixture를 구분하며,
+권한 오류를 0행 성공으로 바꾸거나 SDK mock 통과를 운영 수집 성공으로 보고하지 않는다.

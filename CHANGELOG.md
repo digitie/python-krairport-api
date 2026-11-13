@@ -70,3 +70,18 @@
 - `AGENTS.md` 추가, 문서 경로 상대 표기와 Python 내부 문서 한글 작성 규칙 반영
 - Windows 작업 환경의 `rg` 권한 문제와 PowerShell UTF-8 출력 깨짐 대응 규칙 문서화
 - fixture 기반 테스트 74개 추가, coverage fail-under 85 기준 통과
+## 미배포 — IIAC 주차 관측의 0 밀리초 표기
+
+- 수집 승인용 `parse_parking_snapshot_values()`가 실제 IIAC의
+  `YYYYMMDDHHMMSS.000`을 같은 초의 KST 관측으로 허용한다. 원문의 초·과거 날짜를 보존한다.
+- 비영 소수부를 절삭하지 않으며 잘못된 날짜/시각·날짜만 있는 입력은 계속 거부한다.
+  기존의 느슨한 status/공통 시간 파서·KAC·HTTP·완결 집합 계약은 변경하지 않는다.
+
+## 미배포 — KAC 주차 현황 GW
+
+- `parking_status()`/`parking_raw_set()`의 KAC 주차 요청만 공식 15158681의 HTTPS `/info`로
+  전환했다. 기존 인자·provider 경계·페이지 완결성·인증 오류 계약은 유지한다.
+- 실제 GW의 주차장 이름·분리된 날짜/시각을 typed 현황에 보존한다. Catalog consumer 식별자는
+  유지하면서 표시 서비스·operation·endpoint·활용신청 안내를 실제 계약으로 정정했다.
+- 공식 계약과 등록 뒤 공개 검증 필드 투영을 오프라인 재생한다. 다른 서비스 경로·SDK 의존성·
+  운영 수집/배포는 바꾸지 않는다.
