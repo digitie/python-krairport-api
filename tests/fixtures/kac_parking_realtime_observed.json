@@ -1,0 +1,234 @@
+{
+  "result_code": "00",
+  "result_message": "NORMAL SERVICE.",
+  "total_count": "25",
+  "page_no": "1",
+  "num_rows": "100",
+  "items": [
+    {
+      "aprKor": "김포국제공항",
+      "aprEng": "GIMPO INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "국내선 제1주차장",
+      "parkingFullSpace": "2279",
+      "parkingIstay": "2279",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "김포국제공항",
+      "aprEng": "GIMPO INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "국내선 제2주차장",
+      "parkingFullSpace": "1733",
+      "parkingIstay": "1461",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "김포국제공항",
+      "aprEng": "GIMPO INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "국제선 주차빌딩",
+      "parkingFullSpace": "567",
+      "parkingIstay": "517",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "김포국제공항",
+      "aprEng": "GIMPO INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "국제선 지하",
+      "parkingFullSpace": "599",
+      "parkingIstay": "481",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "김포국제공항",
+      "aprEng": "GIMPO INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "화물청사",
+      "parkingFullSpace": "737",
+      "parkingIstay": "422",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "김해국제공항",
+      "aprEng": "GIMHAE INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "P1 여객주차장",
+      "parkingFullSpace": "2005",
+      "parkingIstay": "2005",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "김해국제공항",
+      "aprEng": "GIMHAE INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "P2 여객주차장",
+      "parkingFullSpace": "2453",
+      "parkingIstay": "2453",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "김해국제공항",
+      "aprEng": "GIMHAE INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "P3 여객(화물)",
+      "parkingFullSpace": "878",
+      "parkingIstay": "878",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "제주국제공항",
+      "aprEng": "JEJU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "P1주차장",
+      "parkingFullSpace": "1563",
+      "parkingIstay": "1457",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "제주국제공항",
+      "aprEng": "JEJU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "P2장기주차장",
+      "parkingFullSpace": "488",
+      "parkingIstay": "435",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "제주국제공항",
+      "aprEng": "JEJU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "화물주차장",
+      "parkingFullSpace": "732",
+      "parkingIstay": "732",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "대구국제공항",
+      "aprEng": "DAEGU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "여객주차장",
+      "parkingFullSpace": "1361",
+      "parkingIstay": "1219",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "대구국제공항",
+      "aprEng": "DAEGU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "화물주차장",
+      "parkingFullSpace": "13",
+      "parkingIstay": "13",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "광주공항",
+      "aprEng": "GWANGJU AIRPORT",
+      "parkingAirportCodeName": "여객주차장(제1+제2)",
+      "parkingFullSpace": "1178",
+      "parkingIstay": "1138",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "여수공항",
+      "aprEng": "YEOSU AIRPORT",
+      "parkingAirportCodeName": "여객주차장",
+      "parkingFullSpace": "852",
+      "parkingIstay": "599",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "울산공항",
+      "aprEng": "ULSAN AIRPORT",
+      "parkingAirportCodeName": "여객주차장",
+      "parkingFullSpace": "539",
+      "parkingIstay": "414",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "군산공항",
+      "aprEng": "GUNSAN AIRPORT",
+      "parkingAirportCodeName": "여객주차장",
+      "parkingFullSpace": "467",
+      "parkingIstay": "259",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "원주공항",
+      "aprEng": "WONJU AIRPORT",
+      "parkingAirportCodeName": "여객주차장",
+      "parkingFullSpace": "129",
+      "parkingIstay": "114",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "청주국제공항",
+      "aprEng": "CHEONGJU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "여객 제1주차장",
+      "parkingFullSpace": "2203",
+      "parkingIstay": "2162",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "청주국제공항",
+      "aprEng": "CHEONGJU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "여객 제2주차장",
+      "parkingFullSpace": "1703",
+      "parkingIstay": "1621",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "청주국제공항",
+      "aprEng": "CHEONGJU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "여객 제3주차장",
+      "parkingFullSpace": "808",
+      "parkingIstay": "782",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "청주국제공항",
+      "aprEng": "CHEONGJU INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "여객 제4주차장",
+      "parkingFullSpace": "463",
+      "parkingIstay": "409",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "무안국제공항",
+      "aprEng": "MUAN INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "여객주차장",
+      "parkingFullSpace": "2467",
+      "parkingIstay": "0",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "사천공항",
+      "aprEng": "SACHEON AIRPORT",
+      "parkingAirportCodeName": "여객주차장",
+      "parkingFullSpace": "226",
+      "parkingIstay": "226",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    },
+    {
+      "aprKor": "양양국제공항",
+      "aprEng": "YANGYANG INTERNATIONAL AIRPORT",
+      "parkingAirportCodeName": "여객주차장",
+      "parkingFullSpace": "452",
+      "parkingIstay": "452",
+      "parkingGetdate": "2026-11-13",
+      "parkingGettime": "20:32:03"
+    }
+  ]
+}

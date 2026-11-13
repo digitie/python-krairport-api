@@ -13,7 +13,7 @@ _SERVICE_KEY_URLS = {
     "kac_status_of_flights": "https://www.data.go.kr/data/15158625/openapi.do",
     "kac_flight_status_apl_list": "https://www.data.go.kr/data/15144867/openapi.do",
     "kac_airport_parking_fee": "https://www.data.go.kr/data/15038474/openapi.do",
-    "kac_airport_parking_congestion": "https://www.data.go.kr/data/15063437/openapi.do",
+    "kac_airport_parking_congestion": "https://www.data.go.kr/data/15158681/openapi.do",
     "kac_flight_schedule_list": "https://www.data.go.kr/data/15000126/openapi.do",
     "kac_airport_facilities": (
         _DATA_GO_KR_SEARCH + "%ED%95%9C%EA%B5%AD%EA%B3%B5%ED%95%AD%EA%B3%B5%EC%82%AC"
@@ -177,15 +177,12 @@ API_CATALOG: tuple[ApiCatalogItem, ...] = (
         function="parking_status",
         provider=Provider.KAC,
         dataset="kac_airport_parking_congestion",
-        dataset_name="한국공항공사 전국공항 주차장 혼잡도",
-        service="AirportParkingCongestion",
-        operation="airportParkingCongestionRT",
-        endpoint=(
-            "http://openapi.airport.co.kr/service/rest/AirportParkingCongestion/"
-            "airportParkingCongestionRT"
-        ),
+        dataset_name="한국공항공사 전국공항 실시간 주차정보_GW",
+        service="parking-realtime-status",
+        operation="info",
+        endpoint="https://apis.data.go.kr/B551178/parking-realtime-status/info",
         response_format="xml",
-        notes="ICN을 제외한 KAC 공항 주차 현황",
+        notes="ICN 제외 KAC 주차 현황. 기존 dataset 식별자는 보존하며 GW 활용신청은 15158681이다.",
     ),
     ApiCatalogItem(
         function="parking_status",

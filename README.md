@@ -3,7 +3,7 @@
 ## KAC 출도착 GW 전환 (2026-09-29)
 
 KAC `departures()`/`arrivals()`는 [15158625](https://www.data.go.kr/data/15158625/openapi.do)의
-`B551178/flight-status/depart`, `/arrival`을 사용한다. IIAC와 주차 API는 바뀌지 않는다.
+`B551178/flight-status/depart`, `/arrival`을 사용한다. IIAC와 주차요금 API는 바뀌지 않는다.
 기존 ODCloud raw 메서드는 구 계약 그대로이며 GW를 대신 호출하지 않는다.
 
 ```python
@@ -180,7 +180,7 @@ async with KrairportClient.from_env() as airport:
 | `KrairportClient.arrivals(...)` | KAC 또는 IIAC | KAC `flight-status/arrival`, IIAC `getPassengerArrivalsDeOdp`/`getPassengerArrivalsOdp` | `list[Flight]` |
 | `KrairportClient.aircraft_assignments(...)` | KAC | `getFlightStatusAPLList` | `list[AircraftAssignment]` |
 | `KrairportClient.parking_fees(...)` | KAC | `parkingfee` | `list[ParkingFee]` |
-| `KrairportClient.parking_status(...)` | KAC 또는 IIAC | KAC `airportParkingCongestionRT`, IIAC `getTrackingParking` | `list[ParkingAreaStatus]` |
+| `KrairportClient.parking_status(...)` | KAC 또는 IIAC | KAC `parking-realtime-status/info`, IIAC `getTrackingParking` | `list[ParkingAreaStatus]` |
 | `KrairportClient.arrival_congestion(...)` | IIAC | `getArrivalsCongestion` | `list[ArrivalCongestion]` |
 | `KrairportClient.passenger_forecast(...)` | IIAC | `getfPassengerNoticeIKR` | `list[PassengerForecast]` |
 | `KrairportClient.flight_schedules(...)` | KAC 또는 IIAC | KAC `getDflightScheduleList`/`getIflightScheduleList`, IIAC `getPaxFltSchedArrivals`/`getPaxFltSchedDepartures` | `list[FlightSchedule]` |
@@ -513,3 +513,17 @@ tests/
 소수/상한초과와 없거나 유효하지 않은 원천시각을 원문 없는 KrairportParseError로 거부한다.
 기존 status API의 느슨한 숫자·시각 변환은 바꾸지 않는다. HTTP를 호출하지 않는 public
 원천검증 함수이므로 수집 승인 전에 raw와 canonical 값의 대응을 확인할 수 있다.
+
+IIAC의 14자리 시각 뒤 정확히 `.000`이 붙는 실제 원문도 같은 초의 KST로 허용한다.
+비영 소수부는 정밀도를 버려 승인하지 않고 거부하며, 원문과 과거 날짜는 보존한다.
+
+## KAC 주차 현황 GW
+
+KAC의 `parking_status()`와 `parking_raw_set()`은 공식
+[15158681](https://www.data.go.kr/data/15158681/openapi.do)의
+`https://apis.data.go.kr/B551178/parking-realtime-status/info`를 XML로 요청한다.
+기존 `KacClient.parking_status(realtime=...)`의 두 인자값도 같은 GW를 사용한다.
+주차장 이름·분리된 관측 날짜/시각·원문·실제 점유 0을 보존한다. Catalog의 기존
+`dataset` 식별자는 유지하지만 활용신청 안내는 새 15158681을 가리킨다.
+새 서비스 미등록/권한 오류는 인증 예외이며 빈 성공으로 바꾸지 않는다. 다른 KAC 서비스의
+경로나 주차요금·IIAC 요청은 변경하지 않는다. [완결성·원천 근거](docs/parking-full-set.md).

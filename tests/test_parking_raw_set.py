@@ -97,7 +97,7 @@ async def test_public_client_uses_real_provider_paths_and_pagination(provider):
     assert [call.params["pageNo"] for call in session.calls] == [1, 2]
     assert all(call.params["numOfRows"] == 2 for call in session.calls)
     expected = (
-        "AirportParking/airportparkingRT"
+        "parking-realtime-status/info"
         if provider == "kac"
         else "StatusOfParking/getTrackingParking"
     )

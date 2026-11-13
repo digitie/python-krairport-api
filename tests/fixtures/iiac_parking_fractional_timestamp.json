@@ -1,0 +1,116 @@
+[
+  {
+    "floor": "T1 단기주차장지하1층",
+    "datetm": "20261113181600.000",
+    "parkingarea": "520",
+    "parking": "430"
+  },
+  {
+    "floor": "T1 단기주차장지하2층",
+    "datetm": "20261113181600.000",
+    "parkingarea": "1334",
+    "parking": "1179"
+  },
+  {
+    "floor": "T1 단기주차장지하3층",
+    "datetm": "20261113181600.000",
+    "parkingarea": "639",
+    "parking": "178"
+  },
+  {
+    "floor": "T1 단기주차장지상층",
+    "datetm": "20261113181600.000",
+    "parkingarea": "1052",
+    "parking": "870"
+  },
+  {
+    "floor": "T1 장기 P1 주차장",
+    "datetm": "20261113181601.000",
+    "parkingarea": "2769",
+    "parking": "2582"
+  },
+  {
+    "floor": "T1 장기 P1 주차타워",
+    "datetm": "20261113181601.000",
+    "parkingarea": "1379",
+    "parking": "1374"
+  },
+  {
+    "floor": "T1 장기 P2 주차장",
+    "datetm": "20261113181601.000",
+    "parkingarea": "2581",
+    "parking": "2565"
+  },
+  {
+    "floor": "T1 장기 P2 주차타워",
+    "datetm": "20261113181602.000",
+    "parkingarea": "1379",
+    "parking": "1369"
+  },
+  {
+    "floor": "T1 장기 P3 주차장",
+    "datetm": "20261113181602.000",
+    "parkingarea": "1605",
+    "parking": "1494"
+  },
+  {
+    "floor": "T1 P5 예약주차장",
+    "datetm": "20261113181602.000",
+    "parkingarea": "1276",
+    "parking": "1148"
+  },
+  {
+    "floor": "T2 단기주차장지하M층",
+    "datetm": "20261113181602.000",
+    "parkingarea": "751",
+    "parking": "676"
+  },
+  {
+    "floor": "T2 단기주차장지상1층",
+    "datetm": "20261113181603.000",
+    "parkingarea": "988",
+    "parking": "937"
+  },
+  {
+    "floor": "T2 단기주차장지상2층",
+    "datetm": "20261113181603.000",
+    "parkingarea": "947",
+    "parking": "897"
+  },
+  {
+    "floor": "T2 단기주차장지상3층",
+    "datetm": "20261113181603.000",
+    "parkingarea": "896",
+    "parking": "855"
+  },
+  {
+    "floor": "T2 단기주차장지상4층",
+    "datetm": "20261113181603.000",
+    "parkingarea": "976",
+    "parking": "854"
+  },
+  {
+    "floor": "T2 장기 주차장",
+    "datetm": "20261113181604.000",
+    "parkingarea": "4404",
+    "parking": "3314"
+  },
+  {
+    "floor": "T2 예약 주차장",
+    "datetm": "20261113181605.000",
+    "parkingarea": "2603",
+    "parking": "2230"
+  },
+  {
+    "floor": "T2 P1 장기주차타워",
+    "datetm": "20261113181604.000",
+    "parkingarea": "2910",
+    "parking": "2022"
+  },
+  {
+    "floor": "T2 P2 장기주차타워",
+    "datetm": "20261113181605.000",
+    "parkingarea": "2925",
+    "parking": "2147"
+  }
+]

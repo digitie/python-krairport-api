@@ -61,6 +61,7 @@ replay 테스트를 수행합니다. 자세한 포맷은 `docs/debug-fixtures.md
 | 항공편 도착 | KAC | `flight-status/arrival` | 전국공항(인천 제외) |
 | 항공기 기종/등록번호 | KAC | `getFlightStatusAPLList` | KAC 운항조회 보강용 |
 | 주차요금 | KAC | `parkingfee` | XML-only |
+| 주차현황 | KAC | `B551178/parking-realtime-status/info` | 공식 15158681 GW, XML 명시 |
 | 여객편 당일 도착 | IIAC | `getPassengerArrivalsOdp` | 당일 운항 |
 | 여객편 당일 출발 | IIAC | `getPassengerDeparturesOdp` | 당일 운항 |
 | 여객편 상세 도착 | IIAC | `getPassengerArrivalsDeOdp` | D-3 ~ D+6 |
@@ -586,3 +587,18 @@ Live 테스트:
 소수/상한초과와 없거나 유효하지 않은 원천시각을 원문 없는 KrairportParseError로 거부한다.
 기존 status API의 느슨한 숫자·시각 변환은 바꾸지 않는다. HTTP를 호출하지 않는 public
 원천검증 함수이므로 수집 승인 전에 raw와 canonical 값의 대응을 확인할 수 있다.
+
+IIAC의 14자리 시각 뒤 정확히 `.000`이 붙는 실제 원문도 같은 초의 KST로 허용한다.
+비영 소수부는 정밀도를 버려 승인하지 않고 거부하며, 원문과 과거 날짜는 보존한다.
+
+## KAC 주차 현황의 공식 GW 전환
+
+`parking_status()`와 `parking_raw_set(provider="kac")`만 공식 15158681의
+`https://apis.data.go.kr/B551178/parking-realtime-status/info`를 GET/XML로 요청한다.
+공항별 현황은 `schAirportCode`, `pageNo`, `numOfRows`, `type=xml`을 보내며 전체 raw 집합은
+공항 필터 없이 페이지 두 필드와 `type=xml`을 보낸다. `serviceKey`는 기존 HTTP 경계에서 주입한다.
+기존 `realtime` 인자는 제거하지 않으며 두 값 모두 이 GW를 사용한다. 다른 서비스는 전환하지 않는다.
+신규 `parkingAirportCodeName`, `parkingGetdate`/`parkingGettime`은 이름과 KST 시각으로 보존한다.
+기존 `sysGetdate`/`datetm`/`updateTime`이 있으면 그 우선순위를 유지한다.
+Catalog consumer 식별자는 그대로이며 서비스·operation·endpoint·활용신청 URL만 실제 GW로 정정한다.
+HTTP/본문 인증 실패를 빈 집합으로 숨기지 않고 기존 예외·완결성·페이지 상한을 유지한다.

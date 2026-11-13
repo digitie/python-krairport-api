@@ -1,5 +1,26 @@
 # 테스트 정책
 
+## IIAC 주차 현황의 0 밀리초 회귀
+
+`tests/test_parking_fractional.py`는 저장된 공개 응답의 19행을 원래 문자열 그대로 재생한다.
+첫/마지막 행의 실제 초·KST·대수를 확인하고, 기존 공통 파서의 과거 원문
+`20260519222836.000`도 엄격한 현황 경계에서 검증한다. 비영 소수부·다른 길이·0 날짜·
+불가능한 시각·날짜만 있는 입력은 오류로 남긴다. 원문은 오류 메시지에 포함하지 않는다.
+실제 HTTP 호출·키·수집·DB 게시 없이 실행한다.
+
+## KAC 주차 GW 회귀
+
+`tests/test_kac_parking_gateway.py`는 공식 15158681 Swagger의 ASCII query/operation 계약과
+공개 성공 응답의 검증 7필드 25행 투영을 XML로 재생한다. 후자는 원 HTTP 바이트 fixture가 아니다.
+합성 2페이지의 전체 raw 집합과 공항별 현황, 실제 점유 0·분리된 날짜/시각·원문 보존,
+새 Catalog/활용신청 안내를 확인한다. HTTP403과 HTTP200의 본문 인증 거부는 기존 인증 예외로
+남으며 키가 포함된 mock 오류도 redaction하고 빈 성공/재시도로 바꾸지 않는다.
+
+2026-11-13 최종 오프라인 검증은 WSL Python 3.12 전체 356 PASS·14 subtests·3 live deselected,
+coverage 92.85%(기준 85%), 기존 로컬 QA 이미지의 network-none Docker 집중 154 PASS다.
+반복한 중간 결과는 합산하지 않는다. compileall·Ruff 0.16.5·mypy 1.19.1·SKILL 형식 검사도 통과했다.
+실제 API 조회는 이 SDK 작업에서 하지 않았으며 소비자의 운영 배포/정규 수집 성공과 구분한다.
+
 ## KAC GW 회귀
 
 `tests/test_kac_gateway.py`는 실제 XML 파서를 거쳐 페이지 축소·메타데이터 누락·변경,
