@@ -119,6 +119,7 @@ KrairportClient(
     *,
     timeout: float = 10.0,
     retries: int = 3,
+    max_retry_after: float = 30.0,
     session: httpx.AsyncClient-compatible object | None = None,
 )
 
@@ -473,7 +474,12 @@ KAC `StatusOfFlights` WADL 기준:
 
 - HTTP transport는 `httpx.AsyncClient` 기반입니다.
 - KAC/IIAC를 분리한 provider adapter를 둡니다.
-- 재시도는 `429`, `500`, `502`, `503`, `504`만 허용합니다.
+- 재시도는 `429`, `500`, `502`, `503`, `504`와 네트워크 예외만 허용합니다.
+- 재시도는 즉시 다시 호출하지 않습니다. n번째 재시도 전 `min(8, 0.5 * 2**n)`초의 50~100%(jitter)를
+  기다립니다. `Retry-After`(정수 초 또는 HTTP-date)가 있으면 그 값과 backoff 중 큰 쪽을 기다립니다.
+- `Retry-After`가 `max_retry_after`(기본 30초)를 넘으면 기다리지 않고 바로 `KrairportRateLimitError`
+  (429) 또는 `KrairportServerError`(503 등)를 올립니다. 두 예외의 `retry_after` 속성(초, 없으면 `None`)으로
+  호출자가 자기 예약을 정합니다. 마지막 시도의 429/5xx도 같은 속성을 싣습니다.
 - 인증 오류는 재시도하지 않습니다.
 - 서비스키는 로그에 남기지 않습니다.
 - IIAC는 가능하면 `type=json` 우선 요청합니다.

@@ -16,7 +16,15 @@ class KrairportRequestError(KrairportError):
 
 
 class KrairportRateLimitError(KrairportError):
-    """공급자가 quota/rate limit 때문에 요청을 거부한 오류."""
+    """공급자가 quota/rate limit 때문에 요청을 거부한 오류.
+
+    `retry_after`는 공급자가 HTTP `Retry-After`로 알려 준 대기 시간(초)이다.
+    알려 주지 않았으면 `None`.
+    """
+
+    def __init__(self, *args: object, retry_after: float | None = None) -> None:
+        super().__init__(*args)
+        self.retry_after = retry_after
 
 
 class KrairportNetworkError(KrairportError):
@@ -24,7 +32,14 @@ class KrairportNetworkError(KrairportError):
 
 
 class KrairportServerError(KrairportError):
-    """공급자가 서버 측 또는 예상하지 못한 오류를 반환한 경우."""
+    """공급자가 서버 측 또는 예상하지 못한 오류를 반환한 경우.
+
+    `retry_after`는 HTTP 503 등의 `Retry-After`(초)다. 알려 주지 않았으면 `None`.
+    """
+
+    def __init__(self, *args: object, retry_after: float | None = None) -> None:
+        super().__init__(*args)
+        self.retry_after = retry_after
 
 
 class KrairportParseError(KrairportError):

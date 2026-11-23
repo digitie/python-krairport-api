@@ -372,7 +372,7 @@ class PassengerForecast(KrairportModel):
 KrairportError
 ├── KrairportAuthError         # 인증키 오류, 활용승인 미완료
 ├── KrairportRequestError      # 잘못된 파라미터, 지원하지 않는 공항/조합
-├── KrairportRateLimitError    # 일 트래픽 초과
+├── KrairportRateLimitError    # 일 트래픽 초과(`retry_after`: HTTP Retry-After 초)
 ├── KrairportNetworkError      # httpx timeout / connection error
 ├── KrairportServerError       # 5xx, 공급자 응답 이상
 ├── KrairportParseError        # XML/JSON 구조 또는 타입 변환 오류
