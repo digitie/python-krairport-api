@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import inspect
-from collections.abc import Mapping
+import math
+import random
+import time
+from collections.abc import Awaitable, Callable, Mapping
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any, Protocol, cast
 from urllib.parse import quote
 
@@ -37,6 +43,17 @@ class SessionLike(Protocol):
 
 
 TRANSIENT_STATUSES = {429, 500, 502, 503, 504}
+#: 재시도 간격의 기준(초). n번째 재시도 전
+#: `min(RETRY_BACKOFF_MAX, BASE * 2**n)`의 50~100%를 기다린다.
+RETRY_BACKOFF_BASE = 0.5
+RETRY_BACKOFF_MAX = 8.0
+#: 공급자가 `Retry-After`로 이보다 긴 대기를 요구하면 기다리지 않고
+#: 예외(`retry_after` 포함)로 돌려준다.
+DEFAULT_MAX_RETRY_AFTER = 30.0
+
+# 테스트가 실제로 기다리지 않도록 교체할 수 있는 대기·난수 함수.
+_sleep: Callable[[float], Awaitable[None]] = asyncio.sleep
+_random: Callable[[], float] = random.random
 
 
 
@@ -53,7 +70,10 @@ class HttpClient:
         retries: int = 3,
         max_rps: float = 5.0,
         rate_limiter: AsyncTokenBucket | None = None,
+        max_retry_after: float = DEFAULT_MAX_RETRY_AFTER,
     ) -> None:
+        if not math.isfinite(max_retry_after) or max_retry_after < 0:
+            raise ValueError("max_retry_after must be a finite number >= 0")
         self.rate_limiter = rate_limiter if rate_limiter is not None else AsyncTokenBucket(max_rps)
         if session is not None and not inspect.iscoroutinefunction(session.get):
             raise TypeError("session.get must be async")
@@ -66,6 +86,7 @@ class HttpClient:
         )
         self._timeout = timeout
         self._retries = retries
+        self._max_retry_after = max_retry_after
 
     async def __aenter__(self) -> HttpClient:
         return self
@@ -115,11 +136,20 @@ class HttpClient:
             except httpx.HTTPError as exc:
                 last_error = exc
                 if attempt < self._retries:
+                    await _sleep(_backoff_delay(attempt))
                     continue
                 raise KrairportNetworkError(_redact_key(str(exc), self._service_key)) from None
 
-            if response.status_code in TRANSIENT_STATUSES and attempt < self._retries:
-                continue
+            if response.status_code in TRANSIENT_STATUSES:
+                retry_after = _retry_after_seconds(response)
+                # 즉시 재호출하지 않는다. 공급자가 상한보다 긴 대기를 요구하면 붙잡지 않고 돌려준다.
+                if attempt < self._retries and (
+                    retry_after is None or retry_after <= self._max_retry_after
+                ):
+                    delay = _backoff_delay(attempt)
+                    await _sleep(delay if retry_after is None else max(retry_after, delay))
+                    continue
+                _raise_for_status(response, retry_after=retry_after)
             _raise_for_status(response)
             return response
 
@@ -166,17 +196,54 @@ def _clean_service_key(value: str | None) -> str | None:
     return cleaned or None
 
 
-def _raise_for_status(response: ResponseLike) -> None:
+def _backoff_delay(attempt: int) -> float:
+    """지수 backoff + jitter(상한의 50~100%).
+
+    함께 실패한 호출자가 같은 순간에 다시 몰리지 않게 한다.
+    """
+    ceiling = min(RETRY_BACKOFF_MAX, RETRY_BACKOFF_BASE * (2.0**attempt))
+    return ceiling * (0.5 + 0.5 * _random())
+
+
+def _retry_after_seconds(response: ResponseLike) -> float | None:
+    """`Retry-After`(정수 초 또는 HTTP-date)를 초로 읽는다. 없거나 해석할 수 없으면 `None`."""
+    headers = getattr(response, "headers", None)
+    if headers is None:
+        return None
+    try:
+        raw = headers.get("Retry-After")
+    except Exception:  # noqa: BLE001 - header 접근 실패는 값 없음으로 본다.
+        return None
+    if raw is None:
+        return None
+    value = str(raw).strip()
+    if not value:
+        return None
+    if value.isascii() and value.isdigit():
+        return float(int(value))
+    try:
+        when = parsedate_to_datetime(value)
+    except (TypeError, ValueError, IndexError, OverflowError):
+        return None
+    if when is None:
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=UTC)
+    seconds = (when - datetime.fromtimestamp(time.time(), tz=UTC)).total_seconds()
+    return max(0.0, seconds) if math.isfinite(seconds) else None
+
+
+def _raise_for_status(response: ResponseLike, *, retry_after: float | None = None) -> None:
     status = response.status_code
     text = response.text[:300]
     if status in {401, 403}:
         raise KrairportAuthError(f"HTTP {status}: {text}")
     if status == 429:
-        raise KrairportRateLimitError(f"HTTP {status}: {text}")
+        raise KrairportRateLimitError(f"HTTP {status}: {text}", retry_after=retry_after)
     if 400 <= status < 500:
         raise KrairportRequestError(f"HTTP {status}: {text}")
     if 500 <= status < 600:
-        raise KrairportServerError(f"HTTP {status}: {text}")
+        raise KrairportServerError(f"HTTP {status}: {text}", retry_after=retry_after)
 
 
 def _raise_for_data_result(data: Mapping[str, Any]) -> None:

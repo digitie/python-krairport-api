@@ -74,6 +74,7 @@ KrairportClient(
     *,
     timeout=10.0,
     retries=3,
+    max_retry_after=30.0,
     session=None,
 )
 
@@ -121,7 +122,8 @@ KAC `StatusOfFlights`, KAC `FlightStatusAPLList`, IIAC 상세 여객 항공편, 
 
 1. Session/retry setup은 한 곳에 둔다.
 2. Service key를 log에 남기지 않는다.
-3. `429`, `500`, `502`, `503`, `504` 같은 transient error만 retry한다.
+3. `429`, `500`, `502`, `503`, `504` 같은 transient error만 retry한다. 즉시 재호출하지 않고 지수 backoff +
+   jitter, `Retry-After`를 존중하며 `max_retry_after`를 넘는 대기는 예외의 `retry_after`로 돌려준다.
 4. KAC XML parsing은 parser layer에 모으고 client method에 흩뿌리지 않는다.
 5. `items.item`이 단일 dict이든 list이든 같은 내부 list 형태로 정규화한다.
 6. `raw` payload는 normalization 이후 보존하며 공개 표면 자체로 삼지 않는다.

@@ -14,6 +14,13 @@
 
 # Changelog
 
+## 미배포 — 재시도 backoff와 Retry-After
+
+- HTTP 429·5xx와 네트워크 예외의 재시도가 지연 없이 즉시 다시 호출하던 것을 지수 backoff + jitter로 바꿨다
+  (n번째 재시도 전 `min(8, 0.5 * 2**n)`초의 50~100%). 재시도 횟수(`retries`)와 토큰 과금 규칙은 그대로다.
+- 429/503의 `Retry-After`(초·HTTP-date)를 존중한다. `max_retry_after`(기본 30초, 클라이언트 생성자 인자)를
+  넘으면 기다리지 않고 `KrairportRateLimitError`/`KrairportServerError`를 올리며 `retry_after` 속성에 초를 싣는다.
+
 ## 미배포 — KAC 운항 GW
 
 - 공동운항의 `fid` 공유를 중복 페이지로 오판해 전체 조회가 실패하던 오류를 수정했다.

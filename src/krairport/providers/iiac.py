@@ -14,7 +14,7 @@ from krairport._convert import (
     to_float_or_none,
     to_int_or_none,
 )
-from krairport._http import HttpClient, SessionLike
+from krairport._http import DEFAULT_MAX_RETRY_AFTER, HttpClient, SessionLike
 from krairport._parking_pages import collect_parking_pages
 from krairport._ratelimit import AsyncTokenBucket
 from krairport._routing import ensure_iiac_airport
@@ -64,6 +64,7 @@ class IiacClient:
         retries: int = 3,
         max_rps: float = 5.0,
         rate_limiter: AsyncTokenBucket | None = None,
+        max_retry_after: float = DEFAULT_MAX_RETRY_AFTER,
     ) -> None:
         self._http = HttpClient(
             service_key,
@@ -72,6 +73,7 @@ class IiacClient:
             retries=retries,
             max_rps=max_rps,
             rate_limiter=rate_limiter,
+            max_retry_after=max_retry_after,
         )
 
     async def __aenter__(self) -> IiacClient:

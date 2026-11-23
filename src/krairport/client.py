@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from datetime import date
 from typing import Any, TypeVar
 
-from krairport._http import SessionLike
+from krairport._http import DEFAULT_MAX_RETRY_AFTER, SessionLike
 from krairport._ratelimit import AsyncTokenBucket
 from krairport._routing import provider_for_airport
 from krairport.airports import get_airport, list_airports, nearest_airport
@@ -51,6 +51,7 @@ class KrairportClient:
         retries: int = 3,
         max_rps: float = 5.0,
         rate_limiter: AsyncTokenBucket | None = None,
+        max_retry_after: float = DEFAULT_MAX_RETRY_AFTER,
         session: SessionLike | None = None,
         kac_client: KacClient | None = None,
         iiac_client: IiacClient | None = None,
@@ -68,6 +69,7 @@ class KrairportClient:
             timeout=timeout,
             retries=retries,
             rate_limiter=self.rate_limiter,
+            max_retry_after=max_retry_after,
         )
         self.iiac = iiac_client or IiacClient(
             iiac_service_key,
@@ -75,6 +77,7 @@ class KrairportClient:
             timeout=timeout,
             retries=retries,
             rate_limiter=self.rate_limiter,
+            max_retry_after=max_retry_after,
         )
 
         self.kac._http.rate_limiter = self.rate_limiter
